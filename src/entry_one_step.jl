@@ -1,5 +1,11 @@
 # One step entry decision
 
+function make_test_entry_one_step()
+    objId = ObjectId(:entryOneStep);
+    switches = EntryOneStepSwitches{Float64}();
+    return init_entry_decision(objId, switches)
+end
+
 function init_entry_decision(objId :: ObjectId, 
     switches :: EntryOneStepSwitches{F1}) where F1
 
