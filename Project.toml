@@ -11,6 +11,7 @@ EconLH = "e3939c25-9e30-5b59-80eb-f399ae42cd76"
 ModelParams = "4089ccbe-b1dc-5f86-a141-4606b18b4241"
 
 [compat]
+ArgCheck = "2.0"
 julia = "^1"
 
 [extras]
