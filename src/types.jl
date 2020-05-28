@@ -71,5 +71,26 @@ mutable struct EntryTwoStep{F1 <: AbstractFloat} <: AbstractEntryDecision
 end
 
 
+## ------------  Sequential assignment
+
+mutable struct AssignmentSwitches{F1 <: AbstractFloat}
+    # Each student has this mass
+    typeMass :: F1
+    # College capacity (in units of typeMass)
+    capacityV :: Vector{F1}
+end
+
+mutable struct CollegeAssignment{F1 <: AbstractFloat}
+    switches :: AssignmentSwitches{F1}
+end
+
+
+mutable struct AssignmentResults{F1 <: AbstractFloat}
+    # Probability that student j chooses college c
+    probEnter_jcM :: Matrix{F1}
+    # Mass of enrollment in each college
+    enrollV :: Vector{F1}
+end
+
 
 # ----------------------

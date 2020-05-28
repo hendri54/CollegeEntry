@@ -16,8 +16,8 @@ export n_colleges, n_college_sets, percentile_var, college_set, open_admission, 
 # Complete entry decisions
 export entry_decisions
 
-include("types.jl")
 include("admissions_types.jl")
+include("types.jl")
 
 # Entry decisions
 include("generic.jl")
@@ -26,5 +26,8 @@ include("entry_two_step.jl")
 
 # Admissions rules
 include("admissions_rules.jl")
+
+# Sequential assignment
+include("sequential.jl")
 
 end # module
