@@ -138,7 +138,6 @@ end
 function prob_coll_set(a :: AdmissionsCutoff{I1, F1}, iSet :: Integer, 
     hsGpaPctV :: AbstractVector{F2}) where {I1, F1, F2 <: AbstractFloat}
 
-    # _, hsGpaPctV = get_draws(endowDraws, percentile_var(a));
     J = length(hsGpaPctV);
     probV = Vector{F1}(undef, J);
     for j = 1 : J
