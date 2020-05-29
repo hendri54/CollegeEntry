@@ -19,7 +19,7 @@ function entry_decisions_test(entryS :: AbstractEntryDecision{F1},
 
     @test size(entryProb_jcM) == (J, nc)
     @test size(v_jV) == (J, )
-    @test all(entryProb_jcM .> 0.0)
+    @test all(entryProb_jcM .>= 0.0)
     @test all(entryProb_jcM .< 1.0)
     @test all(sum(entryProb_jcM, dims = 2) .< 1.0)
 

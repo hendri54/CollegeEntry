@@ -39,6 +39,18 @@ function entry_decisions(entryS :: EntrySequential{F1},
     endowPctV :: Vector{F1},
     rank_jV :: Vector{I2}) where {I1, I2 <: Integer, F1}
 
+    return entry_sequential(entryS,  admissionS, 
+        vWork_jV, vCollege_jcM, endowPctV,  rank_jV);
+end
+
+
+# A method that can be called directly. Avoids potential method ambiguities or dispatch errors.
+function entry_sequential(entryS :: EntrySequential{F1}, 
+    admissionS :: AbstractAdmissionsRule{I1, F1}, 
+    vWork_jV :: Vector{F1}, vCollege_jcM :: Matrix{F1}, 
+    endowPctV :: Vector{F1},
+    rank_jV :: Vector{I2}) where {I1, I2 <: Integer, F1}
+
     nc = n_colleges(admissionS);
     nTypes = length(vWork_jV);
     enrollV = zeros(F1, nc);
@@ -55,8 +67,8 @@ function entry_decisions(entryS :: EntrySequential{F1},
             probSet = prob_coll_set(admissionS, iSet, endowPctV[j]);
             # Can only attend colleges that are not full
             availV = trues(nc);
-            availV[fullV] .= false;
             availV[admitV] .= true;
+            availV[fullV] .= false;
 
             # Entry probs for this set
             prob_cV, eValSet = 
@@ -67,7 +79,11 @@ function entry_decisions(entryS :: EntrySequential{F1},
 
         # Record enrollment
         enrollV .+= entryProb_jcM[j,:] .* type_mass(entryS);
-        fullV = (enrollV .< capacities(entryS));
+        fullV = (enrollV .>= capacities(entryS));
+
+        # println("\nStudent $j. Entry probs ", 
+        #     round.(entryProb_jcM[j,:], digits = 2));
+        # println("  Enrollments: $enrollV   Full: $fullV");
     end
 
     return entryProb_jcM, eVal_jV

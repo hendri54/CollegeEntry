@@ -129,12 +129,19 @@ end
 
 Compute entry probabilities and expected values at entry from admission rule and entry decision objects.
 The `rank_jV` argument does nothing, but is here for consistency with the sequential entry case.
+Beware of ambiguous dispatch. The signature of methods for specific entry decisions must match exactly.
 """
 function entry_decisions(
     entryS :: AbstractEntryDecision{F1}, 
     admissionS :: AbstractAdmissionsRule{I1, F1}, 
     vWork_jV :: AbstractVector{F1}, vCollege_jcM :: AbstractMatrix{F1}, 
-    hsGpaPctV :: AbstractVector{F1}, rank_jV)  where {I1, F1}
+    endowPctV :: AbstractVector{F1}, rank_jV)  where {I1, F1}
+
+    # Avoid potential incorrect dispatch
+    if isa(entryS, EntrySequential)
+        return entry_sequential(entryS,  admissionS, 
+            vWork_jV, vCollege_jcM, endowPctV,  rank_jV);
+    end
 
     # Solve separately for each set of colleges the student could get into
     nSets = n_colleges(admissionS);
@@ -146,7 +153,7 @@ function entry_decisions(
     eVal_jV = zeros(F1, J);
     for (iSet, admitV) in enumerate(admissionS)
         # Prob that each person draws this college set
-        probSet_jV = prob_coll_set(admissionS, iSet, hsGpaPctV);
+        probSet_jV = prob_coll_set(admissionS, iSet, endowPctV);
         prob_jxM, eValSet_jV = 
             entry_probs(entryS, vWork_jV, vCollege_jcM, admitV);
         for j = 1 : J
