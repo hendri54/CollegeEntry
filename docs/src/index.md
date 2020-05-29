@@ -29,12 +29,24 @@ make_admissions
 An `AbstractEntryDecision` provides a structure according to which students make entry decisions, given a set of available colleges. Special cases are:
 
 * [`EntryOneStep`](@ref): Students jointly decide whether and which college to attend, subject to Gumbel preference shocks.
+* [`EntryTwoStep`](@ref): Students first decide whether or not to attend college. Then they decide which college. This is not fully implemented.
+* [`EntrySequential`](@ref): Colleges have capacity constraints. Students are ordered in some given way. The best students decide first, subject to colleges admitting them and not being full.
+
+Useful generic methods are listed below.
 
 
 ```@docs
 AbstractEntryDecision
 EntryOneStep
+EntryTwoStep
+EntrySequential
+init_entry_decision
 entry_decisions
+entry_probs
+scale_entry_probs!
+type_mass
+capacities
+college_enrollment
 ```
 
 ## A general assignment mechanism

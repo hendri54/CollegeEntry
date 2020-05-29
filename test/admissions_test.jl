@@ -3,6 +3,9 @@ using CollegeEntry
 
 function common_test(a :: T1) where T1 <: AbstractAdmissionsRule
     @testset "$a" begin
+        println("\n------------------");
+        println(a);
+
         # Want these increasing
         hsGpaPctV = 0.01 : 0.2 : 0.99;
         J = length(hsGpaPctV);
@@ -43,6 +46,9 @@ end
 
 function gpa_cutoff_test(a :: AdmissionsCutoff)
     @testset "GPA cutoff" begin
+        println("\n----------------------");
+        println(a);
+        
         # a = CollegeStrat.make_test_admissions_gpa(4);
         hsGpaPctV = 0.01 : 0.3 : 0.99;
         highV = CollegeEntry.highest_college(a, hsGpaPctV);

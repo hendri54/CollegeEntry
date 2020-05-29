@@ -1,7 +1,7 @@
 # Entry decision
 
-abstract type AbstractEntryDecision <: ModelObject end
-abstract type AbstractEntrySwitches end
+abstract type AbstractEntryDecision{F1 <: AbstractFloat} <: ModelObject end
+abstract type AbstractEntrySwitches{F1 <: AbstractFloat} end
 
 
 
@@ -13,7 +13,7 @@ abstract type AbstractEntrySwitches end
 
 Switches for `EntryOneStep`.
 """
-Base.@kwdef mutable struct EntryOneStepSwitches{F1 <: AbstractFloat} <: AbstractEntrySwitches
+Base.@kwdef mutable struct EntryOneStepSwitches{F1} <: AbstractEntrySwitches{F1}
     # Min entry prob for each (feasible) college
     minEntryProb :: F1 = 0.01
     # Max entry prob for all colleges jointly
@@ -33,7 +33,7 @@ end
 College entry decisions.
 Students choose whether to attend college and which college to attend simultaneously.
 """
-Base.@kwdef mutable struct EntryOneStep{F1 <: AbstractFloat} <: AbstractEntryDecision
+Base.@kwdef mutable struct EntryOneStep{F1} <: AbstractEntryDecision{F1}
     objId :: ObjectId
     pvec :: ParamVector
     entryPrefScale :: F1
@@ -45,7 +45,7 @@ end
 
 ## --------------  Two step entry decision
 
-Base.@kwdef mutable struct EntryTwoStepSwitches{F1 <: AbstractFloat} <: AbstractEntrySwitches
+Base.@kwdef mutable struct EntryTwoStepSwitches{F1} <: AbstractEntrySwitches{F1}
     # Min entry prob for each (feasible) college
     minEntryProb :: F1 = 0.01
     # Max entry prob for all colleges jointly
@@ -53,7 +53,7 @@ Base.@kwdef mutable struct EntryTwoStepSwitches{F1 <: AbstractFloat} <: Abstract
     "Fix entry rates to match data by [gpa, p]?"
     fixEntryProbs :: Bool = false
     "Preference shock scale parameter"
-    prefScale :: F1 = 1.0
+    entryPrefScale :: F1 = 1.0
     "Calibrate preference shock scale parameter?"
     calEntryPrefScale :: Bool = true
     "Scale parameter for preference shock at college choice"
@@ -62,26 +62,39 @@ Base.@kwdef mutable struct EntryTwoStepSwitches{F1 <: AbstractFloat} <: Abstract
 end
 
 
-mutable struct EntryTwoStep{F1 <: AbstractFloat} <: AbstractEntryDecision
+mutable struct EntryTwoStep{F1} <: AbstractEntryDecision{F1}
     objId :: ObjectId
     pvec :: ParamVector
     entryPrefScale :: F1
     collPrefScale :: F1
-    switches :: EntryTwoStepSwitches
+    switches :: EntryTwoStepSwitches{F1}
 end
 
 
 ## ------------  Sequential assignment
 
-mutable struct AssignmentSwitches{F1 <: AbstractFloat}
+Base.@kwdef mutable struct EntrySequentialSwitches{F1} <: AbstractEntrySwitches{F1}
+    # Min entry prob for each (feasible) college
+    minEntryProb :: F1 = 0.01
+    # Max entry prob for all colleges jointly
+    maxEntryProb :: F1 = 0.99
+    "Fix entry rates to match data?"
+    fixEntryProbs :: Bool = false
+    "Preference shock scale parameter"
+    entryPrefScale :: F1 = 1.0
+    "Calibrate preference shock scale parameter?"
+    calEntryPrefScale :: Bool = true
     # Each student has this mass
-    typeMass :: F1
+    typeMass :: F1 = 1.0
     # College capacity (in units of typeMass)
     capacityV :: Vector{F1}
 end
 
-mutable struct CollegeAssignment{F1 <: AbstractFloat}
-    switches :: AssignmentSwitches{F1}
+mutable struct EntrySequential{F1} <: AbstractEntryDecision{F1}
+    objId :: ObjectId
+    pvec :: ParamVector
+    entryPrefScale :: F1
+    switches :: EntrySequentialSwitches{F1}
 end
 
 

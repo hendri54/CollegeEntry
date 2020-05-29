@@ -1,6 +1,43 @@
 # Sequential assignment
 
-function sequential_entry_probs(assignS :: CollegeAssignment{F1}, entryS :: EntryOneStep{F1}, admissionS :: AbstractAdmissionsRule{I1, F1}, vWork_jV :: Vector{F1}, vCollege_jcM :: Matrix{F1}, endowPctV :: Vector{F1}, rank_jV :: Vector{I2}) where {I1, I2 <: Integer, F1}
+# Inputs are
+# - `nc`: number of colleges
+# - `totalCapacity` of all colleges; in multiples of `typeMass`
+function make_test_entry_sequential(nc, totalCapacity)
+    objId = ObjectId(:entryOneStep);
+    typeMass = 1.0;
+    capacityV = collect(range(1.0, 1.5, length = nc));
+    capacityV = capacityV ./ sum(capacityV) .* totalCapacity .* typeMass;
+    switches = EntrySequentialSwitches{Float64}(
+        typeMass = typeMass, capacityV = capacityV);
+    return init_entry_decision(objId, switches)
+end
+
+function init_entry_decision(objId :: ObjectId, 
+    switches :: EntrySequentialSwitches{F1}) where F1
+
+    pEntryPref = init_entry_prefscale(switches);
+    pvec = ParamVector(objId, [pEntryPref]);
+    return EntrySequential(objId, pvec, ModelParams.value(pEntryPref), switches)
+end
+
+
+## ----------  Access routines
+
+capacities(a :: EntrySequentialSwitches{F1}) where F1 = a.capacityV;
+type_mass(a :: EntrySequentialSwitches{F1}) where F1 = a.typeMass;
+
+capacities(a :: EntrySequential{F1}) where F1 = capacities(a.switches);
+type_mass(a :: EntrySequential{F1}) where F1 = type_mass(a.switches);
+
+
+## ------------  Entry decisions
+
+function entry_decisions(entryS :: EntrySequential{F1}, 
+    admissionS :: AbstractAdmissionsRule{I1, F1}, 
+    vWork_jV :: Vector{F1}, vCollege_jcM :: Matrix{F1}, 
+    endowPctV :: Vector{F1},
+    rank_jV :: Vector{I2}) where {I1, I2 <: Integer, F1}
 
     nc = n_colleges(admissionS);
     nTypes = length(vWork_jV);
@@ -10,31 +47,46 @@ function sequential_entry_probs(assignS :: CollegeAssignment{F1}, entryS :: Entr
     entryProb_jcM = zeros(F1, nTypes, nc);
     eVal_jV = zeros(F1, nTypes);
 
+    # Loop over students in order of ranking
     for j in rank_jV
+        # Loop over college sets that the student may have access to
         for (iSet, admitV) in enumerate(admissionS)
             # Prob that each person draws this college set
             probSet = prob_coll_set(admissionS, iSet, endowPctV[j]);
             # Can only attend colleges that are not full
-            availV = falses(nc);
-            availV[admitV .& !fullV] .= true;
+            availV = trues(nc);
+            availV[fullV] .= false;
+            availV[admitV] .= true;
 
             # Entry probs for this set
-            # does this work for one j +++++
-            prob_cV, eValSet = entry_probs(entryS, vWork_jV[j], vCollege_jcM[j,:], availV);
+            prob_cV, eValSet = 
+                entry_probs(entryS, vWork_jV[j], vCollege_jcM[j,:], availV);
             entryProb_jcM[j,:] .+= probSet .* prob_cV;
             eVal_jV .+= probSet .* eValSet;
-
         end
 
         # Record enrollment
-        enrollV .+= entryProb_jcM[j,:] .* type_mass(assignS);
-        fullV = (enrollV .< capacities(assignS));
+        enrollV .+= entryProb_jcM[j,:] .* type_mass(entryS);
+        fullV = (enrollV .< capacities(entryS));
     end
 
     return entryProb_jcM, eVal_jV
 end
 
 
+# The actual entry decision is the same as for the OneStep case. But has to be computed one student at a time.
+# This function does not handle the sequential nature of admissions. It is mainly here for testing.
+function entry_probs(e :: EntrySequential{F1}, 
+    vWork_jV :: Vector{F1}, vCollege_jcM :: Matrix{F1}, admitV) where F1 <: AbstractFloat
+
+    return one_step_entry_probs(entry_pref_scale(e), vWork_jV, vCollege_jcM, admitV);
+end
+
+function entry_probs(e :: EntrySequential{F1}, 
+    vWork :: F1, vCollege_cV :: Vector{F1}, admitV) where F1
+
+    return one_step_entry_probs(entry_pref_scale(e), vWork, vCollege_cV, admitV)
+end
 
 
 

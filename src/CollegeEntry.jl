@@ -7,7 +7,7 @@ using EconLH, ModelParams
 export AbstractEntryDecision, AbstractEntrySwitches
 export init_entry_decision, entry_probs, fix_entry_probs!, scale_entry_probs!,
     min_entry_prob, max_entry_prob, entry_probs_fixed, entry_pref_scale
-export EntryOneStep, EntryOneStepSwitches
+export EntryOneStep, EntryOneStepSwitches, EntryTwoStep, EntryTwoStepSwitches, EntrySequential, EntrySequentialSwitches
 
 # Admissions rules
 export AbstractAdmissionsRule, AbstractAdmissionsSwitches, AdmissionsOpenSwitches, AdmissionsOpen, AdmissionsCutoffSwitches, AdmissionsCutoff
@@ -15,6 +15,8 @@ export n_colleges, n_college_sets, percentile_var, college_set, open_admission, 
 
 # Complete entry decisions
 export entry_decisions
+export college_enrollment, type_mass, colleges_full, capacities
+
 
 include("admissions_types.jl")
 include("types.jl")
@@ -23,11 +25,11 @@ include("types.jl")
 include("generic.jl")
 include("entry_one_step.jl")
 include("entry_two_step.jl")
+# Sequential assignment
+include("sequential.jl")
 
 # Admissions rules
 include("admissions_rules.jl")
 
-# Sequential assignment
-include("sequential.jl")
 
 end # module
