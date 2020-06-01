@@ -58,17 +58,17 @@ For sequential admissions protocols, students need to be ranked. All colleges ag
 Steps:
 
 1. Define an object that holds endowment draws.
-2. Extend [`get_draws`](@ref) and [`n_draws`](@ref) for this object. 
+2. Extend [`retrieve_draws`](@ref) and [`n_draws`](@ref) for this object. 
 3. Set up switches that govern the ranking, such as [`EndowPctRankingSwitches`](@ref).
 4. Call [`make_student_ranking`](@ref) to initialize an `AbstractRanking`.
-5. Call [`entry_decisions`](@ref) to compute entry probabilities by type and college and expected values at college entry. This accepts the endowment draws object as input and call `get_draws` to retrieve named endowments.
+5. Call [`entry_decisions`](@ref) to compute entry probabilities by type and college and expected values at college entry. This accepts the endowment draws object as input and call `retrieve_draws` to retrieve named endowments.
 
 ```@docs
 AbstractRanking
 AbstractRankingSwitches
 EndowPctRanking
 EndowPctRankingSwitches
-get_draws
+retrieve_draws
 n_draws
 make_student_ranking
 ```

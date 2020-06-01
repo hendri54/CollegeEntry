@@ -23,23 +23,43 @@ function entry_decisions_test(entryS :: AbstractEntryDecision{F1},
     @test all(entryProb_jcM .< 1.0)
     @test all(sum(entryProb_jcM, dims = 2) .< 1.0)
 
+    # Check implied properties
+    totalMass = sum(type_mass(entryS, 1 : J));
     enrollV = college_enrollment(entryS, entryProb_jcM);
     @test size(enrollV) == (nc,)
     @test all(enrollV .>= 0.0)
-    @test sum(enrollV) < J * type_mass(entryS)
+    @test sum(enrollV) < totalMass
     fullV = colleges_full(entryS, entryProb_jcM);
     @test size(fullV) == (nc,)
     capacityV = capacities(entryS);
-    @test all((capacityV .< J * type_mass(entryS)) .| .!fullV)
+    @test all((capacityV .< totalMass) .| .!fullV)
+
+    # Solving one student at a time should give the same answer. But not for sequential entry, unless no colleges are full.
+    for j = 1 : J
+        entryProb_cV, eVal = CollegeEntry.entry_decisions_one_student(
+            entryS, admissionS,
+            vWork_jV[j], vCollege_jcM[j,:], hsGpaPctV[j], falses(nc));
+        @test sum(entryProb_cV) .<= 1.0
+        # Not having full colleges should increase value
+        @test eVal >= v_jV[j]
+        # And it should increase entry
+        @test sum(entryProb_cV) >= sum(entryProb_jcM[j,:])
+        if !any(fullV)
+            @test isapprox(entryProb_cV, entryProb_jcM[j,:])
+            @test isapprox(eVal, v_jV[j])
+        end
+    end
+
 end
 
 @testset "Entry decisions" begin
+    J = 8;
     nc = 4;
     admissionS = CollegeEntry.make_test_admissions_cutoff(nc);
     # The last case ensures that some colleges are full
     for entryS in [CollegeEntry.make_test_entry_one_step(),
-        CollegeEntry.make_test_entry_sequential(nc, 3.0),
-        CollegeEntry.make_test_entry_sequential(nc, 0.5)]
+        CollegeEntry.make_test_entry_sequential(J, nc, 0.8),
+        CollegeEntry.make_test_entry_sequential(J, nc, 0.2)]
 
         entry_decisions_test(entryS, admissionS);
     end

@@ -1,10 +1,10 @@
 function entry_test()
-    J = 5; nc = 3;
+    J = 8; nc = 3;
     @testset "Entry probs" begin
         F1 = Float64;
         for e in [CollegeEntry.make_test_entry_one_step(), 
             CollegeEntry.make_test_entry_two_step(),
-            CollegeEntry.make_test_entry_sequential(nc, 3.0)]
+            CollegeEntry.make_test_entry_sequential(J, nc, 3.0)]
 
             println("\n--------------------------")
             println(e);

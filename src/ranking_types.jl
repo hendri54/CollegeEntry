@@ -20,7 +20,7 @@ abstract type AbstractRanking{F1 <: AbstractFloat} <: ModelObject end
 	$(SIGNATURES)
 
 Switches for linear endowment percentile weights. 
-`eNameV` contains the endowments used for ranking. It must be possible to call `get_draws(EndowmentDraws, eName)`.
+`eNameV` contains the endowments used for ranking. It must be possible to call `retrieve_draws(EndowmentDraws, eName)`.
 `wtV` are the weights to be used if not calibrated. This omits the first weight, which is fixed at 1. This is empty when there is only one endowment to rank on.
 `doCal` determines whether weights are calibrated or fixed.
 """

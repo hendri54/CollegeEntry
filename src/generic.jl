@@ -23,15 +23,23 @@ entry_pref_scale(e :: AbstractEntryDecision) = e.entryPrefScale;
 
 Mass of each type. Only plays a role when colleges have capacities. Set to 1 otherwise.
 """
-type_mass(e :: AbstractEntryDecision{F1}) where F1 = one(F1);
+type_mass(e :: AbstractEntrySwitches{F1}, j) where F1 = ones(F1, size(j)...);
+
+type_mass(a :: AbstractEntryDecision{F1}, j) where F1 = type_mass(a.switches, j);
+
 
 """
 	$(SIGNATURES)
 
 College capacities. Set to an arbitrary large number for entry mechanisms where capacities do not matter.
 """
-capacities(e :: AbstractEntryDecision{F1}) where F1 = F1(1e8);
+capacities(e :: AbstractEntrySwitches{F1}) where F1 = F1(1e8);
+capacities(a :: AbstractEntryDecision{F1}) where F1 = capacities(a.switches);
 
+capacity(e :: AbstractEntrySwitches{F1}, iCollege :: Integer) where F1 = 
+    F1(1e8);
+capacity(e :: AbstractEntryDecision{F1}, iCollege :: Integer) where F1 = 
+    capacity(e.switches, iCollege);
 
 """
 	$(SIGNATURES)
@@ -103,6 +111,7 @@ function one_step_entry_probs(entryPrefScale :: F1,
     return prob_jxM, eVal_jV
 end
 
+
 # The same for one type
 function one_step_entry_probs(entryPrefScale :: F1,
     vWork :: F1, vCollege_cV :: Vector{F1}, admitV) where F1 <: AbstractFloat
@@ -158,11 +167,43 @@ function entry_decisions(
             entry_probs(entryS, vWork_jV, vCollege_jcM, admitV);
         for j = 1 : J
             entryProb_jcM[j,:] .+= probSet_jV[j] .* prob_jxM[j, :];
-            eVal_jV .+= probSet_jV[j] .* eValSet_jV;
+            eVal_jV[j] += probSet_jV[j] * eValSet_jV[j];
         end
     end
 
     return entryProb_jcM, eVal_jV
+end
+
+
+"""
+	$(SIGNATURES)
+
+Entry probs for one student across all admissions sets. Handles the case where some colleges are full.
+"""
+function entry_decisions_one_student(entryS :: AbstractEntryDecision{F1}, 
+    admissionS :: AbstractAdmissionsRule{I1, F1}, 
+    vWork :: F1, vCollege_cV :: AbstractVector{F1}, 
+    endowPct :: F1, fullV)  where {I1, F1}
+
+    nc = n_colleges(admissionS);
+    entryProb_cV = zeros(F1, nc);
+    eVal = zero(F1);
+    for (iSet, admitV) in enumerate(admissionS)
+        # Prob that each person draws this college set
+        probSet = prob_coll_set(admissionS, iSet, endowPct);
+        # Can only attend colleges that are not full
+        availV = falses(nc);
+        availV[admitV] .= true;
+        availV[fullV] .= false;
+
+        # Entry probs for this set
+        prob_cV, eValSet = 
+            entry_probs(entryS, vWork, vCollege_cV, availV);
+        entryProb_cV .+= probSet .* prob_cV;
+        eVal += probSet * eValSet;
+    end
+
+    return entryProb_cV, eVal
 end
 
 
@@ -173,20 +214,40 @@ end
 
 Compute college enrollment from type mass and entry probabilities.
 """
-college_enrollment(entryProb_jcM :: Matrix{F1}, 
-    typeMass :: F1) where F1 <: AbstractFloat =
-    vec(sum(entryProb_jcM, dims = 1)) .* typeMass;
+function college_enrollment(entryProb_jcM :: Matrix{F1}, 
+    typeMass_jV) where F1 <: AbstractFloat
 
-college_enrollment(e :: AbstractEntryDecision, 
-    entryProb_jcM :: Matrix{F1}) where F1 <: AbstractFloat =
-    college_enrollment(entryProb_jcM, type_mass(e));
+    J, nc = size(entryProb_jcM);
+    enrollV = zeros(F1, nc);
+    for ic = 1 : nc
+        enrollV[ic] = sum(entryProb_jcM[:, ic] .* typeMass_jV);
+    end
+    return enrollV
+end
+
+function college_enrollment(e :: AbstractEntryDecision{F1}, 
+    entryProb_jcM :: Matrix{F1}) where F1 <: AbstractFloat
+
+    J = size(entryProb_jcM, 1);
+    return college_enrollment(entryProb_jcM, type_mass(e, 1 : J));
+end
+
+function college_enrollment(e :: AbstractEntryDecision{F1}, 
+    entryProb_cV :: Vector{F1},  j :: Integer) where F1   
+    
+    return entryProb_cV .* type_mass(e, j);
+end
+
 
 """
     $(SIGNATURES)
 
 Return `Bool` vector that indicates which colleges are full. Only matters for entry structures with capacity constraints.
 """
-colleges_full(e :: AbstractEntryDecision{F1}, entryProb_jcM :: Matrix{F1}) where F1 <: AbstractFloat =
-    college_enrollment(e, entryProb_jcM) .>= capacities(e)
+function colleges_full(e :: AbstractEntryDecision{F1}, 
+    entryProb_jcM :: Matrix{F1}) where F1 <: AbstractFloat
+  
+    return college_enrollment(e, entryProb_jcM) .>= capacities(e)
+end
 
 # --------------

@@ -2,14 +2,15 @@
 
 # Inputs are
 # - `nc`: number of colleges
-# - `totalCapacity` of all colleges; in multiples of `typeMass`
-function make_test_entry_sequential(nc, totalCapacity)
+# - `totalCapacity` of all colleges; in multiples of  total `typeMass`
+function make_test_entry_sequential(J, nc, totalCapacity)
     objId = ObjectId(:entryOneStep);
-    typeMass = 1.0;
+    typeMass_jV = ones(J);
+    typeMass = sum(typeMass_jV);
     capacityV = collect(range(1.0, 1.5, length = nc));
     capacityV = capacityV ./ sum(capacityV) .* totalCapacity .* typeMass;
     switches = EntrySequentialSwitches{Float64}(
-        typeMass = typeMass, capacityV = capacityV);
+        typeMass_jV = typeMass_jV, capacityV = capacityV);
     return init_entry_decision(objId, switches)
 end
 
@@ -25,14 +26,13 @@ end
 ## ----------  Access routines
 
 capacities(a :: EntrySequentialSwitches{F1}) where F1 = a.capacityV;
-type_mass(a :: EntrySequentialSwitches{F1}) where F1 = a.typeMass;
+type_mass(a :: EntrySequentialSwitches{F1}, j) where F1 = a.typeMass_jV[j];
 
-capacities(a :: EntrySequential{F1}) where F1 = capacities(a.switches);
-type_mass(a :: EntrySequential{F1}) where F1 = type_mass(a.switches);
 
 
 ## ------------  Entry decisions
 
+# Just a wrapper for consistent interface.
 function entry_decisions(entryS :: EntrySequential{F1}, 
     admissionS :: AbstractAdmissionsRule{I1, F1}, 
     vWork_jV :: Vector{F1}, vCollege_jcM :: Matrix{F1}, 
@@ -61,29 +61,13 @@ function entry_sequential(entryS :: EntrySequential{F1},
 
     # Loop over students in order of ranking
     for j in rank_jV
-        # Loop over college sets that the student may have access to
-        for (iSet, admitV) in enumerate(admissionS)
-            # Prob that each person draws this college set
-            probSet = prob_coll_set(admissionS, iSet, endowPctV[j]);
-            # Can only attend colleges that are not full
-            availV = trues(nc);
-            availV[admitV] .= true;
-            availV[fullV] .= false;
-
-            # Entry probs for this set
-            prob_cV, eValSet = 
-                entry_probs(entryS, vWork_jV[j], vCollege_jcM[j,:], availV);
-            entryProb_jcM[j,:] .+= probSet .* prob_cV;
-            eVal_jV .+= probSet .* eValSet;
-        end
+        entryProb_jcM[j, :], eVal_jV[j] = entry_decisions_one_student(
+            entryS, admissionS, vWork_jV[j], vCollege_jcM[j, :],
+            endowPctV[j], fullV);
 
         # Record enrollment
-        enrollV .+= entryProb_jcM[j,:] .* type_mass(entryS);
+        enrollV .+= college_enrollment(entryS, entryProb_jcM[j,:], j);
         fullV = (enrollV .>= capacities(entryS));
-
-        # println("\nStudent $j. Entry probs ", 
-        #     round.(entryProb_jcM[j,:], digits = 2));
-        # println("  Enrollments: $enrollV   Full: $fullV");
     end
 
     return entryProb_jcM, eVal_jV
@@ -103,7 +87,6 @@ function entry_probs(e :: EntrySequential{F1},
 
     return one_step_entry_probs(entry_pref_scale(e), vWork, vCollege_cV, admitV)
 end
-
 
 
 # --------------

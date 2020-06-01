@@ -4,7 +4,7 @@ using ModelParams, CollegeEntry
 make_test_endowment_draws(J :: Integer) = 
     range(1.0, 2.0, length = J) * range(0.5, 1.5, length = 4)';
 
-function CollegeEntry.get_draws(draws :: Matrix{Float64}, eName)
+function CollegeEntry.retrieve_draws(draws :: Matrix{Float64}, eName)
     switches = CollegeEntry.make_test_endowpct_switches(4);
     eIdx = findfirst(eName .== endow_names(switches));
     return draws[:, eIdx]

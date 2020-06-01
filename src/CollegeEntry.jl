@@ -19,7 +19,7 @@ export college_enrollment, type_mass, colleges_full, capacities
 
 # Student rankings
 export AbstractRankingSwitches, AbstractRanking, EndowPctRankingSwitches, EndowPctRanking
-export rank_students, make_student_ranking, validate_ranking, validate_ranking_switches, get_draws, n_draws, endow_names
+export rank_students, make_student_ranking, validate_ranking, validate_ranking_switches, retrieve_draws, n_draws, endow_names
 
 include("ranking_types.jl")
 include("admissions_types.jl")

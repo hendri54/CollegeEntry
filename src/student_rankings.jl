@@ -15,8 +15,8 @@ function make_student_ranking end
 
 Retrieve draws for endowment `eName`. Needs to be defined for objects passed into ranking functions.
 """
-get_draws(draws, eName) =
-    error("Caller must define `get_draws` for input $(typeof(draws))");
+retrieve_draws(draws, eName) =
+    error("Caller must define `retrieve_draws` for input $(typeof(draws))");
 
 """
 	$(SIGNATURES)
@@ -33,7 +33,7 @@ n_draws(draws) =
 Rank students. Returns indices of students in rank order from best to worst.
 
 # Arguments
-- `draws`: must support `get_draws`.
+- `draws`: must support `retrieve_draws`.
 """
 function rank_students(e :: AbstractRanking{F1}, draws) where F1
     return sortperm(score_students(e, draws), rev = true);
@@ -45,7 +45,7 @@ function score_students(e :: AbstractRanking{F1}, draws) where F1
     wtV = weights(e);
     nameV = endow_names(e);
     for (j, eName) in enumerate(nameV)
-        scoreV .+= get_draws(draws, eName) .* wtV[j];
+        scoreV .+= retrieve_draws(draws, eName) .* wtV[j];
     end
     return scoreV
 end

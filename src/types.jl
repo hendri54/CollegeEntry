@@ -110,7 +110,7 @@ Base.@kwdef mutable struct EntrySequentialSwitches{F1} <: AbstractEntrySwitches{
     "Calibrate preference shock scale parameter?"
     calEntryPrefScale :: Bool = true
     # Each student has this mass
-    typeMass :: F1 = 1.0
+    typeMass_jV :: Vector{F1}
     # College capacity (in units of typeMass)
     capacityV :: Vector{F1}
 end

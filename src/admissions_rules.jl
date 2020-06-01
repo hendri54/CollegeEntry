@@ -180,7 +180,6 @@ end
 function prob_coll_sets(a :: AdmissionsCutoff{I1, F1}, hsGpaPctV :: AbstractVector{F2}) where {I1, F1, F2 <: AbstractFloat}
 
     nSets = n_college_sets(a);
-    # _, hsGpaPctV = get_draws(endowDraws, percentile_var(a));
     n = length(hsGpaPctV);
     prob_jsM = Matrix{F1}(undef, n, nSets);
     for j = 1 : n
