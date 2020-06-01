@@ -1,6 +1,17 @@
 # Entry decision
 
+"""
+	$(SIGNATURES)
+
+Abstract type for entry decision protocols.
+"""
 abstract type AbstractEntryDecision{F1 <: AbstractFloat} <: ModelObject end
+
+"""
+	$(SIGNATURES)
+
+Abstract type for switches governing entry decision protocols.
+"""
 abstract type AbstractEntrySwitches{F1 <: AbstractFloat} end
 
 
@@ -45,6 +56,11 @@ end
 
 ## --------------  Two step entry decision
 
+"""
+	$(SIGNATURES)
+
+Switches governing two step entry protocol. Students first choose whether to enter college or work. Then they choose a college.
+"""
 Base.@kwdef mutable struct EntryTwoStepSwitches{F1} <: AbstractEntrySwitches{F1}
     # Min entry prob for each (feasible) college
     minEntryProb :: F1 = 0.01
@@ -61,7 +77,11 @@ Base.@kwdef mutable struct EntryTwoStepSwitches{F1} <: AbstractEntrySwitches{F1}
     calCollPrefScale :: Bool = true
 end
 
+"""
+	$(SIGNATURES)
 
+Two step entry protocol object.
+"""
 mutable struct EntryTwoStep{F1} <: AbstractEntryDecision{F1}
     objId :: ObjectId
     pvec :: ParamVector
@@ -73,6 +93,11 @@ end
 
 ## ------------  Sequential assignment
 
+"""
+	$(SIGNATURES)
+
+Switches governing sequential entry protocol.
+"""
 Base.@kwdef mutable struct EntrySequentialSwitches{F1} <: AbstractEntrySwitches{F1}
     # Min entry prob for each (feasible) college
     minEntryProb :: F1 = 0.01
@@ -90,6 +115,11 @@ Base.@kwdef mutable struct EntrySequentialSwitches{F1} <: AbstractEntrySwitches{
     capacityV :: Vector{F1}
 end
 
+"""
+	$(SIGNATURES)
+
+Sequential entry protocol.
+"""
 mutable struct EntrySequential{F1} <: AbstractEntryDecision{F1}
     objId :: ObjectId
     pvec :: ParamVector
@@ -98,12 +128,12 @@ mutable struct EntrySequential{F1} <: AbstractEntryDecision{F1}
 end
 
 
-mutable struct AssignmentResults{F1 <: AbstractFloat}
-    # Probability that student j chooses college c
-    probEnter_jcM :: Matrix{F1}
-    # Mass of enrollment in each college
-    enrollV :: Vector{F1}
-end
+# mutable struct AssignmentResults{F1 <: AbstractFloat}
+#     # Probability that student j chooses college c
+#     probEnter_jcM :: Matrix{F1}
+#     # Mass of enrollment in each college
+#     enrollV :: Vector{F1}
+# end
 
 
 # ----------------------

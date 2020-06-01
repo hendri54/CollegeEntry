@@ -1,8 +1,25 @@
+"""
+	$(SIGNATURES)
+
+Abstract type for admissions rules.
+"""
 abstract type AbstractAdmissionsRule{I1, F1 <: AbstractFloat} end
+
+"""
+	$(SIGNATURES)
+
+Abstract type for switches from which admissions rules are constructed.
+"""
 abstract type AbstractAdmissionsSwitches{I1, F1 <: AbstractFloat} end
+
 
 ## -----------  Open admission
 
+"""
+	$(SIGNATURES)
+
+Switches governing open admissions protocol.
+"""
 mutable struct AdmissionsOpenSwitches{I1, F1} <: AbstractAdmissionsSwitches{I1, F1}
     nColleges :: I1
     # The variable that holds the individual percentiles (here for interface consistency)
@@ -22,6 +39,11 @@ end
 
 ## ----------  HS GPA or other endowment percentile cutoff
 
+"""
+	$(SIGNATURES)
+
+Switches governing admissions by cutoff rule.
+"""
 mutable struct AdmissionsCutoffSwitches{I1, F1 <: AbstractFloat} <: AbstractAdmissionsSwitches{I1, F1}
     nColleges :: I1
     # The variable that holds the individual percentiles

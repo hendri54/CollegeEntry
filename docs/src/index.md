@@ -8,6 +8,8 @@ This package contains various college entry or assignment models. The general id
 
 Once the user has set up an `AbstractEntryDecision` and an `AbstractAdmissionsRule`, calling [`entry_decisions`](@ref) yields entry probabilities and expected utilities for students with given payoffs from attending each college.
 
+For sequential entry mechanisms, students need to be ranked to determine the order in which they get to choose colleges. This is done using `AbstractRanking`s.
+
 ## Admission rules
 
 An `AbstractAdmissionsRule` determines the probability that a student may attend a particular college as a function of the students characteristics. Special cases are:
@@ -49,7 +51,29 @@ capacities
 college_enrollment
 ```
 
-## A general assignment mechanism
+## Student Rankings
+
+For sequential admissions protocols, students need to be ranked. All colleges agree on the ranking which determines the order in which students get to choose colleges.
+
+Steps:
+
+1. Define an object that holds endowment draws.
+2. Extend [`get_draws`](@ref) and [`n_draws`](@ref) for this object. 
+3. Set up switches that govern the ranking, such as [`EndowPctRankingSwitches`](@ref).
+4. Call [`make_student_ranking`](@ref) to initialize an `AbstractRanking`.
+5. Call [`entry_decisions`](@ref) to compute entry probabilities by type and college and expected values at college entry. This accepts the endowment draws object as input and call `get_draws` to retrieve named endowments.
+
+```@docs
+AbstractRanking
+AbstractRankingSwitches
+EndowPctRanking
+EndowPctRankingSwitches
+get_draws
+n_draws
+make_student_ranking
+```
+
+## Sequential entry decisions
 
 The idea is to implement an assignment mechanism similar to Hendricks, Herrington, and Schoellman (2020 AEJM). The ingredients are:
 
