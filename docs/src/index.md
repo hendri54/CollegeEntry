@@ -6,7 +6,7 @@ CurrentModule = CollegeEntry
 
 This package contains various college entry or assignment models. The general idea is to map the values of working and of attending various colleges together with student characteristics, such as test scores, into college entry probabilities.
 
-Once the user has set up an `AbstractEntryDecision` and an `AbstractAdmissionsRule`, calling [`entry_decisions`](@ref) yields entry probabilities and expected utilities for students with given payoffs from attending each college.
+Once the user has set up an `AbstractEntryDecision` and an `AbstractAdmissionsRule`, calling [`entry_decisions`](@ref) yields entry probabilities and expected utilities for students with given payoffs from attending each college. The results are returned as an `AbstractEntryResults` object.
 
 For sequential entry mechanisms, students need to be ranked to determine the order in which they get to choose colleges. This is done using `AbstractRanking`s.
 
@@ -94,5 +94,25 @@ The algorithm then proceeds as follows:
 
 Colleges' preferences for diversity may be modeled by imposing quotas on students with certain characteristics. For example, high quality colleges may only admit a certain fraction of students in each income quartile. Once the quota is filled, such colleges are removed from the admissions set for students in those quartiles.
 
+## Results
+
+[`entry_decisions`](@ref) returns an `AbstractEntryResults` object. This can be queried using a unified interface, even though different entry protocols produce information in different ways. For example, only some protocols have locations.
+
+```@docs
+AbstractEntryResults
+EntryResults
+n_locations
+n_colleges
+n_types
+capacities
+enrollments
+enrollment
+entry_probs
+type_entry_probs
+expected_values
+frac_local
+frac_local_by_type
+frac_local_by_college
+```
 
 -----------

@@ -12,11 +12,13 @@ min_entry_prob(e :: AbstractEntryDecision{F1}) where F1 = e.switches.minEntryPro
 max_entry_prob(e :: AbstractEntryDecision{F1}) where F1 = e.switches.maxEntryProb;
 
 fix_entry_probs!(e :: AbstractEntryDecision) = fix_entry_probs!(e.switches);
-fix_entry_probs!(e :: AbstractEntrySwitches) = e.fixEntryProbs = true;
+fix_entry_probs!(switches :: AbstractEntrySwitches) = switches.fixEntryProbs = true;
 
 entry_probs_fixed(e :: AbstractEntryDecision) = e.switches.fixEntryProbs;
 entry_pref_scale(e :: AbstractEntryDecision) = e.entryPrefScale;
 
+n_locations(switches :: AbstractEntrySwitches) = 1;
+n_locations(e :: AbstractEntryDecision) = n_locations(e.switches);
 
 """
 	$(SIGNATURES)
@@ -171,7 +173,11 @@ function entry_decisions(
         end
     end
 
-    return entryProb_jcM, eVal_jV
+    enrollV = college_enrollment(entryS, entryProb_jcM);
+    er = EntryResults(entryS.switches, entryProb_jcM, eVal_jV, enrollV);
+    @assert validate_er(er);
+    return er
+    # return entryProb_jcM, eVal_jV
 end
 
 

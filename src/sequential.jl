@@ -70,7 +70,10 @@ function entry_sequential(entryS :: EntrySequential{F1},
         fullV = (enrollV .>= capacities(entryS));
     end
 
-    return entryProb_jcM, eVal_jV
+    er = EntryResults(entryS.switches, entryProb_jcM, eVal_jV, enrollV);
+    @assert validate_er(er);
+    return er
+    # return entryProb_jcM, eVal_jV
 end
 
 

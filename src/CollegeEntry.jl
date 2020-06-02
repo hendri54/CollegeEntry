@@ -1,7 +1,7 @@
 module CollegeEntry
 
 using ArgCheck, DocStringExtensions
-using EconLH, ModelParams
+using CommonLH, EconLH, ModelParams
 
 # Entry decisions
 export AbstractEntryDecision, AbstractEntrySwitches
@@ -21,6 +21,12 @@ export college_enrollment, type_mass, colleges_full, capacities
 export AbstractRankingSwitches, AbstractRanking, EndowPctRankingSwitches, EndowPctRanking
 export rank_students, make_student_ranking, validate_ranking, validate_ranking_switches, retrieve_draws, n_draws, endow_names
 
+# Results
+export AbstractEntryResults, EntryResults
+export frac_local, frac_local_by_type, frac_local_by_college, n_locations, n_colleges, n_types, capacities, enrollments, enrollment, entry_probs, expected_values, type_entry_probs, validate_er
+
+include("helpers.jl")
+
 include("ranking_types.jl")
 include("admissions_types.jl")
 include("types.jl")
@@ -37,6 +43,8 @@ include("admissions_rules.jl")
 
 # Student rankings
 include("student_rankings.jl")
+
+include("entry_results.jl")
 
 
 end # module

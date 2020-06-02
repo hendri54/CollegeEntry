@@ -14,18 +14,34 @@ function entry_decisions_test(entryS :: AbstractEntryDecision{F1},
     hsGpaPctV = collect(range(0.1, 0.9, length = J));
     rank_jV = vcat(2 : 2 : J, 1 : 2 : J);
 
-    entryProb_jcM, v_jV = entry_decisions(entryS, admissionS,
+    er = entry_decisions(entryS, admissionS,
         vWork_jV, vCollege_jcM, hsGpaPctV, rank_jV);
+    @test validate_er(er)
+    v_jV = expected_values(er);
+    entryProb_jcM = entry_probs(er);
+    # @test size(entryProb_jcM) == (J, nc)
+    # @test size(v_jV) == (J, )
+    # @test all(entryProb_jcM .>= 0.0)
+    # @test all(entryProb_jcM .< 1.0)
+    # @test all(sum(entryProb_jcM, dims = 2) .< 1.0)
 
-    @test size(entryProb_jcM) == (J, nc)
-    @test size(v_jV) == (J, )
-    @test all(entryProb_jcM .>= 0.0)
-    @test all(entryProb_jcM .< 1.0)
-    @test all(sum(entryProb_jcM, dims = 2) .< 1.0)
+    # Entry results methods
+    @test n_colleges(er) == nc
+    @test capacities(er) == capacities(entryS)
+    @test type_entry_probs(er) == sum(entryProb_jcM, dims = 2)
+    @test colleges_full(er) == colleges_full(entryS, entryProb_jcM)
+    if n_locations(er) == 1
+        @test frac_local(er) == 1.0
+        @test all(frac_local_by_type(er) .== 1.0)
+        @test all(frac_local_by_college(er) .== 1.0)
+    else
+        # not mplemented ++++++++
+    end
 
     # Check implied properties
     totalMass = sum(type_mass(entryS, 1 : J));
-    enrollV = college_enrollment(entryS, entryProb_jcM);
+    enrollV = college_enrollment(entryS, entry_probs(er));
+    @test isapprox(enrollV, enrollments(er))
     @test size(enrollV) == (nc,)
     @test all(enrollV .>= 0.0)
     @test sum(enrollV) < totalMass

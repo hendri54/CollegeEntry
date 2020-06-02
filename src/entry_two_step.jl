@@ -42,6 +42,8 @@ function entry_probs(e :: EntryTwoStep{F1}, vWork_jV :: Vector{F1},
 
     prob_jxM = zeros(F1, size(vCollege_jcM));
     prob_jxM[:, admitV] .= probM;
+
+    # er = EntryResults(e.switches, prob_jxM, eVal_jV, enrollV)
     return prob_jxM, eVal_jV
 end
 

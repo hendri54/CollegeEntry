@@ -128,12 +128,24 @@ mutable struct EntrySequential{F1} <: AbstractEntryDecision{F1}
 end
 
 
-# mutable struct AssignmentResults{F1 <: AbstractFloat}
-#     # Probability that student j chooses college c
-#     probEnter_jcM :: Matrix{F1}
-#     # Mass of enrollment in each college
-#     enrollV :: Vector{F1}
-# end
+## ----------------  Results object
+
+abstract type AbstractEntryResults{F1 <: AbstractFloat} end
+
+"""
+	$(SIGNATURES)
+
+This applies to entry with one location.
+"""
+struct EntryResults{F1} <: AbstractEntryResults{F1}
+    switches :: AbstractEntrySwitches{F1}
+    # Probability that student j chooses college c
+    probEnter_jcM :: Matrix{F1}
+    # Expected values of types
+    eVal_jV :: Vector{F1}
+    # Mass of enrollment in each college
+    enrollV :: Vector{F1}
+end
 
 
 # ----------------------
