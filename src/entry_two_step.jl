@@ -1,10 +1,7 @@
 # Two step entry decision
 
-function make_test_entry_two_step()
-    objId = ObjectId(:entryTwoStep);
-    switches = EntryTwoStepSwitches{Float64}();
-    return init_entry_decision(objId, switches)
-end
+make_test_entry_two_step(J, nc) = 
+    EntryTwoStepSwitches{Float64}(nTypes = J, nColleges = nc);
 
 function init_entry_decision(objId :: ObjectId,
     switches :: EntryTwoStepSwitches{F1}) where F1
@@ -36,14 +33,15 @@ OUT:
 function entry_probs(e :: EntryTwoStep{F1}, vWork_jV :: Vector{F1},
     vCollege_jcM :: Matrix{F1}, admitV) where F1 <: AbstractFloat
 
-    @assert !isempty(admitV)  "Two step entry cannot have empty admission set"
-    d = ExtremeValueDecision(entry_pref_scale(e), true, false);
-    probM, eVal_jV = EconLH.extreme_value_decision(d, vCollege_jcM[:, admitV]);
-
     prob_jxM = zeros(F1, size(vCollege_jcM));
-    prob_jxM[:, admitV] .= probM;
 
-    # er = EntryResults(e.switches, prob_jxM, eVal_jV, enrollV)
+    if isempty(admitV)
+        eVal_jV = fill(F1(-1e8), size(vWork_jV));
+    else
+        d = ExtremeValueDecision(entry_pref_scale(e), true, false);
+        probM, eVal_jV = EconLH.extreme_value_decision(d, vCollege_jcM[:, admitV]);
+        prob_jxM[:, admitV] .= probM;
+    end
     return prob_jxM, eVal_jV
 end
 
@@ -62,5 +60,14 @@ function entry_probs(e :: EntryTwoStep{F1},
     return prob_cV, eVal[1]
 end
 
+
+function entry_decisions(
+    entryS :: EntryTwoStep{F1}, 
+    admissionS :: AbstractAdmissionsRule{I1, F1}, 
+    vWork_jV :: AbstractVector{F1}, vCollege_jcM :: AbstractMatrix{F1}, 
+    endowPctV :: AbstractVector{F1}, rank_jV)  where {I1, F1}
+
+    error("Not implemented for two step entry yet")
+end
 
 # -----------------

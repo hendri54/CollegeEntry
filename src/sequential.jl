@@ -4,14 +4,15 @@
 # - `nc`: number of colleges
 # - `totalCapacity` of all colleges; in multiples of  total `typeMass`
 function make_test_entry_sequential(J, nc, totalCapacity)
-    objId = ObjectId(:entryOneStep);
+    # objId = ObjectId(:entryOneStep);
     typeMass_jV = ones(J);
     typeMass = sum(typeMass_jV);
     capacityV = collect(range(1.0, 1.5, length = nc));
     capacityV = capacityV ./ sum(capacityV) .* totalCapacity .* typeMass;
-    switches = EntrySequentialSwitches{Float64}(
+    switches = EntrySequentialSwitches{Float64}(nTypes = J, nColleges = nc,
         typeMass_jV = typeMass_jV, capacityV = capacityV);
-    return init_entry_decision(objId, switches)
+    return switches
+    # return init_entry_decision(objId, switches)
 end
 
 function init_entry_decision(objId :: ObjectId, 
@@ -21,13 +22,6 @@ function init_entry_decision(objId :: ObjectId,
     pvec = ParamVector(objId, [pEntryPref]);
     return EntrySequential(objId, pvec, ModelParams.value(pEntryPref), switches)
 end
-
-
-## ----------  Access routines
-
-capacities(a :: EntrySequentialSwitches{F1}) where F1 = a.capacityV;
-type_mass(a :: EntrySequentialSwitches{F1}, j) where F1 = a.typeMass_jV[j];
-
 
 
 ## ------------  Entry decisions
@@ -54,7 +48,7 @@ function entry_sequential(entryS :: EntrySequential{F1},
     nc = n_colleges(admissionS);
     nTypes = length(vWork_jV);
     enrollV = zeros(F1, nc);
-    fullV = falses(nc);
+    fullV = fill(false, nc);
 
     entryProb_jcM = zeros(F1, nTypes, nc);
     eVal_jV = zeros(F1, nTypes);
@@ -77,19 +71,6 @@ function entry_sequential(entryS :: EntrySequential{F1},
 end
 
 
-# The actual entry decision is the same as for the OneStep case. But has to be computed one student at a time.
-# This function does not handle the sequential nature of admissions. It is mainly here for testing.
-function entry_probs(e :: EntrySequential{F1}, 
-    vWork_jV :: Vector{F1}, vCollege_jcM :: Matrix{F1}, admitV) where F1 <: AbstractFloat
-
-    return one_step_entry_probs(entry_pref_scale(e), vWork_jV, vCollege_jcM, admitV);
-end
-
-function entry_probs(e :: EntrySequential{F1}, 
-    vWork :: F1, vCollege_cV :: Vector{F1}, admitV) where F1
-
-    return one_step_entry_probs(entry_pref_scale(e), vWork, vCollege_cV, admitV)
-end
 
 
 # --------------

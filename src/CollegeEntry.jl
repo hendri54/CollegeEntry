@@ -15,7 +15,7 @@ export n_colleges, n_college_sets, percentile_var, college_set, open_admission, 
 
 # Complete entry decisions
 export entry_decisions
-export college_enrollment, type_mass, colleges_full, capacities
+export college_enrollment, type_mass, colleges_full, capacities, limited_capacity
 
 # Student rankings
 export AbstractRankingSwitches, AbstractRanking, EndowPctRankingSwitches, EndowPctRanking
@@ -23,7 +23,7 @@ export rank_students, make_student_ranking, validate_ranking, validate_ranking_s
 
 # Results
 export AbstractEntryResults, EntryResults
-export frac_local, frac_local_by_type, frac_local_by_college, n_locations, n_colleges, n_types, capacities, enrollments, enrollment, entry_probs, expected_values, type_entry_probs, validate_er
+export frac_local, frac_local_by_type, frac_local_by_college, n_locations, n_colleges, n_types, type_mass, type_masses, capacities, enrollments, enrollment, entry_probs, expected_values, type_entry_probs, validate_er
 
 include("helpers.jl")
 
@@ -31,18 +31,20 @@ include("ranking_types.jl")
 include("admissions_types.jl")
 include("types.jl")
 
-# Entry decisions
-include("generic.jl")
-include("entry_one_step.jl")
-include("entry_two_step.jl")
-# Sequential assignment
-include("sequential.jl")
-
 # Admissions rules
 include("admissions_rules.jl")
 
 # Student rankings
 include("student_rankings.jl")
+
+# Entry decisions
+include("access_routines.jl")
+include("generic.jl")
+include("entry_one_step.jl")
+include("entry_two_step.jl")
+# Sequential assignment
+include("sequential.jl")
+include("sequential_multi_locations.jl")
 
 include("entry_results.jl")
 

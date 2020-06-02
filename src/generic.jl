@@ -1,47 +1,5 @@
 # Generic functions that apply to all (or most) objects
 
-## --------------   Access methods
-
-Base.show(io :: IO, e :: AbstractEntrySwitches) =
-    print(io, typeof(e));
-Base.show(io :: IO, e :: AbstractEntryDecision) =
-    print(io, typeof(e), ":  preference scale ",  
-        round(entry_pref_scale(e), digits = 2));
-
-min_entry_prob(e :: AbstractEntryDecision{F1}) where F1 = e.switches.minEntryProb;
-max_entry_prob(e :: AbstractEntryDecision{F1}) where F1 = e.switches.maxEntryProb;
-
-fix_entry_probs!(e :: AbstractEntryDecision) = fix_entry_probs!(e.switches);
-fix_entry_probs!(switches :: AbstractEntrySwitches) = switches.fixEntryProbs = true;
-
-entry_probs_fixed(e :: AbstractEntryDecision) = e.switches.fixEntryProbs;
-entry_pref_scale(e :: AbstractEntryDecision) = e.entryPrefScale;
-
-n_locations(switches :: AbstractEntrySwitches) = 1;
-n_locations(e :: AbstractEntryDecision) = n_locations(e.switches);
-
-"""
-	$(SIGNATURES)
-
-Mass of each type. Only plays a role when colleges have capacities. Set to 1 otherwise.
-"""
-type_mass(e :: AbstractEntrySwitches{F1}, j) where F1 = ones(F1, size(j)...);
-
-type_mass(a :: AbstractEntryDecision{F1}, j) where F1 = type_mass(a.switches, j);
-
-
-"""
-	$(SIGNATURES)
-
-College capacities. Set to an arbitrary large number for entry mechanisms where capacities do not matter.
-"""
-capacities(e :: AbstractEntrySwitches{F1}) where F1 = F1(1e8);
-capacities(a :: AbstractEntryDecision{F1}) where F1 = capacities(a.switches);
-
-capacity(e :: AbstractEntrySwitches{F1}, iCollege :: Integer) where F1 = 
-    F1(1e8);
-capacity(e :: AbstractEntryDecision{F1}, iCollege :: Integer) where F1 = 
-    capacity(e.switches, iCollege);
 
 """
 	$(SIGNATURES)
@@ -91,8 +49,22 @@ end
 
 Entry probability for a student who is admitted to colleges in `admitV`.
 Returns: Entry prob by [type, college], expected value at decision stage by type.
+This function does not handle the sequential nature of admissions. It is mainly here for unified interface.
+It defaults to the one step entry protocol. If that does not apply for a protocol, need to define a new method (e.g. two step entry).
 """
-function entry_probs end
+function entry_probs(e :: AbstractEntryDecision{F1}, 
+    vWork_jV :: Vector{F1}, vCollege_jcM :: Matrix{F1}, admitV) where F1 <: AbstractFloat
+
+    return one_step_entry_probs(entry_pref_scale(e), vWork_jV, vCollege_jcM, admitV);
+end
+
+# The same for one student
+function entry_probs(e :: AbstractEntryDecision{F1}, 
+    vWork :: F1, vCollege_cV :: Vector{F1}, admitV) where F1
+
+    return one_step_entry_probs(entry_pref_scale(e), vWork, vCollege_cV, admitV)
+end
+
 
 
 # Generic entry decision. One step. Given pref shock scale.
@@ -152,7 +124,10 @@ function entry_decisions(
     if isa(entryS, EntrySequential)
         return entry_sequential(entryS,  admissionS, 
             vWork_jV, vCollege_jcM, endowPctV,  rank_jV);
+    elseif isa(entryS, EntryTwoStep)
+        error("Not implemented for two step entry")
     end
+    @assert n_locations(entryS) == 1
 
     # Solve separately for each set of colleges the student could get into
     nSets = n_colleges(admissionS);
@@ -185,31 +160,57 @@ end
 	$(SIGNATURES)
 
 Entry probs for one student across all admissions sets. Handles the case where some colleges are full.
+Always for multiple locations (matrix inputs). But one location is allowed.
 """
 function entry_decisions_one_student(entryS :: AbstractEntryDecision{F1}, 
     admissionS :: AbstractAdmissionsRule{I1, F1}, 
     vWork :: F1, vCollege_cV :: AbstractVector{F1}, 
-    endowPct :: F1, fullV)  where {I1, F1}
+    endowPct :: F1, full_clM :: AbstractMatrix{Bool}, l :: Integer)  where {I1, F1}
 
-    nc = n_colleges(admissionS);
-    entryProb_cV = zeros(F1, nc);
+    nl = n_locations(entryS);
+    nc = n_colleges(entryS);
+    @check size(full_clM) == (nc, nl)
+
+    # Value of college is the same for all locations, except local
+    vCollege_clM = repeat(vCollege_cV, outer = (1, nl));
+    vCollege_clM[:, l] .+= value_local(entryS);
+
+    entryProb_clM = zeros(F1, nc, nl);
     eVal = zero(F1);
+    # Admission rule gives admission to one college type in all locations
     for (iSet, admitV) in enumerate(admissionS)
         # Prob that each person draws this college set
         probSet = prob_coll_set(admissionS, iSet, endowPct);
         # Can only attend colleges that are not full
-        availV = falses(nc);
-        availV[admitV] .= true;
-        availV[fullV] .= false;
+        # Do not use falses here. It creates 
+        avail_clM = fill(false, nc, nl);
+        avail_clM[admitV, :] .= true;
+        avail_clM[full_clM] .= false;
+        @check size(avail_clM) == size(vCollege_clM)
 
         # Entry probs for this set
-        prob_cV, eValSet = 
-            entry_probs(entryS, vWork, vCollege_cV, availV);
-        entryProb_cV .+= probSet .* prob_cV;
+        prob_clV, eValSet = 
+            entry_probs(entryS, vWork, vec(vCollege_clM), vec(avail_clM));
+        prob_clM = reshape(prob_clV, nc, nl);
+        entryProb_clM .+= probSet .* prob_clM;
         eVal += probSet * eValSet;
     end
 
-    return entryProb_cV, eVal
+    return entryProb_clM, eVal
+end
+
+
+# The same with one location. Simply calls the multi-location code with one location dimension.
+function entry_decisions_one_student(entryS :: AbstractEntryDecision{F1}, 
+    admissionS :: AbstractAdmissionsRule{I1, F1}, 
+    vWork :: F1, vCollege_cV :: AbstractVector{F1}, 
+    endowPct :: F1, full_cV :: AbstractVector{Bool})  where {I1, F1}
+
+    entryProb_clM, eVal = entry_decisions_one_student(entryS, admissionS, vWork, 
+        vCollege_cV, endowPct,
+        repeat(full_cV, outer = (1,1)), 1);
+
+    return vec(entryProb_clM), eVal
 end
 
 
@@ -233,14 +234,21 @@ end
 
 function college_enrollment(e :: AbstractEntryDecision{F1}, 
     entryProb_jcM :: Matrix{F1}) where F1 <: AbstractFloat
+    return college_enrollment(e.switches, entryProb_jcM);
+end
 
+function college_enrollment(e :: AbstractEntrySwitches{F1}, 
+    entryProb_jcM :: Matrix{F1}) where F1 <: AbstractFloat
+
+    @assert n_locations(e) == 1
     J = size(entryProb_jcM, 1);
-    return college_enrollment(entryProb_jcM, type_mass(e, 1 : J));
+    return college_enrollment(entryProb_jcM, type_masses(e));
 end
 
 function college_enrollment(e :: AbstractEntryDecision{F1}, 
     entryProb_cV :: Vector{F1},  j :: Integer) where F1   
     
+    @assert n_locations(e) == 1
     return entryProb_cV .* type_mass(e, j);
 end
 
@@ -253,6 +261,7 @@ Return `Bool` vector that indicates which colleges are full. Only matters for en
 function colleges_full(e :: AbstractEntryDecision{F1}, 
     entryProb_jcM :: Matrix{F1}) where F1 <: AbstractFloat
   
+    @assert n_locations(e) == 1  "Not valid for multiple locations"
     return college_enrollment(e, entryProb_jcM) .>= capacities(e)
 end
 

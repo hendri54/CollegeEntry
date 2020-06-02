@@ -107,7 +107,6 @@ n_types
 capacities
 enrollments
 enrollment
-entry_probs
 type_entry_probs
 expected_values
 frac_local
