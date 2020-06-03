@@ -22,11 +22,11 @@ function access_test(switches)
             @test !CollegeEntry.limited_capacity(e)
         end
 
-        typeMass_jlM = type_masses(e);
+        typeMass_jlM = type_mass_jl(e);
         @test size(typeMass_jlM) == (J, nl)
         @test all(typeMass_jlM .> 0.0)
         for j = 1 : J
-            @test isapprox(typeMass_jlM[j,:], type_mass(e, j))
+            @test isapprox(typeMass_jlM[j,:], type_mass_jl(e, j))
         end
 
         capacity_clM = capacities(e);

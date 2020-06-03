@@ -38,22 +38,34 @@ n_colleges(switches :: AbstractEntrySwitches{F1}) where F1 = switches.nColleges;
 
 Mass of each type. Only plays a role when colleges have capacities. Set to 1 otherwise. By location, if available.
 """
-type_mass(a :: AbstractEntryDecision{F1}, j :: Integer) where F1 = 
-    type_mass(a.switches, j);
-type_mass(switches :: AbstractEntrySwitches{F1}, j :: Integer) where F1 = 
+type_mass_jl(a :: AbstractEntryDecision{F1}, j :: Integer) where F1 = 
+    type_mass_jl(a.switches, j);
+type_mass_jl(switches :: AbstractEntrySwitches{F1}, j :: Integer) where F1 = 
     switches.typeMass_jlM[j, :];
 
-type_mass(a :: AbstractEntryDecision{F1}, j :: Integer, l :: Integer) where F1 = 
-    type_mass(a.switches, j, l);
-type_mass(switches :: AbstractEntrySwitches{F1}, j, l) where F1 = 
+type_mass_jl(a :: AbstractEntryDecision{F1}, j :: Integer, l :: Integer) where F1 = 
+    type_mass_jl(a.switches, j, l);
+type_mass_jl(switches :: AbstractEntrySwitches{F1}, j, l) where F1 = 
     switches.typeMass_jlM[j, l];
 
 # By location, if any
-type_masses(a :: AbstractEntryDecision{F1}) where F1 = type_masses(a.switches);
-type_masses(e :: AbstractEntryResults{F1}) where F1 = type_masses(e.switches);
-type_masses(switches :: AbstractEntrySwitches{F1}) where F1 = 
+type_mass_jl(a :: AbstractEntryDecision{F1}) where F1 = type_mass_jl(a.switches);
+type_mass_jl(e :: AbstractEntryResults{F1}) where F1 = type_mass_jl(e.switches);
+type_mass_jl(switches :: AbstractEntrySwitches{F1}) where F1 = 
     switches.typeMass_jlM;
 
+type_mass_j(a :: AbstractEntryDecision{F1}) where F1 = type_mass_j(a.switches);
+type_mass_j(e :: AbstractEntryResults{F1}) where F1 = type_mass_j(e.switches);
+type_mass_j(switches :: AbstractEntrySwitches{F1}) where F1 = 
+    vec(sum(switches.typeMass_jlM, dims = 2));
+    
+type_mass_j(a :: AbstractEntryDecision{F1}, j :: Integer) where F1 = 
+    type_mass_j(a.switches, j);
+type_mass_j(e :: AbstractEntryResults{F1}, j :: Integer) where F1 = 
+    type_mass_j(e.switches, j);
+type_mass_j(switches :: AbstractEntrySwitches{F1}, j :: Integer) where F1 = 
+    sum(switches.typeMass_jlM[j,:]);
+    
 
 """
 	$(SIGNATURES)

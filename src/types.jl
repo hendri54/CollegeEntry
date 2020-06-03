@@ -76,18 +76,21 @@ abstract type AbstractEntryResults{F1 <: AbstractFloat} end
 """
 	$(SIGNATURES)
 
-Entry results for multiple locations.
+Entry results for multiple locations. Records:
+- `fracEnter_jlcM`: Fraction of students in (j,l) who attend college `c`
+- `fracLocal_jlcM`: The same, but for the local college `c` (if any).
+- `enroll_clM`: total enrollment at college (c, l).
+- `enrollLocal_clM`: local enrollment at college (c, l).
 """
 struct EntryResults{F1} <: AbstractEntryResults{F1}
     switches :: AbstractEntrySwitches{F1}
-    # Probability that student j chooses local college c
-    probLocal_jcM :: Matrix{F1}
-    # Probability that student j chooses non-local college c
-    probNonLocal_jcM :: Matrix{F1}
+    fracEnter_jlcM :: Array{F1, 3}
+    fracLocal_jlcM :: Array{F1, 3}
     # Expected values of types
     eVal_jlM :: Matrix{F1}
     # Mass of enrollment in each college
     enroll_clM :: Matrix{F1}
+    enrollLocal_clM :: Matrix{F1}
 end
 
 

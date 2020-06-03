@@ -98,17 +98,12 @@ function entry_decisions(entryS :: EntryDecision{F1},
     nl = n_locations(entryS);
     er = EntryResults(entryS.switches);
 
-    # enroll_clM = zeros(F1, nc, nl);
-    # # Prob that student (j, l) attends college (c, l)
-    # probLocal_jcM = zeros(F1, nTypes, nc);
-    # probNonLocal_jcM = zeros(F1, nTypes, nc);
-    # eVal_jlM = zeros(F1, nTypes, nl);
-
     # Loop over students in order of ranking
     for j in rank_jV
-        # Loop over locations in ascending order
+        # Loop over student locations in ascending order
+        # We are now processing student (j, l)
         for l = 1 : nl
-            full_clM = (enrollments(er) .>= capacities(entryS));
+            full_clM = (enrollment_cl(er) .>= capacities(entryS));
 
             # This is the standard one-step entry decision, but with colleges from all locations stacked.
             entryProb_clM, er.eVal_jlM[j, l] = entry_decisions_one_student(
@@ -116,10 +111,16 @@ function entry_decisions(entryS :: EntryDecision{F1},
                 endowPctV[j], full_clM, l);
 
             # Record enrollment
-            er.enroll_clM .+= enrollment_cl(entryS, entryProb_clM, j, l);
-            er.probLocal_jcM[j,:] = entryProb_clM[:,l];
-            er.probNonLocal_jcM[j,:] = 
-                sum(entryProb_clM, dims = 2) .- er.probLocal_jcM[j,:];
+            typeMass = type_mass_jl(entryS, j, l);
+            er.enroll_clM .+= typeMass .* entryProb_clM;
+            er.enrollLocal_clM[:,l] .+= er.enroll_clM[:,l];
+
+            # Record entry probs
+            entryProb_cV = vec(sum(entryProb_clM, dims = 2));
+            # Fraction entering any `c` college; local or not.
+            er.fracEnter_jlcM[j,l,:] .= entryProb_cV;
+            # Fraction entering a local `c` college.
+            er.fracLocal_jlcM[j,l,:] = entryProb_clM[:,l];
         end
     end
 
@@ -128,11 +129,11 @@ function entry_decisions(entryS :: EntryDecision{F1},
 end
 
 
-# College enrollments of student `j` in `l`
-function enrollment_cl(entryS :: EntryDecision{F1}, 
-    entryProb_clM :: Matrix{F1}, j :: Integer, l :: Integer) where F1
+# # College enrollments of student `j` in `l`
+# function enrollment_cl(entryS :: EntryDecision{F1}, 
+#     entryProb_clM :: Matrix{F1}, j :: Integer, l :: Integer) where F1
 
-    return entryProb_clM .* type_mass(entryS, j, l)
-end
+#     return entryProb_clM .* type_mass_jl(entryS, j, l)
+# end
 
 # --------------

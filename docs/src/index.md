@@ -10,6 +10,8 @@ Once the user has set up an `AbstractEntryDecision` and an `AbstractAdmissionsRu
 
 For sequential entry mechanisms, students need to be ranked to determine the order in which they get to choose colleges. This is done using `AbstractRanking`s.
 
+Notational note: Several functions have suffixes that indicate the dimensions of the objects to be returned. For example, `type_mass_jl` returns the mass of types by (type, location), whereas `type_mass_j` returns the total mass of each type across locations.
+
 ## Admission rules
 
 An `AbstractAdmissionsRule` determines the probability that a student may attend a particular college as a function of the students characteristics. Special cases are:

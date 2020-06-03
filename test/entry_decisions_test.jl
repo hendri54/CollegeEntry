@@ -21,22 +21,22 @@ function entry_decisions_test(switches :: AbstractEntrySwitches{F1},
     er = entry_decisions(entryS, admissionS,
         vWork_jV, vCollege_jcM, hsGpaPctV, rank_jV);
     @test validate_er(er)
-    entryProb_jcM = entry_probs(er);
-    eValM = expected_values(er);
+    entryProb_jcM = entry_probs_jc(er);
+    eValM = expected_values_jl(er);
 
     # Entry results methods
     if n_locations(er) == 1
         @test frac_local(er) == 1.0
-        @test all(frac_local_by_type(er) .== 1.0)
-        @test all(frac_local_by_college(er) .== 1.0)
+        @test all(frac_local_j(er) .== 1.0)
+        @test all(frac_local_c(er) .== 1.0)
     else
         @test 0.0 < frac_local(er) < 1.0
-        @test all(0.0 .< frac_local_by_type(er) .< 1.0)
-        @test all(0.0 .< frac_local_by_college(er) .< 1.0)        
+        @test all(0.0 .< frac_local_j(er) .< 1.0)
+        @test all(0.0 .< frac_local_c(er) .< 1.0)        
     end
 
     # Check implied properties
-    totalMass = sum(type_masses(er));
+    totalMass = sum(type_mass_jl(er));
     
     # Solving one student at a time should give the same answer IF no colleges are full.
     # add: no capacity constraints => same outcome ++++++++
@@ -49,7 +49,7 @@ function entry_decisions_test(switches :: AbstractEntrySwitches{F1},
             # Not having full colleges should increase value
             @test eVal >= eValM[j]
             # And it should increase entry
-            @test sum(entryProb_cV) >= sum(entryProb_jcM[j,:])
+            @test sum(entryProb_cV) > sum(entryProb_jcM[j,:] .- 1e-5)
             if !any(colleges_full(er))
                 @test isapprox(entryProb_cV, entryProb_jcM[j,:])
                 @test isapprox(eVal, eValM[j])
