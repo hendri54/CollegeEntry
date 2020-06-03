@@ -107,53 +107,53 @@ function one_step_entry_probs(entryPrefScale :: F1,
 end
 
 
-"""
-	$(SIGNATURES)
+# """
+# 	$(SIGNATURES)
 
-Compute entry probabilities and expected values at entry from admission rule and entry decision objects.
-The `rank_jV` argument does nothing, but is here for consistency with the sequential entry case.
-Beware of ambiguous dispatch. The signature of methods for specific entry decisions must match exactly.
-"""
-function entry_decisions(
-    entryS :: AbstractEntryDecision{F1}, 
-    admissionS :: AbstractAdmissionsRule{I1, F1}, 
-    vWork_jV :: AbstractVector{F1}, vCollege_jcM :: AbstractMatrix{F1}, 
-    endowPctV :: AbstractVector{F1}, rank_jV)  where {I1, F1}
+# Compute entry probabilities and expected values at entry from admission rule and entry decision objects.
+# The `rank_jV` argument does nothing, but is here for consistency with the sequential entry case.
+# Beware of ambiguous dispatch. The signature of methods for specific entry decisions must match exactly.
+# """
+# function entry_decisions(
+#     entryS :: AbstractEntryDecision{F1}, 
+#     admissionS :: AbstractAdmissionsRule{I1, F1}, 
+#     vWork_jV :: AbstractVector{F1}, vCollege_jcM :: AbstractMatrix{F1}, 
+#     endowPctV :: AbstractVector{F1}, rank_jV)  where {I1, F1}
 
-    # Avoid potential incorrect dispatch
-    if isa(entryS, EntrySequential)
-        return entry_sequential(entryS,  admissionS, 
-            vWork_jV, vCollege_jcM, endowPctV,  rank_jV);
-    elseif isa(entryS, EntryTwoStep)
-        error("Not implemented for two step entry")
-    end
-    @assert n_locations(entryS) == 1
+#     # Avoid potential incorrect dispatch
+#     if isa(entryS, EntrySequential)
+#         return entry_sequential(entryS,  admissionS, 
+#             vWork_jV, vCollege_jcM, endowPctV,  rank_jV);
+#     elseif isa(entryS, EntryTwoStep)
+#         error("Not implemented for two step entry")
+#     end
+#     @assert n_locations(entryS) == 1
 
-    # Solve separately for each set of colleges the student could get into
-    nSets = n_colleges(admissionS);
-    J, nc = size(vCollege_jcM);
+#     # Solve separately for each set of colleges the student could get into
+#     nSets = n_colleges(admissionS);
+#     J, nc = size(vCollege_jcM);
 
-    # For one step entry: these are conditional on entry.
-    # For two step entry: they are not conditional on entry.
-    entryProb_jcM = zeros(F1, J, nc);
-    eVal_jV = zeros(F1, J);
-    for (iSet, admitV) in enumerate(admissionS)
-        # Prob that each person draws this college set
-        probSet_jV = prob_coll_set(admissionS, iSet, endowPctV);
-        prob_jxM, eValSet_jV = 
-            entry_probs(entryS, vWork_jV, vCollege_jcM, admitV);
-        for j = 1 : J
-            entryProb_jcM[j,:] .+= probSet_jV[j] .* prob_jxM[j, :];
-            eVal_jV[j] += probSet_jV[j] * eValSet_jV[j];
-        end
-    end
+#     # For one step entry: these are conditional on entry.
+#     # For two step entry: they are not conditional on entry.
+#     entryProb_jcM = zeros(F1, J, nc);
+#     eVal_jV = zeros(F1, J);
+#     for (iSet, admitV) in enumerate(admissionS)
+#         # Prob that each person draws this college set
+#         probSet_jV = prob_coll_set(admissionS, iSet, endowPctV);
+#         prob_jxM, eValSet_jV = 
+#             entry_probs(entryS, vWork_jV, vCollege_jcM, admitV);
+#         for j = 1 : J
+#             entryProb_jcM[j,:] .+= probSet_jV[j] .* prob_jxM[j, :];
+#             eVal_jV[j] += probSet_jV[j] * eValSet_jV[j];
+#         end
+#     end
 
-    enrollV = college_enrollment(entryS, entryProb_jcM);
-    er = EntryResults(entryS.switches, entryProb_jcM, eVal_jV, enrollV);
-    @assert validate_er(er);
-    return er
-    # return entryProb_jcM, eVal_jV
-end
+#     enrollV = college_enrollment(entryS, entryProb_jcM);
+#     er = EntryResults(entryS.switches, entryProb_jcM, eVal_jV, enrollV);
+#     @assert validate_er(er);
+#     return er
+#     # return entryProb_jcM, eVal_jV
+# end
 
 
 """
@@ -189,6 +189,7 @@ function entry_decisions_one_student(entryS :: AbstractEntryDecision{F1},
         @check size(avail_clM) == size(vCollege_clM)
 
         # Entry probs for this set
+            # Change: entry_probs should always accept inputs by cl ++++++++
         prob_clV, eValSet = 
             entry_probs(entryS, vWork, vec(vCollege_clM), vec(avail_clM));
         prob_clM = reshape(prob_clV, nc, nl);
@@ -216,53 +217,53 @@ end
 
 ## ------------  Implied outcomes
 
-"""
-	$(SIGNATURES)
+# """
+# 	$(SIGNATURES)
 
-Compute college enrollment from type mass and entry probabilities.
-"""
-function college_enrollment(entryProb_jcM :: Matrix{F1}, 
-    typeMass_jV) where F1 <: AbstractFloat
+# Compute college enrollment from type mass and entry probabilities.
+# """
+# function college_enrollment(entryProb_jcM :: Matrix{F1}, 
+#     typeMass_jV) where F1 <: AbstractFloat
 
-    J, nc = size(entryProb_jcM);
-    enrollV = zeros(F1, nc);
-    for ic = 1 : nc
-        enrollV[ic] = sum(entryProb_jcM[:, ic] .* typeMass_jV);
-    end
-    return enrollV
-end
+#     J, nc = size(entryProb_jcM);
+#     enrollV = zeros(F1, nc);
+#     for ic = 1 : nc
+#         enrollV[ic] = sum(entryProb_jcM[:, ic] .* typeMass_jV);
+#     end
+#     return enrollV
+# end
 
-function college_enrollment(e :: AbstractEntryDecision{F1}, 
-    entryProb_jcM :: Matrix{F1}) where F1 <: AbstractFloat
-    return college_enrollment(e.switches, entryProb_jcM);
-end
+# function college_enrollment(e :: AbstractEntryDecision{F1}, 
+#     entryProb_jcM :: Matrix{F1}) where F1 <: AbstractFloat
+#     return college_enrollment(e.switches, entryProb_jcM);
+# end
 
-function college_enrollment(e :: AbstractEntrySwitches{F1}, 
-    entryProb_jcM :: Matrix{F1}) where F1 <: AbstractFloat
+# function college_enrollment(e :: AbstractEntrySwitches{F1}, 
+#     entryProb_jcM :: Matrix{F1}) where F1 <: AbstractFloat
 
-    @assert n_locations(e) == 1
-    J = size(entryProb_jcM, 1);
-    return college_enrollment(entryProb_jcM, type_masses(e));
-end
+#     @assert n_locations(e) == 1
+#     J = size(entryProb_jcM, 1);
+#     return college_enrollment(entryProb_jcM, type_masses(e));
+# end
 
-function college_enrollment(e :: AbstractEntryDecision{F1}, 
-    entryProb_cV :: Vector{F1},  j :: Integer) where F1   
+# function college_enrollment(e :: AbstractEntryDecision{F1}, 
+#     entryProb_cV :: Vector{F1},  j :: Integer) where F1   
     
-    @assert n_locations(e) == 1
-    return entryProb_cV .* type_mass(e, j);
-end
+#     @assert n_locations(e) == 1
+#     return entryProb_cV .* type_mass(e, j);
+# end
 
 
-"""
-    $(SIGNATURES)
+# """
+#     $(SIGNATURES)
 
-Return `Bool` vector that indicates which colleges are full. Only matters for entry structures with capacity constraints.
-"""
-function colleges_full(e :: AbstractEntryDecision{F1}, 
-    entryProb_jcM :: Matrix{F1}) where F1 <: AbstractFloat
+# Return `Bool` vector that indicates which colleges are full. Only matters for entry structures with capacity constraints.
+# """
+# function colleges_full(e :: AbstractEntryDecision{F1}, 
+#     entryProb_jcM :: Matrix{F1}) where F1 <: AbstractFloat
   
-    @assert n_locations(e) == 1  "Not valid for multiple locations"
-    return college_enrollment(e, entryProb_jcM) .>= capacities(e)
-end
+#     @assert n_locations(e) == 1  "Not valid for multiple locations"
+#     return college_enrollment(e, entryProb_jcM) .>= capacities(e)
+# end
 
 # --------------

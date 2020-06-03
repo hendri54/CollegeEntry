@@ -29,38 +29,36 @@ function entry_results_test(switches)
 
         typeMasses = type_masses(er);
         @test all(typeMasses .> 0.0)
+        @test size(typeMasses) == (J, nl)
+
+        @test size(expected_values(er)) == (J, nl)
+        @test size(colleges_full(er)) == (nc, nl)
+
+        @test size(enrollments(er)) == (nc, nl)
+        enroll_clM = enrollments(er);
+        for ic = 1 : nc
+            @test isapprox(enroll_clM[ic,:], CollegeEntry.enrollment(er, ic))
+        end
 
         if nl == 1
             @test length(capacities(er)) == nc
 
-            @test size(typeMasses) == (J,)
             @test frac_local(er) == one(F1);
             @test frac_local_by_type(er) == ones(F1, J)
             @test frac_local_by_college(er) == ones(F1, nc)
-            @test length(enrollments(er)) == nc
             # This may not hold in test data
             # @test all(0.0 .<= enrollments(er) .< capacities(er) .* 1.2)
-            enroll_cV = enrollments(er);
-            for ic = 1 : nc
-                @test isapprox(enroll_cV[ic], CollegeEntry.enrollment(er, ic))
-            end
-            @test size(expected_values(er)) == (J, )
-            @test size(colleges_full(er)) == (nc, )
+            # enroll_cV = enrollments(er);
+            # for ic = 1 : nc
+            #     @test isapprox(enroll_cV[ic], CollegeEntry.enrollment(er, ic))
+            # end
             
         else
-            @test size(typeMasses) == (J, nl)
             @test 0.0 < frac_local(er) < 1.0
             @test all(0.0 .< frac_local_by_type(er) .< one(F1))
             @test length(frac_local_by_type(er)) == J
             @test all(0.0 .< frac_local_by_college(er) .< one(F1))
             @test length(frac_local_by_college(er)) == nc
-            @test size(enrollments(er)) == (nc, nl)
-            enroll_clM = enrollments(er);
-            for ic = 1 : nc
-                @test isapprox(enroll_clM[ic,:], CollegeEntry.enrollment(er, ic))
-            end
-            @test size(expected_values(er)) == (J, nl)
-            @test size(colleges_full(er)) == (nc, nl)
         end
 	end
 end

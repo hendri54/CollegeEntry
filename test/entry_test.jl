@@ -14,45 +14,29 @@ function access_test(switches)
         @test entry_pref_scale(e) > 0.0
 
         @test isa(CollegeEntry.value_local(e), Float64)
-
         
         capacityV = capacities(e);
-        if capacityV[1] < 1e6
+        if any(capacityV .< 1e6)
             @test CollegeEntry.limited_capacity(e)
         else
             @test !CollegeEntry.limited_capacity(e)
         end
 
+        typeMass_jlM = type_masses(e);
+        @test size(typeMass_jlM) == (J, nl)
+        @test all(typeMass_jlM .> 0.0)
+        for j = 1 : J
+            @test isapprox(typeMass_jlM[j,:], type_mass(e, j))
+        end
+
+        capacity_clM = capacities(e);
+        @test size(capacity_clM) == (nc, nl)
+        for ic = 1 : nc
+            @test isapprox(capacity_clM[ic,:], CollegeEntry.capacity(e, ic))
+        end
 
         if nl == 1
             @test CollegeEntry.value_local(e) == 0.0
-
-            typeMassV = type_masses(e);
-            @test length(typeMassV) == J
-            @test all(typeMassV .> 0.0)
-            for j = 1 : J
-                @test isapprox(typeMassV[j], type_mass(e, j))
-            end
-
-            capacityV = capacities(e);
-            @test length(capacityV) == nc
-            for ic = 1 : nc
-                @test isapprox(capacityV[ic], CollegeEntry.capacity(e, ic))
-            end
-
-        else
-            typeMass_jlM = type_masses(e);
-            @test size(typeMass_jlM) == (J, nl)
-            @test all(typeMass_jlM .> 0.0)
-            for j = 1 : J
-                @test isapprox(typeMass_jlM[j,:], type_mass(e, j))
-            end
-
-            capacity_clM = capacities(e);
-            @test size(capacity_clM) == (nc, nl)
-            for ic = 1 : nc
-                @test isapprox(capacity_clM[ic,:], CollegeEntry.capacity(e, ic))
-            end
         end
     end
 end
@@ -60,9 +44,6 @@ end
 
 # Test `entry_probs` which has no notion of locations
 function entry_test(switches)
-    if n_locations(switches) > 1
-        return
-    end
     @testset "Entry probs" begin
         F1 = Float64;
         e = init_entry_decision(ObjectId(:entry), switches);
@@ -107,9 +88,9 @@ function entry_test(switches)
         prob_jcM, eVal_jV = entry_probs(e, vWork_jV, vCollege_jcM, []);
         @test size(prob_jcM) == (J, nc)
         @test all(prob_jcM .== 0.0)
-        if !isa(e, EntryTwoStep)
+        # if !isa(e, EntryTwoStep)
             @test isapprox(eVal_jV, vWork_jV)
-        end
+        # end
     end
 end
 

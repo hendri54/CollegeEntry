@@ -4,10 +4,11 @@ using ArgCheck, DocStringExtensions
 using CommonLH, EconLH, ModelParams
 
 # Entry decisions
-export AbstractEntryDecision, AbstractEntrySwitches
+export AbstractEntryDecision, AbstractEntrySwitches, 
+    EntryDecision, EntryDecisionSwitches
 export init_entry_decision, entry_probs, fix_entry_probs!, scale_entry_probs!,
     min_entry_prob, max_entry_prob, entry_probs_fixed, entry_pref_scale
-export EntryOneStep, EntryOneStepSwitches, EntryTwoStep, EntryTwoStepSwitches, EntrySequential, EntrySequentialSwitches
+
 
 # Admissions rules
 export AbstractAdmissionsRule, AbstractAdmissionsSwitches, AdmissionsOpenSwitches, AdmissionsOpen, AdmissionsCutoffSwitches, AdmissionsCutoff
@@ -15,7 +16,7 @@ export n_colleges, n_college_sets, percentile_var, college_set, open_admission, 
 
 # Complete entry decisions
 export entry_decisions
-export college_enrollment, type_mass, colleges_full, capacities, limited_capacity
+export type_mass, colleges_full, capacities, limited_capacity
 
 # Student rankings
 export AbstractRankingSwitches, AbstractRanking, EndowPctRankingSwitches, EndowPctRanking
@@ -40,10 +41,10 @@ include("student_rankings.jl")
 # Entry decisions
 include("access_routines.jl")
 include("generic.jl")
-include("entry_one_step.jl")
-include("entry_two_step.jl")
+# include("entry_one_step.jl")
+# include("entry_two_step.jl")
 # Sequential assignment
-include("sequential.jl")
+# include("sequential.jl")
 include("sequential_multi_locations.jl")
 
 include("entry_results.jl")

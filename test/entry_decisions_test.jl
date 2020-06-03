@@ -10,11 +10,6 @@ function entry_decisions_test(switches :: AbstractEntrySwitches{F1},
     entryS = init_entry_decision(objId, switches);
     println(entryS);
 
-    if isa(entryS, EntryTwoStep)
-        println("Not implemented for two step entry yet.")
-        return
-    end
-
     nc = n_colleges(switches);
     J = n_types(switches);
     nl = n_locations(switches)
@@ -31,7 +26,6 @@ function entry_decisions_test(switches :: AbstractEntrySwitches{F1},
 
     # Entry results methods
     if n_locations(er) == 1
-        @test colleges_full(er) == colleges_full(entryS, entry_probs(er, :all))
         @test frac_local(er) == 1.0
         @test all(frac_local_by_type(er) .== 1.0)
         @test all(frac_local_by_college(er) .== 1.0)
@@ -43,14 +37,9 @@ function entry_decisions_test(switches :: AbstractEntrySwitches{F1},
 
     # Check implied properties
     totalMass = sum(type_masses(er));
-    if nl == 1
-        enrollV = college_enrollment(entryS, entry_probs(er));
-        @test isapprox(enrollV, enrollments(er))
-        @test all(enrollV .>= 0.0)
-        @test sum(enrollV) < totalMass
-    end
     
-    # Solving one student at a time should give the same answer. But not for sequential entry, unless no colleges are full.
+    # Solving one student at a time should give the same answer IF no colleges are full.
+    # add: no capacity constraints => same outcome ++++++++
     for j = 1 : J
         if nl == 1
             entryProb_cV, eVal = CollegeEntry.entry_decisions_one_student(
@@ -67,6 +56,7 @@ function entry_decisions_test(switches :: AbstractEntrySwitches{F1},
             end
 
         else
+            # Solver for student in one location
             for l = 1 : nl
                 entryProb_clM, eVal = CollegeEntry.entry_decisions_one_student(
                     entryS, admissionS,  vWork_jV[j], vCollege_jcM[j,:], 
