@@ -1,6 +1,24 @@
 using Test
 using CollegeEntry
 
+# The code uses the fact that reshape undoes vec. This is tested here.
+function reshape_test()
+    @testset "reshape" begin
+        sizeV = (4,3,2);
+        x = zeros(sizeV...);
+        for i1 = 1 : sizeV[1]
+            for i2 = 1 : sizeV[2]
+                for i3 = 1 : sizeV[3]
+                    x[i1,i2,i3] = 0.1 * i1 + 0.2 * i2 - 0.3 * i3;
+                end
+            end
+        end
+        v = vec(x);
+        @test isequal(x, reshape(v, sizeV...))
+    end
+end
+
+
 function entry_decisions_test(switches :: AbstractEntrySwitches{F1},
     admissionS) where F1
 
@@ -39,7 +57,6 @@ function entry_decisions_test(switches :: AbstractEntrySwitches{F1},
     totalMass = sum(type_mass_jl(er));
     
     # Solving one student at a time should give the same answer IF no colleges are full.
-    # add: no capacity constraints => same outcome ++++++++
     for j = 1 : J
         if nl == 1
             entryProb_cV, eVal = CollegeEntry.entry_decisions_one_student(
@@ -77,6 +94,8 @@ end
     for switches in test_entry_switches(J, nc)
         entry_decisions_test(switches, admissionS);
     end
+
+    reshape_test()
 end
 
 # -----------

@@ -7,6 +7,11 @@
 # 	return EntryResults(switches, probEnter_jcM, eVal_jV, enrollV);
 # end
 
+"""
+	$(SIGNATURES)
+
+Object that holds results of sequential entry protocol. If there is only one location, all students are considered "local."
+"""
 function EntryResults(switches :: EntryDecisionSwitches{F1}) where F1
 	J = n_types(switches);
 	nc = n_colleges(switches);
@@ -18,13 +23,21 @@ function EntryResults(switches :: EntryDecisionSwitches{F1}) where F1
 end
 
 
+"""
+	$(SIGNATURES)
+
+Validate `EntryResults`.
+"""
 function validate_er(er :: EntryResults{F1}) where F1
 	isValid = true
 	isValid = isValid  &&  check_prob_array(er.fracEnter_jlcM);
 	isValid = isValid  &&  check_prob_array(er.fracLocal_jlcM);
 	isValid = isValid  &&  all(er.fracLocal_jlcM .< er.fracEnter_jlcM .+ 1e-5);
 	isValid = isValid  &&  check_prob_array(sum(er.fracEnter_jlcM, dims = 3));
-	
+	if any(er.enrollLocal_clM .> er.enroll_clM .+ 1e-5)
+		isValid = false;
+		@warn "$er: Local enrollment > total enrollment"
+	end
 	return isValid
 end
 
@@ -60,7 +73,6 @@ Base.show(io :: IO, er :: AbstractEntryResults{F1}) where F1 =
 
 ## ----------  Helpers
 
-# test this ++++++++
 # Take the mean of a variable by (j,l,c) across locations, weighted by typeMass(j,l).
 function mean_over_locations(e :: EntryResults{F1}, x_jlcM :: Array{F1, 3}) where F1
 	J, nl, nc = size(x_jlcM);
@@ -104,7 +116,11 @@ enrollment_cl(e :: EntryResults{F1}, ic :: Integer, l,
 	univ = :all) where F1 = 
 	enrollment_cl(e, univ)[ic,l];
 
-# Total enrollment by college; across all locations
+"""
+	$(SIGNATURES)
+
+Total enrollment by college; across all locations.
+"""
 enrollment_c(e :: AbstractEntryResults{F1}, univ :: Symbol = :all) where F1 = 
 	vec(sum(enrollment_cl(e, univ), dims = 2));
 
@@ -116,9 +132,6 @@ enrollment_c(e :: AbstractEntryResults{F1}, univ :: Symbol = :all) where F1 =
 
 Fraction of students who attend local colleges.
 """
-# frac_local(e :: AbstractEntryResults{F1}) where F1 = one(F1);
-
-# Not enough info to compute this unless type mass does not differ by location ++++++
 function frac_local(e :: EntryResults{F1}) where F1
 	if n_locations(e) == 1
 		fracLocal = one(F1);
@@ -126,6 +139,7 @@ function frac_local(e :: EntryResults{F1}) where F1
 		fracLocal = sum(frac_local_c(e) .* enrollment_c(e)) /
 			sum(enrollment_c(e));
 	end
+	@check zero(F1) <= fracLocal <= one(F1)
 	return fracLocal
 end
 
@@ -140,6 +154,7 @@ function frac_local_j(e :: EntryResults{F1}) where F1
 	else
 		fracLocalV = entry_probs_j(e, :local) ./ entry_probs_j(e, :all);
 	end
+	@assert check_prob_array(fracLocalV)
 	return fracLocalV
 end
 
@@ -154,6 +169,7 @@ function frac_local_c(e :: EntryResults{F1}) where F1
 	else
 		fracLocalV = enrollment_c(e, :local) ./ enrollment_c(e, :all);
 	end
+	@assert check_prob_array(fracLocalV)
 	return fracLocalV
 end
 

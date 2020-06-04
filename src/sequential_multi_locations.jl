@@ -113,7 +113,7 @@ function entry_decisions(entryS :: EntryDecision{F1},
             # Record enrollment
             typeMass = type_mass_jl(entryS, j, l);
             er.enroll_clM .+= typeMass .* entryProb_clM;
-            er.enrollLocal_clM[:,l] .+= er.enroll_clM[:,l];
+            er.enrollLocal_clM[:,l] .+= typeMass .* entryProb_clM[:,l];
 
             # Record entry probs
             entryProb_cV = vec(sum(entryProb_clM, dims = 2));

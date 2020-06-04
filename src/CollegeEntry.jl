@@ -1,6 +1,7 @@
 module CollegeEntry
 
-using ArgCheck, DocStringExtensions
+# Distributions only needed for simulations.
+using ArgCheck, Distributions, DocStringExtensions, Random
 using CommonLH, EconLH, ModelParams
 
 # Entry decisions
@@ -46,6 +47,7 @@ include("generic.jl")
 # Sequential assignment
 # include("sequential.jl")
 include("sequential_multi_locations.jl")
+include("simulations.jl")
 
 include("entry_results.jl")
 

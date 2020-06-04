@@ -189,14 +189,15 @@ function entry_decisions_one_student(entryS :: AbstractEntryDecision{F1},
         @check size(avail_clM) == size(vCollege_clM)
 
         # Entry probs for this set
-            # Change: entry_probs should always accept inputs by cl ++++++++
         prob_clV, eValSet = 
             entry_probs(entryS, vWork, vec(vCollege_clM), vec(avail_clM));
+        # Tested separately that `reshape` undoes `vec`
         prob_clM = reshape(prob_clV, nc, nl);
         entryProb_clM .+= probSet .* prob_clM;
         eVal += probSet * eValSet;
     end
 
+    @assert check_prob_array(entryProb_clM)
     return entryProb_clM, eVal
 end
 
@@ -211,6 +212,7 @@ function entry_decisions_one_student(entryS :: AbstractEntryDecision{F1},
         vCollege_cV, endowPct,
         repeat(full_cV, outer = (1,1)), 1);
 
+    @assert check_prob_array(entryProb_clM)
     return vec(entryProb_clM), eVal
 end
 

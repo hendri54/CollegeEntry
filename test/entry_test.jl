@@ -1,3 +1,6 @@
+using Random, Test
+using ModelParams, CollegeEntry
+
 function access_test(switches)
     @testset "Access routines" begin
         println("\n--------------------------")
@@ -27,7 +30,9 @@ function access_test(switches)
         @test all(typeMass_jlM .> 0.0)
         for j = 1 : J
             @test isapprox(typeMass_jlM[j,:], type_mass_jl(e, j))
+            @test isapprox(sum(typeMass_jlM[j,:]),  type_mass_j(e, j))
         end
+        @test type_mass_jl(e, J, nl) == typeMass_jlM[J, nl]
 
         capacity_clM = capacities(e);
         @test size(capacity_clM) == (nc, nl)
@@ -94,11 +99,50 @@ function entry_test(switches)
     end
 end
 
+
+function sim_entry_test(switches)
+    @testset "Simulate Entry probs" begin
+        rng = MersenneTwister(123);
+        F1 = Float64;
+        e = init_entry_decision(ObjectId(:entry), switches);
+        println("\n------------")
+        println(e);
+
+        J = n_types(e);
+        nc = n_colleges(e);
+        nl = n_locations(e);
+        vCollege_clM = test_value_cl(nc, nl);
+        vWork = sum(vCollege_clM) / length(vCollege_clM);
+        avail_clM = rand(rng, Bool, nc, nl);
+        # Make sure one college is available
+        avail_clM[1,1] = true;
+
+        prob_clV, eVal = entry_probs(e, vWork, vec(vCollege_clM), vec(avail_clM));
+        prob_clM = reshape(prob_clV, nc, nl);
+        @test !any(prob_clM[.!avail_clM])
+
+        nSim = Int(1e5);
+        prob2_clM, eVal2 = CollegeEntry.sim_entry_probs(e, 
+            vWork, vCollege_clM, avail_clM, 
+            nSim, rng);
+        @test !any(prob2_clM[.!avail_clM])
+
+        @test isapprox(eVal, eVal2, atol = 0.05)
+        @test isapprox(prob_clM, prob2_clM, atol = 0.02)
+
+        println(prob_clM)
+        println(prob2_clM)
+        println(eVal)
+        println(eVal2)
+    end
+end
+
 @testset "All" begin
     J = 8; nc = 3;
     for switches in test_entry_switches(J, nc)
         access_test(switches);
         entry_test(switches);
+        sim_entry_test(switches);
     end
 end
 

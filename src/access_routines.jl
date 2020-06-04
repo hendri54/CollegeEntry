@@ -15,6 +15,11 @@ fix_entry_probs!(switches :: AbstractEntrySwitches) = switches.fixEntryProbs = t
 entry_probs_fixed(e :: AbstractEntryDecision) = e.switches.fixEntryProbs;
 entry_pref_scale(e :: AbstractEntryDecision) = e.entryPrefScale;
 
+"""
+	$(SIGNATURES)
+
+Number of locations.
+"""
 n_locations(e :: AbstractEntryDecision) = n_locations(e.switches);
 n_locations(e :: AbstractEntryResults) = n_locations(e.switches);
 n_locations(switches :: AbstractEntrySwitches) = switches.nLocations;
@@ -25,10 +30,20 @@ value_local(e :: AbstractEntryDecision) = value_local(e.switches);
 value_local(switches :: AbstractEntrySwitches{F1}) where F1 = switches.valueLocal;
 # value_local(a :: EntryDecision{F1}) where F1 = a.valueLocal;
 
+"""
+	$(SIGNATURES)
+
+Number of student types.
+"""
 n_types(e :: AbstractEntryDecision) = n_types(e.switches);
 n_types(er :: AbstractEntryResults{F1}) where F1 = n_types(er.switches);
 n_types(switches :: AbstractEntrySwitches{F1}) where F1 = switches.nTypes;
 
+"""
+	$(SIGNATURES)
+
+Number of colleges.
+"""
 n_colleges(e :: AbstractEntryDecision) = n_colleges(e.switches);
 n_colleges(er :: AbstractEntryResults{F1}) where F1 = n_colleges(er.switches);
 n_colleges(switches :: AbstractEntrySwitches{F1}) where F1 = switches.nColleges;
