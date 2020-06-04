@@ -119,21 +119,16 @@ function sim_entry_test(switches)
 
         prob_clV, eVal = entry_probs(e, vWork, vec(vCollege_clM), vec(avail_clM));
         prob_clM = reshape(prob_clV, nc, nl);
-        @test !any(prob_clM[.!avail_clM])
+        @test !any(prob_clM[.!avail_clM] .> 0.0)
 
         nSim = Int(1e5);
         prob2_clM, eVal2 = CollegeEntry.sim_entry_probs(e, 
             vWork, vCollege_clM, avail_clM, 
             nSim, rng);
-        @test !any(prob2_clM[.!avail_clM])
+        @test !any(prob2_clM[.!avail_clM] .> 0.0)
 
         @test isapprox(eVal, eVal2, atol = 0.05)
         @test isapprox(prob_clM, prob2_clM, atol = 0.02)
-
-        println(prob_clM)
-        println(prob2_clM)
-        println(eVal)
-        println(eVal2)
     end
 end
 

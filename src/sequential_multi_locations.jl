@@ -26,13 +26,12 @@ function make_test_entry_sequ_multiloc(J, nc, nl, totalCapacity)
     switches = EntryDecisionSwitches(
         nTypes = J, nColleges = nc, nLocations = nl, valueLocal = valueLocal,
         typeMass_jlM = typeMass_jlM, capacity_clM = capacity_clM, 
+        entryPrefScale = 1.3,
         calValueLocal = calValueLocal);
     @assert validate_es(switches)
     return switches
 end
 
-
-# function make_entry_
 
 function validate_es(switches :: EntryDecisionSwitches{F1}) where F1
     isValid = true;

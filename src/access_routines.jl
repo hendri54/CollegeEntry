@@ -3,8 +3,9 @@
 Base.show(io :: IO, e :: AbstractEntrySwitches) =
     print(io, typeof(e));
 Base.show(io :: IO, e :: AbstractEntryDecision) =
-    print(io, typeof(e), ":  preference scale ",  
-        round(entry_pref_scale(e), digits = 2));
+    print(io, typeof(e), 
+        ":  preference scale ",  round(entry_pref_scale(e), digits = 2),
+        "  ",  n_colleges(e), " colleges  ",  n_locations(e), " locations.");
 
 min_entry_prob(e :: AbstractEntryDecision{F1}) where F1 = e.switches.minEntryProb;
 max_entry_prob(e :: AbstractEntryDecision{F1}) where F1 = e.switches.maxEntryProb;

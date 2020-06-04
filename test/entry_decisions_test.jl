@@ -1,5 +1,5 @@
-using Test
-using CollegeEntry
+using Random, Test
+using ModelParams, CollegeEntry
 
 # The code uses the fact that reshape undoes vec. This is tested here.
 function reshape_test()
@@ -86,6 +86,52 @@ function entry_decisions_test(switches :: AbstractEntrySwitches{F1},
     end
 end
 
+
+function sim_entry_one_test(switches :: AbstractEntrySwitches{F1},
+    admissionS) where F1
+
+    rng = MersenneTwister(32);
+	@testset "Simulate entry decision one student" begin
+        println("\n------------------------");
+        println(switches);
+        objId = ObjectId(:entryOneStep);
+        entryS = init_entry_decision(objId, switches);
+        println(entryS);
+
+        nSim = Int(1e5);
+        nc = n_colleges(switches);
+        J = n_types(switches);
+        nl = n_locations(switches)
+        vWork = 1.4;
+        vCollege_cV = collect(range(0.92, 1.5, length = nc));
+        endowPct = 0.7;
+        full_clM = rand(rng, Bool, nc, nl);
+        full_clM[1,1] = false;
+        l = nl;
+
+        prob_clM, eVal = CollegeEntry.entry_decisions_one_student(
+            entryS, admissionS, vWork, vCollege_cV, 
+            endowPct, full_clM, l);
+
+        @test CollegeEntry.check_prob_array(prob_clM)
+        # If all corners, nothing to be tested
+        @test all(prob_clM .< 0.9)
+
+        probSim_clM, eValSim = CollegeEntry.sim_one_student(
+            entryS, admissionS, vWork, vCollege_cV, 
+            endowPct, full_clM, l, nSim, rng);
+        
+        probGap = maximum(abs.(probSim_clM .- prob_clM));
+        println("Max prob_cl gap:  ", probGap);
+        if probGap > 1e-2
+            show_matrix(probSim_clM; header = "Simulated");
+            show_matrix(prob_clM; header = "Solved");
+        end
+        @test isapprox(probSim_clM, prob_clM, atol = 1e-2)
+        @test isapprox(eValSim, eVal, rtol = 2e-2)
+    end
+end
+
 @testset "Entry decisions" begin
     J = 8;
     nc = 4;
@@ -93,6 +139,7 @@ end
     # The last case ensures that some colleges are full
     for switches in test_entry_switches(J, nc)
         entry_decisions_test(switches, admissionS);
+        sim_entry_one_test(switches, admissionS);
     end
 
     reshape_test()

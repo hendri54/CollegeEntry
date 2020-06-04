@@ -6,6 +6,14 @@ function test_value_cl(nc, nl)
     end
 end
 
+function show_matrix(m :: Matrix{F1}; header = "Matrix:") where F1
+    println(header);
+    nr = size(m, 1);
+    for ir = 1 : nr
+        println(round.(m[ir,:], digits = 3));
+    end
+end
+
 # Low capacity sequential ensures that there are full colleges
 function test_entry_switches(J, nc)
     return [
