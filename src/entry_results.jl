@@ -273,13 +273,14 @@ function fix_type_entry_probs!(er :: AbstractEntryResults{F1}, typeTotalV :: Abs
 	@assert length(typeTotalV) == n_types(er)
 	
 	# Ratio local/total entry
-	fracLocal_jV = frac_local_j(er);
-	# Scale total entry. Reaching into object to ensure we don't get copies.
-	scale_array!(er.fracEnter_jlcM, 1, typeTotalV);
-	# Restore frac local / total
-	scale_array!(er.fracLocal_jlcM, 1, typeTotalV .* fracLocal_jV);
+	fracEnter_jV = entry_probs_j(er, :all);
 
-	@assert isapprox(frac_local_j(er), fracLocal_jV)
+	J = n_types(er);
+	for j = 1 : J
+		er.fracEnter_jlcM[j, :, :] .*= (typeTotalV[j] / fracEnter_jV[j]);
+		er.fracLocal_jlcM[j, :, :] .*= (typeTotalV[j] / fracEnter_jV[j]);
+	end
+	
 	return nothing
 end
 

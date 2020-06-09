@@ -88,10 +88,14 @@ function fix_type_probs_test(switches)
     rng = MersenneTwister(95);
 	@testset "Fix type entry probs" begin
         er = make_test_entry_results(switches);
+        fracLocal_jV = frac_local_j(er);
+
         J = n_types(er);
         typeTotalV = 0.3 .+ 0.6 .* rand(rng, J);
         CollegeEntry.fix_type_entry_probs!(er, typeTotalV);
+
         @test isapprox(entry_probs_j(er, :all),  typeTotalV)
+        @test isapprox(frac_local_j(er), fracLocal_jV)
     end
 end
 
