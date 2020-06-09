@@ -4,35 +4,36 @@ using ModelParams, CollegeEntry
 # The code uses the fact that reshape undoes vec. This is tested here.
 function reshape_test()
     @testset "reshape" begin
+        rng = MersenneTwister(123);
         sizeV = (4,3,2);
-        x = zeros(sizeV...);
-        for i1 = 1 : sizeV[1]
-            for i2 = 1 : sizeV[2]
-                for i3 = 1 : sizeV[3]
-                    x[i1,i2,i3] = 0.1 * i1 + 0.2 * i2 - 0.3 * i3;
-                end
-            end
-        end
+        x = rand(rng, sizeV...);
         v = vec(x);
-        @test isequal(x, reshape(v, sizeV...))
+        @test isapprox(x, reshape(v, sizeV...))
     end
 end
 
 
 function entry_decisions_test(switches :: AbstractEntrySwitches{F1},
-    admissionS) where F1
+    admissionS; takeSubset :: Bool = false) where F1
 
+    rng = MersenneTwister(12);
     println("\n------------------------");
     println(switches);
     objId = ObjectId(:entryOneStep);
     entryS = init_entry_decision(objId, switches);
     println(entryS);
 
+    if takeSubset
+        idxV = 1 : 3 : n_types(switches);
+        subset_types!(entryS, idxV);
+        @test n_types(entryS) == length(idxV)
+        @test validate_es(entryS.switches)
+    end
+
     nc = n_colleges(switches);
     J = n_types(switches);
     nl = n_locations(switches)
-    vWork_jV = collect(range(-0.5, 1.5, length = J));
-    vCollege_jcM = range(-0.2, 1.2, length = J) * range(1.0, 2.0, length = nc)';
+    vWork_jV, vCollege_jcM = values_for_test(rng, J, nc, nl);
     hsGpaPctV = collect(range(0.1, 0.9, length = J));
     rank_jV = vcat(2 : 2 : J, 1 : 2 : J);
 
@@ -41,6 +42,20 @@ function entry_decisions_test(switches :: AbstractEntrySwitches{F1},
     @test validate_er(er)
     entryProb_jcM = entry_probs_jc(er);
     eValM = expected_values_jl(er);
+    # Need interior entry probs. Otherwise adjust values
+    if all(entry_probs_j(er) .< 0.2)
+        @warn "Entry probs too low:  $(entry_probs_j(er))"
+        @test false
+    end
+    @test any(entry_probs_j(er) .< 0.8)
+
+    # # Computing fracLocal across colleges and across types should give the same answer
+    # fracLocal = frac_local(er);
+    # fracLocal2 = sum(frac_local_c(er) .* enrollment_c(er)) / sum(enrollment_c(er));
+    # @test isapprox(fracLocal, fracLocal2)
+    # entryMass_jV = entry_probs_j(er, :all) .* type_mass_j(er);
+    # fracLocal3 = sum(frac_local_j(er) .* entryMass_jV) / sum(entryMass_jV);
+    # @test isapprox(fracLocal3, fracLocal)
 
     # Entry results methods
     if n_locations(er) == 1
@@ -87,6 +102,36 @@ function entry_decisions_test(switches :: AbstractEntrySwitches{F1},
 end
 
 
+# function subset_types_test(admissionS)
+#     @testset "Subset types" begin
+#         J = 8; nc = 3; nl = 4;
+
+#         vWork_jV = collect(range(-0.5, 1.5, length = J));
+#         vCollege_jcM = range(-0.2, 1.2, length = J) * range(1.0, 2.0, length = nc)';
+#         hsGpaPctV = collect(range(0.1, 0.9, length = J));
+#         rank_jV = vcat(2 : 2 : J, 1 : 2 : J);
+
+#         # solve for all
+#         e = CollegeEntry.make_test_entry_sequ_multiloc(J, nc, nl, Float64(1e8));
+#         er = entry_decisions(e, admissionS,
+#             vWork_jV, vCollege_jcM, hsGpaPctV, rank_jV);
+#         @test validate_er(er)
+#         entryProb_jcM = entry_probs_jc(er);
+#         eValM = expected_values_jl(er);
+
+#         # solve for subset; should yield same solution without capacity constraints
+#         typeV = collect(2 : 2 : J);
+#         e2 = copy_for_subset_of_types(e, typeV);
+#         er2 = entry_decisions(e2, admissionS,
+#             vWork_jV[typeV], vCollege_jcM[typeV], hsGpaPctV[typeV], 
+#             1 : length(typeV));
+
+#         @test isapprox(entryProb_jcM[typeV,:], entry_probs_jc(e2))
+#         @test isapprox(eValM[typeV,:], expected_values_jl(e2))
+# 	end
+# end
+
+
 function sim_entry_one_test(switches :: AbstractEntrySwitches{F1},
     admissionS) where F1
 
@@ -102,8 +147,9 @@ function sim_entry_one_test(switches :: AbstractEntrySwitches{F1},
         nc = n_colleges(switches);
         J = n_types(switches);
         nl = n_locations(switches)
-        vWork = 1.4;
-        vCollege_cV = collect(range(0.92, 1.5, length = nc));
+        vWork_jV, vCollege_jcM = values_for_test(rng, J, nc, nl);
+        vWork = vWork_jV[1];
+        vCollege_cV = vCollege_jcM[1,:];
         endowPct = 0.7;
         full_clM = rand(rng, Bool, nc, nl);
         full_clM[1,1] = false;
@@ -112,6 +158,9 @@ function sim_entry_one_test(switches :: AbstractEntrySwitches{F1},
         prob_clM, eVal = CollegeEntry.entry_decisions_one_student(
             entryS, admissionS, vWork, vCollege_cV, 
             endowPct, full_clM, l);
+        # Check that bounded away from 0, 1
+        @test sum(prob_clM) < 0.85
+        @test sum(prob_clM) > 0.15
 
         @test CollegeEntry.check_prob_array(prob_clM)
         # If all corners, nothing to be tested
@@ -142,7 +191,13 @@ end
         sim_entry_one_test(switches, admissionS);
     end
 
+    # Test with subsetting
+    J = 21;
+    switches = make_test_entry_sequ_multiloc(J, nc, nc + 1, 0.3 * J * nc);
+    entry_decisions_test(switches, admissionS; takeSubset = true);
+
     reshape_test()
+    # subset_types_test(admissionS)
 end
 
 # -----------

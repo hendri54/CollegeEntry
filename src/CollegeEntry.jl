@@ -8,7 +8,7 @@ using CommonLH, EconLH, ModelParams
 export AbstractEntryDecision, AbstractEntrySwitches, 
     EntryDecision, EntryDecisionSwitches
 export init_entry_decision, entry_probs, fix_entry_probs!, scale_entry_probs!,
-    min_entry_prob, max_entry_prob, entry_probs_fixed, entry_pref_scale
+    min_entry_prob, max_entry_prob, entry_probs_fixed, entry_pref_scale, subset_types, subset_types!
 
 
 # Admissions rules
@@ -17,10 +17,11 @@ export n_colleges, n_college_sets, percentile_var, college_set, open_admission, 
 
 # Complete entry decisions
 export entry_decisions
-export colleges_full, capacities, limited_capacity
+export colleges_full, capacities, capacities_c, limited_capacity
 
 # Student rankings
 export AbstractRankingSwitches, AbstractRanking, EndowPctRankingSwitches, EndowPctRanking
+export make_entry_switches_oneloc, validate_es
 export rank_students, make_student_ranking, validate_ranking, validate_ranking_switches, retrieve_draws, n_draws, endow_names
 
 # Results

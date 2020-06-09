@@ -2,32 +2,26 @@
 
 ## ------------- Switches
 
-# Inputs are
-# - `totalCapacity` of all colleges; in multiples of  total `typeMass`
-function make_test_entry_sequ_multiloc(J, nc, nl, totalCapacity)
-    if nl > 1
-        valueLocal = 0.7;
-        calValueLocal = true;
-        typeMass_jlM = range(1.0, 1.3, length = J) * range(1.0, 0.8, length = nl)';
-        totalMass = sum(typeMass_jlM);
-        capacity_clM = range(1.0, 1.5, length = nc) * range(1.0, 0.7, length = nl)';
-        capacity_clM = capacity_clM ./ sum(capacity_clM) .* 
-            totalCapacity .* totalMass;
-    else
-        valueLocal = 0.0;
-        calValueLocal = false;
-        typeMass_jlM = matrix_from_vector(range(1.0, 1.3, length = J));
-        totalMass = sum(typeMass_jlM);
-        capacity_clM = matrix_from_vector(range(1.0, 1.5, length = nc));
-        capacity_clM = capacity_clM ./ sum(capacity_clM) .* 
-            totalCapacity .* totalMass;
-    end
+"""
+    $(SIGNATURES)
 
-    switches = EntryDecisionSwitches(
-        nTypes = J, nColleges = nc, nLocations = nl, valueLocal = valueLocal,
-        typeMass_jlM = typeMass_jlM, capacity_clM = capacity_clM, 
-        entryPrefScale = 1.3,
-        calValueLocal = calValueLocal);
+Constructor for `EntryDecisionSwitches`: One location. Equal type mass. No capacity constraints by default.
+"""
+function make_entry_switches_oneloc(J, nc; entryPrefScale = 1.0,
+    typeMass = 1.0, capacity_cV = nothing)
+
+    F1 = typeof(entryPrefScale);
+    if isnothing(capacity_cV)
+        capacity_clM = fill(F1(CapacityInf), nc, 1);
+    else
+        capacity_clM = matrix_from_vector(capacity_cV);
+    end
+    switches = EntryDecisionSwitches{F1}(
+        nTypes = J, nColleges = nc, nLocations = 1, 
+        typeMass_jlM = fill(F1(typeMass), J, 1), 
+        capacity_clM = capacity_clM, 
+        entryPrefScale = entryPrefScale, 
+        valueLocal = zero(F1), calValueLocal = false);
     @assert validate_es(switches)
     return switches
 end
@@ -85,6 +79,12 @@ end
     $(SIGNATURES)
 
 Compute entry probabilities and expected values at entry from admission rule and entry decision objects.
+
+It is possible to solve for a subset of types. Only those listed in `rank_jV` will be solved. But keep in mind that capacity constraints may then not bind.
+
+The type dimension of the `EntryResults` object matches that of the `EntryDecision`.
+
+Note that multiple locations only matter if they are not identical. If all colleges are available in all locations (and not full), the fraction going local (conditional on entry) is only a function of the number of locations and the value of going local. `vCollege_jcM` and `vWork_jV` do not matter. This is easy to check analytically.
 """
 function entry_decisions(entryS :: EntryDecision{F1}, 
     admissionS :: AbstractAdmissionsRule{I1, F1}, 
@@ -92,7 +92,7 @@ function entry_decisions(entryS :: EntryDecision{F1},
     endowPctV :: Vector{F1},
     rank_jV :: Vector{I2}) where {I1, I2 <: Integer, F1}
 
-    nTypes = n_types(entryS);
+    # nTypes = n_types(entryS);
     nc = n_colleges(entryS);
     nl = n_locations(entryS);
     er = EntryResults(entryS.switches);

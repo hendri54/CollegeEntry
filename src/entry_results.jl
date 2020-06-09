@@ -7,6 +7,8 @@
 # 	return EntryResults(switches, probEnter_jcM, eVal_jV, enrollV);
 # end
 
+## -------------  Construction
+
 """
 	$(SIGNATURES)
 
@@ -27,8 +29,9 @@ end
 	$(SIGNATURES)
 
 Validate `EntryResults`.
+For subsetted `EntryResults`, do not `validateFracLocal`.
 """
-function validate_er(er :: EntryResults{F1}) where F1
+function validate_er(er :: EntryResults{F1}; validateFracLocal :: Bool = true) where F1
 	isValid = true
 	isValid = isValid  &&  check_prob_array(er.fracEnter_jlcM);
 	isValid = isValid  &&  check_prob_array(er.fracLocal_jlcM);
@@ -38,32 +41,19 @@ function validate_er(er :: EntryResults{F1}) where F1
 		isValid = false;
 		@warn "$er: Local enrollment > total enrollment"
 	end
+
+	# Computing fracLocal across colleges and across types should give the same answer
+	if validateFracLocal
+		fracLocal = frac_local(er);
+		fracLocal2 = sum(frac_local_c(er) .* enrollment_c(er)) / sum(enrollment_c(er));
+		entryMass_jV = entry_probs_j(er, :all) .* type_mass_j(er);
+		fracLocal3 = sum(frac_local_j(er) .* entryMass_jV) / sum(entryMass_jV);
+		if !isapprox(fracLocal, fracLocal2)  ||  !isapprox(fracLocal3, fracLocal)
+			@warn "Fraction local not consistent: $fracLocal, $fracLocal2, $fracLocal3"
+			isValid = false;
+		end
+	end
 	return isValid
-end
-
-
-function make_test_entry_results(switches :: EntryDecisionSwitches{F1}) where F1
-	J = n_types(switches);
-	nc = n_colleges(switches);
-	nl = n_locations(switches);
-	er = EntryResults(switches);
-	for j = 1 : J
-		for l = 1 : nl
-			er.eVal_jlM[j, l] = 0.5 * j + 0.6 * l;
-			for ic = 1 : nc
-				er.fracEnter_jlcM[j, l, ic] = 0.01 * J + 0.02 * l + 0.015 * ic;
-				er.fracLocal_jlcM[j, l, ic] = 0.5 * er.fracEnter_jlcM[j, l, ic];
-			end
-		end
-	end
-	for l = 1 : nl
-		for ic = 1 : nc
-			er.enroll_clM[ic, l] = 0.3 * ic + 0.2 * l;
-			er.enrollLocal_clM[ic, l] = 0.3 * er.enroll_clM[ic, l];
-		end
-	end
-	@assert validate_er(er)
-	return er
 end
 
 
@@ -82,6 +72,23 @@ function mean_over_locations(e :: EntryResults{F1}, x_jlcM :: Array{F1, 3}) wher
 			type_mass_j(e);
 	end
 	return x_jcM
+end
+
+
+"""
+	$(SIGNATURES)
+
+Return a copy of the `EntryDecision` object for a subset of types.
+College enrollments are not updated. There is not enough info to compute local enrollments.
+"""
+function subset_types(er :: EntryResults{F1}, idxV :: AbstractVector) where F1
+	newSwitches = deepcopy(er.switches);
+	subset_types!(newSwitches, idxV);
+	erOut = EntryResults(newSwitches, er.fracEnter_jlcM[idxV,:,:],
+		er.fracLocal_jlcM[idxV,:,:], er.eVal_jlM[idxV,:], 
+		er.enroll_clM, er.enrollLocal_clM);
+	@assert validate_er(erOut; validateFracLocal = false)
+	return erOut
 end
 
 
@@ -138,8 +145,9 @@ function frac_local(e :: EntryResults{F1}) where F1
 	else
 		fracLocal = sum(frac_local_c(e) .* enrollment_c(e)) /
 			sum(enrollment_c(e));
+		# Prevent rounding errors
+		fracLocal = min(fracLocal, one(F1));
 	end
-	@check zero(F1) <= fracLocal <= one(F1)
 	return fracLocal
 end
 
@@ -153,8 +161,8 @@ function frac_local_j(e :: EntryResults{F1}) where F1
 		fracLocalV = ones(F1, n_types(e));
 	else
 		fracLocalV = entry_probs_j(e, :local) ./ entry_probs_j(e, :all);
+		fracLocalV = min.(fracLocalV, ones(F1));
 	end
-	@assert check_prob_array(fracLocalV)
 	return fracLocalV
 end
 
@@ -168,8 +176,8 @@ function frac_local_c(e :: EntryResults{F1}) where F1
 		fracLocalV = ones(F1, n_colleges(e));
 	else
 		fracLocalV = enrollment_c(e, :local) ./ enrollment_c(e, :all);
+		fracLocalV = min.(fracLocalV, ones(F1));
 	end
-	@assert check_prob_array(fracLocalV)
 	return fracLocalV
 end
 
@@ -210,7 +218,7 @@ Entry probabilities by type, across all colleges.
 """
 function entry_probs_j(er :: AbstractEntryResults{F1}, 
 	univ :: Symbol = :all) where F1
-	return sum(entry_probs_jc(er, univ), dims = 2);
+	return vec(sum(entry_probs_jc(er, univ), dims = 2));
 end
 
 
@@ -231,6 +239,50 @@ Returns `Vector{Bool}` that indicates which colleges are full.
 """
 colleges_full(e :: AbstractEntryResults{F1}) where F1 =
     enrollment_cl(e) .>= capacities(e);
+
+
+
+## -----------  Modify
+
+"""
+	$(SIGNATURES)
+
+Scale entry probs to bound within `min_entry_prob` and `max_entry_prob`.
+"""
+function scale_entry_probs!(er :: AbstractEntryResults{F1}) where F1
+    minEntryProb = min_entry_prob(er.switches);
+	maxEntryProb = max_entry_prob(er.switches);
+	# Reach into object to ensure that we don't get a copy
+    scale_entry_probs!(er.fracEnter_jlcM, minEntryProb, maxEntryProb);
+	scale_entry_probs!(er.fracLocal_jlcM, minEntryProb, maxEntryProb);
+	return nothing
+end
+
+
+"""
+	$(SIGNATURES)
+
+Scale entry probs to match given total entry probs by type.
+Respect the fraction of each type that goes to each (l, c). Also adjust `fracLocal_jlcM` to ensure that the ratio of local to total entry is unchanged.
+
+`EntryResults` are no longer internally consistent after scaling. Only meant for testing / fixing poor outcomes during an optimization.
+"""
+function fix_type_entry_probs!(er :: AbstractEntryResults{F1}, typeTotalV :: AbstractVector{F1}) where F1 <: AbstractFloat
+
+    @assert all_at_most(typeTotalV, one(F1))
+	@assert length(typeTotalV) == n_types(er)
+	
+	# Ratio local/total entry
+	fracLocal_jV = frac_local_j(er);
+	# Scale total entry. Reaching into object to ensure we don't get copies.
+	scale_array!(er.fracEnter_jlcM, 1, typeTotalV);
+	# Restore frac local / total
+	scale_array!(er.fracLocal_jlcM, 1, typeTotalV .* fracLocal_jV);
+
+	@assert isapprox(frac_local_j(er), fracLocal_jV)
+	return nothing
+end
+
 
 
 # ---------------

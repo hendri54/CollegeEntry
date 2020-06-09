@@ -7,8 +7,10 @@ Base.show(io :: IO, e :: AbstractEntryDecision) =
         ":  preference scale ",  round(entry_pref_scale(e), digits = 2),
         "  ",  n_colleges(e), " colleges  ",  n_locations(e), " locations.");
 
-min_entry_prob(e :: AbstractEntryDecision{F1}) where F1 = e.switches.minEntryProb;
-max_entry_prob(e :: AbstractEntryDecision{F1}) where F1 = e.switches.maxEntryProb;
+min_entry_prob(e :: AbstractEntryDecision{F1}) where F1 = min_entry_prob(e.switches);
+min_entry_prob(switches :: AbstractEntrySwitches) = switches.minEntryProb;
+max_entry_prob(e :: AbstractEntryDecision{F1}) where F1 = max_entry_prob(e.switches);
+max_entry_prob(switches :: AbstractEntrySwitches) = switches.maxEntryProb;
 
 fix_entry_probs!(e :: AbstractEntryDecision) = fix_entry_probs!(e.switches);
 fix_entry_probs!(switches :: AbstractEntrySwitches) = switches.fixEntryProbs = true;
@@ -96,6 +98,17 @@ capacities(switches :: AbstractEntrySwitches{F1}) where F1 =
 """
 	$(SIGNATURES)
 
+Capacities; summed across locations
+"""
+capacities_c(a :: AbstractEntryDecision{F1}) where F1 = capacities_c(a.switches);
+capacities_c(e :: AbstractEntryResults{F1}) where F1 = capacities_c(e.switches);
+capacities_c(switches :: AbstractEntrySwitches{F1}) where F1 = 
+    vec(sum(switches.capacity_clM, dims = 2));
+
+
+"""
+	$(SIGNATURES)
+
 Capacity of one college by location.
 """
 capacity(e :: AbstractEntryDecision{F1}, iCollege :: Integer) where F1 = 
@@ -112,5 +125,30 @@ limited_capacity(a :: AbstractEntryDecision{F1}) where F1 =
     limited_capacity(a.switches);
 limited_capacity(switches:: AbstractEntrySwitches{F1}) where F1 = 
     any(capacities(switches) .< CapacityInf);
+
+
+# Change the number of types
+# Useful for solving with a subset of types, keeping in mind that 
+# capacity constraints likely won't bind with fewer types.
+function subset_types!(switches :: EntryDecisionSwitches{F1}, typeV :: AbstractVector{I1}) where {F1, I1 <: Integer}
+
+    @assert maximum(typeV) <= n_types(switches)
+    switches.nTypes = length(typeV);
+    switches.typeMass_jlM = switches.typeMass_jlM[typeV, :];
+    @assert validate_es(switches)
+    return nothing
+end
+
+
+"""
+	$(SIGNATURES)
+
+Adjust the `EntryDecision` so that only a subset of types is kept.
+Useful for solving with a subset of types, keeping in mind that 
+capacity constraints likely won't bind with fewer types.
+`deepcopy(entryS)` first to keep the original `EntryDecision` unchanged.
+"""
+subset_types!(entryS :: EntryDecision{F1}, typeV :: AbstractVector{I1}) where {F1, I1 <: Integer} =
+    subset_types!(entryS.switches, typeV);
 
 # --------------

@@ -4,23 +4,47 @@
 """
 	$(SIGNATURES)
 
-Scale entry probabilities to bound away from 0 and bound sum away from 1.
-Does not guarantee particular min or max values (that is hard to do).
+Scale entry probabilities by (j,l) -> c to bound away from 0.
+Bound entry probs by (j,l) away from 1.
+Does not guarantee particular min values (that is hard to do).
 """
-function scale_entry_probs!(entryS :: AbstractEntryDecision{F1}, 
-    entryProb_jcM :: Matrix{F1}) where F1 <: AbstractFloat
+function scale_entry_probs!(entryProb_jlcM :: Array{F1, 3},
+    minEntryProb :: F1, maxEntryProb :: F1) where F1 <: AbstractFloat
 
-    minEntryProb = min_entry_prob(entryS);
-    maxEntryProb = max_entry_prob(entryS);
-    for iType = 1 : size(entryProb_jcM)[1]
-        entryProb_jcM[iType, :] = max.(entryProb_jcM[iType, :], minEntryProb);
-		pSum = sum(entryProb_jcM[iType,:]);
-		if pSum > maxEntryProb
-			entryProb_jcM[iType,:] .*= (maxEntryProb / pSum);
-		end
+    J, nl, nc = size(entryProb_jlcM);
+    for iType = 1 : J
+        for l = 1 : nl
+            prob_cV = 
+                max.(minEntryProb, entryProb_jlcM[iType, l, :]);
+
+            pSum = sum(prob_cV);
+            if pSum > maxEntryProb
+                prob_cV .*= (maxEntryProb / pSum);
+            end
+            entryProb_jlcM[iType, l, :] .= prob_cV;    
+        end
+        # for ic = 1 : nc
+        #     # Scale so that total entry prob j -> c is at least minEntryProb
+        #     prob_lV = entryProb_jlcM[iType, :, ic];
+        #     pSum = sum(prob_lV);
+        #     if pSum < 0.000001
+        #         # Basically all zero entries. Set to a constant
+        #         prob_lV = fill(minEntryProb / nl, nl);
+        #     elseif pSum < minEntryProb
+        #         prob_lV .*= (minEntryProb / pSum);
+        #     end
+        #     entryProb_jlcM[iType, :, ic] = prob_lV;
+        # end
+
+        # # Scale so that entry prob j <= maxEntryProb
+        # pSum = sum(entryProb_jlcM[iType,:,:]);
+		# if pSum > maxEntryProb
+		# 	entryProb_jlcM[iType,:,:] .*= (maxEntryProb / pSum);
+        # end
 	end
 	return nothing
 end
+
 
 
 ## ---------------  Constructors
@@ -105,55 +129,6 @@ function one_step_entry_probs(entryPrefScale :: F1,
     end
     return prob_cV, eVal
 end
-
-
-# """
-# 	$(SIGNATURES)
-
-# Compute entry probabilities and expected values at entry from admission rule and entry decision objects.
-# The `rank_jV` argument does nothing, but is here for consistency with the sequential entry case.
-# Beware of ambiguous dispatch. The signature of methods for specific entry decisions must match exactly.
-# """
-# function entry_decisions(
-#     entryS :: AbstractEntryDecision{F1}, 
-#     admissionS :: AbstractAdmissionsRule{I1, F1}, 
-#     vWork_jV :: AbstractVector{F1}, vCollege_jcM :: AbstractMatrix{F1}, 
-#     endowPctV :: AbstractVector{F1}, rank_jV)  where {I1, F1}
-
-#     # Avoid potential incorrect dispatch
-#     if isa(entryS, EntrySequential)
-#         return entry_sequential(entryS,  admissionS, 
-#             vWork_jV, vCollege_jcM, endowPctV,  rank_jV);
-#     elseif isa(entryS, EntryTwoStep)
-#         error("Not implemented for two step entry")
-#     end
-#     @assert n_locations(entryS) == 1
-
-#     # Solve separately for each set of colleges the student could get into
-#     nSets = n_colleges(admissionS);
-#     J, nc = size(vCollege_jcM);
-
-#     # For one step entry: these are conditional on entry.
-#     # For two step entry: they are not conditional on entry.
-#     entryProb_jcM = zeros(F1, J, nc);
-#     eVal_jV = zeros(F1, J);
-#     for (iSet, admitV) in enumerate(admissionS)
-#         # Prob that each person draws this college set
-#         probSet_jV = prob_coll_set(admissionS, iSet, endowPctV);
-#         prob_jxM, eValSet_jV = 
-#             entry_probs(entryS, vWork_jV, vCollege_jcM, admitV);
-#         for j = 1 : J
-#             entryProb_jcM[j,:] .+= probSet_jV[j] .* prob_jxM[j, :];
-#             eVal_jV[j] += probSet_jV[j] * eValSet_jV[j];
-#         end
-#     end
-
-#     enrollV = college_enrollment(entryS, entryProb_jcM);
-#     er = EntryResults(entryS.switches, entryProb_jcM, eVal_jV, enrollV);
-#     @assert validate_er(er);
-#     return er
-#     # return entryProb_jcM, eVal_jV
-# end
 
 
 """
