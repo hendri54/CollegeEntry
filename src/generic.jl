@@ -96,6 +96,7 @@ end
 function one_step_entry_probs(entryPrefScale :: F1, 
     vWork_jV :: Vector{F1}, vCollege_jcM :: Matrix{F1}, admitV) where F1 <: AbstractFloat
 
+    J = size(vCollege_jcM, 1);
     prob_jxM = zeros(F1, size(vCollege_jcM));
     if isempty(admitV)
         eVal_jV = copy(vWork_jV);
@@ -104,7 +105,11 @@ function one_step_entry_probs(entryPrefScale :: F1,
         # Prob of work in column 1. Then admitted colleges.
         probM, eVal_jV = EconLH.extreme_value_decision(d, 
             hcat(vWork_jV, vCollege_jcM[:, admitV]));
-        prob_jxM[:, admitV] .= probM[:, 2 : end];
+        for j = 1 : J
+            probV = probM[j,:];
+            make_valid_probs!(probV);
+            prob_jxM[j, admitV] .= probV[2 : end];
+        end
     end
     return prob_jxM, eVal_jV
 end
@@ -124,6 +129,7 @@ function one_step_entry_probs(entryPrefScale :: F1,
         # eVal is a one element vector and probV is a Matrix
         probV, eValV = EconLH.extreme_value_decision(d, 
             hcat(vWork, Matrix{F1}(vCollege_cV[admitV]')));
+        make_valid_probs!(probV);
         prob_cV[admitV] .= probV[2 : end];
         eVal = eValV[1];
     end
@@ -172,7 +178,7 @@ function entry_decisions_one_student(entryS :: AbstractEntryDecision{F1},
         eVal += probSet * eValSet;
     end
 
-    @assert check_prob_array(entryProb_clM)
+    make_valid_probs!(entryProb_clM);
     return entryProb_clM, eVal
 end
 
@@ -187,7 +193,7 @@ function entry_decisions_one_student(entryS :: AbstractEntryDecision{F1},
         vCollege_cV, endowPct,
         repeat(full_cV, outer = (1,1)), 1);
 
-    @assert check_prob_array(entryProb_clM)
+    make_valid_probs!(entryProb_clM)
     return vec(entryProb_clM), eVal
 end
 

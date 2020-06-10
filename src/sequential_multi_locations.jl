@@ -116,6 +116,7 @@ function entry_decisions(entryS :: EntryDecision{F1},
 
             # Record entry probs
             entryProb_cV = vec(sum(entryProb_clM, dims = 2));
+            make_valid_probs!(entryProb_cV);
             # Fraction entering any `c` college; local or not.
             er.fracEnter_jlcM[j,l,:] .= entryProb_cV;
             # Fraction entering a local `c` college.
