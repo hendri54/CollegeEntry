@@ -77,7 +77,7 @@ function entry_test(switches)
         J = n_types(e);
         nc = n_colleges(e);
         nl = n_locations(e);
-        vWork_jV, vCollege_jcM = values_for_test(rng, J, nc, nl);
+        vWork_jV, vCollege_jcM = CollegeEntry.values_for_test(rng, J, nc, nl);
         # vWork_jV = collect(range(-0.1, 2.2, length = J));
         # vCollege_jcM = range(1.0, 2.0, length = J) * 
         #     collect(range(-0.5, 1.5, length = nc))';

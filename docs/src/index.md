@@ -12,6 +12,37 @@ For sequential entry mechanisms, students need to be ranked to determine the ord
 
 Entry is always represented as sequential choice in the rank order of the students. Without capacity constraints, sequential choice and simultaneous choice are the same, so this representation is without loss of generality. Without capacity constraints, the rank order does not matter.
 
+*Example:*
+
+```
+# There are `nc` colleges
+nc = 4;
+
+# Set up admission rules
+# Students are ranked by the endowment named `hsGpa`.
+# The cutoff for each college that grants admission ranges from 0.0 to 0.8.
+admissionS = AdmissionsCutoffSwitches(nc, :hsGpa, 
+        collect(range(0.0, 0.8, length = nc)), 0.05);
+
+# Set up entry decision structure
+# There are `J` types
+J = 200;
+# and `nl` locations
+nl = 3;
+# Total college capacity as multiple of type mass is
+totalCapacity = J * nl * 0.4;
+switches = make_test_entry_sequ_multiloc(J, nc, nl, totalCapacity);
+# Initialize the entry decision
+entryS = init_entry_decision(ObjectId(:test), switches);
+
+# From model solution, get values of working and of studying
+# Provide the ranking of each student according to the indicator that determines the order in which students get to decide (rank_jV).
+# Provide the `hsGpa` of each student that is used in admissions.
+# The result `er` is an `AbstractEntryResult`
+er = entry_decisions(entryS, admissionS,
+        vWork_jV, vCollege_jcM, hsGpaPctV, rank_jV);
+```
+
 Notational note: Several functions have suffixes that indicate the dimensions of the objects to be returned. For example, `type_mass_jl` returns the mass of types by (type, location), whereas `type_mass_j` returns the total mass of each type across locations.
 
 ## Admission rules

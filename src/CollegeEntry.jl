@@ -18,6 +18,7 @@ export n_colleges, n_college_sets, percentile_var, college_set, open_admission, 
 # Complete entry decisions
 export entry_decisions
 export colleges_full, capacities, capacities_c, limited_capacity
+export set_capacities!, increase_capacities!
 
 # Student rankings
 export AbstractRankingSwitches, AbstractRanking, EndowPctRankingSwitches, EndowPctRanking
@@ -27,8 +28,10 @@ export rank_students, make_student_ranking, validate_ranking, validate_ranking_s
 # Results
 export AbstractEntryResults, EntryResults, validate_er
 export frac_local, frac_local_j, frac_local_c, n_locations, n_colleges, n_types, type_mass_jl, type_mass_j, capacities, enrollment_cl, enrollment_c, entry_probs_jlc, entry_probs_jc, entry_probs_j, expected_values_jl
+export make_test_entry_results
 
 include("helpers.jl")
+include("test_helpers.jl")
 
 include("ranking_types.jl")
 include("admissions_types.jl")

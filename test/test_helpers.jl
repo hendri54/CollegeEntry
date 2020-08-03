@@ -20,14 +20,6 @@ function test_value_cl(rng, nc, nl)
     return 1.0 .+ 2.0 .* rand(rng, nc, nl);
 end
 
-# Set to get interior entry rates
-function values_for_test(rng, J, nc, nl)
-    # vWork_jV = (0.8 * nl) .+ 1.0 .* rand(rng, Float64, J);
-    vCollege_jcM = 1.0 .+ 2.0 .* rand(rng, Float64, J, nc);
-    vWork_jV = vec(sum(vCollege_jcM, dims = 2)) ./ nc .+ (0.6 * nl);
-    return vWork_jV, vCollege_jcM
-end
-
 # Make type masses, setting some to 0
 function type_masses_for_test(rng, J, nl)
     if nl == 1
@@ -100,45 +92,6 @@ function make_test_entry_sequ_multiloc(J, nc, nl, totalCapacity)
         calValueLocal = calValueLocal);
     @assert validate_es(switches)
     return switches
-end
-
-
-# Cannot make EntryResults without actually solving. At least its hard to maintain consistency.
-function make_test_entry_results(switches :: EntryDecisionSwitches{F1}) where F1
-    rng = MersenneTwister(34);
-
-	nc = n_colleges(switches);
-	J = n_types(switches);
-	nl = n_locations(switches);
-
-    admissionS = CollegeEntry.make_test_admissions_cutoff(nc);
-    objId = ObjectId(:entryOneStep);
-    entryS = init_entry_decision(objId, switches);
-
-    vWork_jV, vCollege_jcM = values_for_test(rng, J, nc, nl);
-    hsGpaPctV = collect(range(0.1, 0.9, length = J));
-    rank_jV = vcat(2 : 2 : J, 1 : 2 : J);
-
-    er = entry_decisions(entryS, admissionS,
-        vWork_jV, vCollege_jcM, hsGpaPctV, rank_jV);
-	# er = EntryResults(switches);
-	# for j = 1 : J
-	# 	for l = 1 : nl
-	# 		er.eVal_jlM[j, l] = 0.5 * j + 0.6 * l;
-	# 		for ic = 1 : nc
-	# 			er.fracEnter_jlcM[j, l, ic] = 0.01 * J + 0.02 * l + 0.015 * ic;
-	# 			er.fracLocal_jlcM[j, l, ic] = 0.5 * er.fracEnter_jlcM[j, l, ic];
-	# 		end
-	# 	end
-	# end
-	# for l = 1 : nl
-	# 	for ic = 1 : nc
-	# 		er.enroll_clM[ic, l] = 0.3 * ic + 0.2 * l;
-	# 		er.enrollLocal_clM[ic, l] = 0.3 * er.enroll_clM[ic, l];
-	# 	end
-	# end
-	@assert validate_er(er)
-	return er
 end
 
 

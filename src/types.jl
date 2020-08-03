@@ -81,6 +81,7 @@ Entry results for multiple locations. Records:
 - `fracLocal_jlcM`: The same, but for the local college `c` (if any).
 - `enroll_clM`: total enrollment at college (c, l).
 - `enrollLocal_clM`: local enrollment at college (c, l).
+- `eVal_jlM`: expected value of students in (j,l) at the start of the process.
 """
 struct EntryResults{F1} <: AbstractEntryResults{F1}
     switches :: AbstractEntrySwitches{F1}

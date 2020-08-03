@@ -61,6 +61,47 @@ Base.show(io :: IO, er :: AbstractEntryResults{F1}) where F1 =
 	print(io, typeof(er))
 
 
+# Cannot make EntryResults without actually solving. At least its hard to maintain consistency.
+function make_test_entry_results(switches :: EntryDecisionSwitches{F1};
+	typicalValue :: F1 = 1.0) where F1
+    rng = MersenneTwister(34);
+
+	nc = n_colleges(switches);
+	J = n_types(switches);
+	nl = n_locations(switches);
+
+    admissionS = make_test_admissions_cutoff(nc);
+    objId = ObjectId(:entryOneStep);
+    entryS = init_entry_decision(objId, switches);
+
+	vWork_jV, vCollege_jcM = values_for_test(rng, J, nc, nl; 
+		typicalValue = typicalValue);
+    hsGpaPctV = collect(range(0.1, 0.9, length = J));
+    rank_jV = vcat(2 : 2 : J, 1 : 2 : J);
+
+    er = entry_decisions(entryS, admissionS,
+        vWork_jV, vCollege_jcM, hsGpaPctV, rank_jV);
+	# er = EntryResults(switches);
+	# for j = 1 : J
+	# 	for l = 1 : nl
+	# 		er.eVal_jlM[j, l] = 0.5 * j + 0.6 * l;
+	# 		for ic = 1 : nc
+	# 			er.fracEnter_jlcM[j, l, ic] = 0.01 * J + 0.02 * l + 0.015 * ic;
+	# 			er.fracLocal_jlcM[j, l, ic] = 0.5 * er.fracEnter_jlcM[j, l, ic];
+	# 		end
+	# 	end
+	# end
+	# for l = 1 : nl
+	# 	for ic = 1 : nc
+	# 		er.enroll_clM[ic, l] = 0.3 * ic + 0.2 * l;
+	# 		er.enrollLocal_clM[ic, l] = 0.3 * er.enroll_clM[ic, l];
+	# 	end
+	# end
+	@assert validate_er(er)
+	return er
+end
+
+
 ## ----------  Helpers
 
 # Take the mean of a variable by (j,l,c) across locations, weighted by typeMass(j,l).
@@ -72,6 +113,12 @@ function mean_over_locations(e :: EntryResults{F1}, x_jlcM :: Array{F1, 3}) wher
 			type_mass_j(e);
 	end
 	return x_jcM
+end
+
+function mean_over_locations(e :: EntryResults{F1}, x_jlM :: Matrix{F1}) where F1
+	x_jV = sum(x_jlM .* type_mass_jl(e),  dims = 2) ./
+		type_mass_j(e);
+	return x_jV
 end
 
 
@@ -111,14 +158,10 @@ function enrollment_cl(e :: AbstractEntryResults{F1}, univ :: Symbol = :all) whe
 	end
 end
 
-"""
-	$(SIGNATURES)
-
-Enrollment of one college. By location (if any).
-"""
 enrollment_cl(e :: EntryResults{F1}, ic :: Integer, 
 	univ :: Symbol = :all) where F1 = 
 	enrollment_cl(e, univ)[ic,:];
+
 enrollment_cl(e :: EntryResults{F1}, ic :: Integer, l, 
 	univ = :all) where F1 = 
 	enrollment_cl(e, univ)[ic,l];
@@ -231,6 +274,17 @@ Expected value at college entry stage, by type.
 """
 expected_values_jl(e :: EntryResults{F1}) where F1 = e.eVal_jlM;
 
+
+"""
+	$(SIGNATURES)
+
+Expected values at college entry by type; averaged across locations.
+"""
+expected_values_j(e :: EntryResults{F1}) where F1 = 
+	mean_over_locations(e, expected_values_jl(e));
+
+expected_values_j(e :: EntryResults{F1}, l :: Integer) where F1 = 
+	e.eVal_jlM[:, l];
 
 """
 	$(SIGNATURES)

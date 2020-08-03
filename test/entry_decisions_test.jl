@@ -33,7 +33,7 @@ function entry_decisions_test(switches :: AbstractEntrySwitches{F1},
     nc = n_colleges(switches);
     J = n_types(switches);
     nl = n_locations(switches)
-    vWork_jV, vCollege_jcM = values_for_test(rng, J, nc, nl);
+    vWork_jV, vCollege_jcM = CollegeEntry.values_for_test(rng, J, nc, nl);
     hsGpaPctV = collect(range(0.1, 0.9, length = J));
     rank_jV = vcat(2 : 2 : J, 1 : 2 : J);
 
@@ -147,7 +147,7 @@ function sim_entry_one_test(switches :: AbstractEntrySwitches{F1},
         nc = n_colleges(switches);
         J = n_types(switches);
         nl = n_locations(switches)
-        vWork_jV, vCollege_jcM = values_for_test(rng, J, nc, nl);
+        vWork_jV, vCollege_jcM = CollegeEntry.values_for_test(rng, J, nc, nl);
         vWork = vWork_jV[1];
         vCollege_cV = vCollege_jcM[1,:];
         endowPct = 0.7;

@@ -98,6 +98,28 @@ capacities(switches :: AbstractEntrySwitches{F1}) where F1 =
 """
 	$(SIGNATURES)
 
+Set college capacities.
+"""    
+function set_capacities!(switches :: AbstractEntrySwitches{F1}, 
+    capacity_clM :: Matrix{F1}) where F1
+
+    @assert size(capacity_clM) == size(switches.capacity_clM)
+    switches.capacity_clM = capacity_clM;
+    return nothing
+end
+
+"""
+	$(SIGNATURES)
+
+Increase all college capacities by a common factor.
+"""
+increase_capacities!(switches :: AbstractEntrySwitches{F1}, 
+    cFactor :: F1) where F1 = 
+    switches.capacity_clM .*= cFactor;
+
+"""
+	$(SIGNATURES)
+
 Capacities; summed across locations
 """
 capacities_c(a :: AbstractEntryDecision{F1}) where F1 = capacities_c(a.switches);
