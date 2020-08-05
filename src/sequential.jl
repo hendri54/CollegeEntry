@@ -1,5 +1,7 @@
 # Sequential assignment
 
+# no longer used +++++
+
 # Inputs are
 # - `nc`: number of colleges
 # - `totalCapacity` of all colleges; in multiples of  total `typeMass`
@@ -31,10 +33,12 @@ function entry_decisions(entryS :: EntrySequential{F1},
     admissionS :: AbstractAdmissionsRule{I1, F1}, 
     vWork_jV :: Vector{F1}, vCollege_jcM :: Matrix{F1}, 
     endowPctV :: Vector{F1},
-    rank_jV :: Vector{I2}) where {I1, I2 <: Integer, F1}
+    rank_jV :: Vector{I2};
+    prefShocks :: Bool = true) where {I1, I2 <: Integer, F1}
 
     return entry_sequential(entryS,  admissionS, 
-        vWork_jV, vCollege_jcM, endowPctV,  rank_jV);
+        vWork_jV, vCollege_jcM, endowPctV,  rank_jV;
+        prefShocks = prefShocks);
 end
 
 
@@ -43,7 +47,8 @@ function entry_sequential(entryS :: EntrySequential{F1},
     admissionS :: AbstractAdmissionsRule{I1, F1}, 
     vWork_jV :: Vector{F1}, vCollege_jcM :: Matrix{F1}, 
     endowPctV :: Vector{F1},
-    rank_jV :: Vector{I2}) where {I1, I2 <: Integer, F1}
+    rank_jV :: Vector{I2}; 
+    prefShocks :: Bool = true) where {I1, I2 <: Integer, F1}
 
     nc = n_colleges(admissionS);
     nTypes = length(vWork_jV);
@@ -65,7 +70,7 @@ function entry_sequential(entryS :: EntrySequential{F1},
     end
 
     er = EntryResults(entryS.switches, entryProb_jcM, eVal_jV, enrollV);
-    @assert validate_er(er);
+    @assert validate_er(er; validateFracLocal = prefShocks);
     return er
     # return entryProb_jcM, eVal_jV
 end

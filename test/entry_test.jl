@@ -1,6 +1,8 @@
 using Random, Test
 using ModelParams, CollegeEntry
 
+ce = CollegeEntry;
+
 function constructor_test()
     @testset "Constructors" begin
         J = 8; nc = 3;
@@ -66,24 +68,23 @@ end
 
 
 # Test `entry_probs` which has no notion of locations
-function entry_test(switches)
+function entry_test(switches, prefShocks :: Bool)
     rng = MersenneTwister(49);
     @testset "Entry probs" begin
         F1 = Float64;
         e = init_entry_decision(ObjectId(:entry), switches);
         println("\n------------")
         println(e);
+        println("Preference shocks: $prefShocks");
 
         J = n_types(e);
         nc = n_colleges(e);
         nl = n_locations(e);
         vWork_jV, vCollege_jcM = CollegeEntry.values_for_test(rng, J, nc, nl);
-        # vWork_jV = collect(range(-0.1, 2.2, length = J));
-        # vCollege_jcM = range(1.0, 2.0, length = J) * 
-        #     collect(range(-0.5, 1.5, length = nc))';
         admitV = [1, 3];
         rejectV = [2];
-        prob_jcM, eVal_jV = entry_probs(e, vWork_jV, vCollege_jcM, admitV);
+        prob_jcM, eVal_jV = entry_probs(e, vWork_jV, vCollege_jcM, admitV;
+            prefShocks = prefShocks);
         @test all(prob_jcM .>= 0.0)
         @test all(prob_jcM .<= 1.0)
         @test size(prob_jcM) == (J, nc)
@@ -93,30 +94,67 @@ function entry_test(switches)
         # One person at a time
         for j = 1 : J
             prob_cV, eVal = 
-                entry_probs(e, vWork_jV[j], vCollege_jcM[j,:], admitV);
+                entry_probs(e, vWork_jV[j], vCollege_jcM[j,:], admitV;
+                    prefShocks = prefShocks);
             @test isapprox(prob_cV, prob_jcM[j,:])
             @test isapprox(eVal, eVal_jV[j])
         end
 
         # Increasing a value should increase probability
         # Not for limited capacities, though
-        if !limited_capacity(e)
+        # Also not without pref shocks
+        if !limited_capacity(e)  &&  prefShocks
             idx = admitV[end];
             otherAdmitV = admitV[1 : (end-1)];
             vCollege_jcM[:, idx] .+= 0.1;
-            prob2_jcM, eVal2_jV = entry_probs(e, vWork_jV, vCollege_jcM, admitV);
+            prob2_jcM, eVal2_jV = entry_probs(e, vWork_jV, vCollege_jcM, admitV;
+                prefShocks = prefShocks);
             @test all(prob2_jcM[:, idx] .> prob_jcM[:, idx])
             @test all(prob2_jcM[:, otherAdmitV] .< prob_jcM[:, otherAdmitV])
             @test all(eVal2_jV .> eVal_jV)
         end
 
         # Empty admission set
-        prob_jcM, eVal_jV = entry_probs(e, vWork_jV, vCollege_jcM, []);
+        prob_jcM, eVal_jV = entry_probs(e, vWork_jV, vCollege_jcM, [];
+            prefShocks = prefShocks);
         @test size(prob_jcM) == (J, nc)
         @test all(prob_jcM .== 0.0)
         # if !isa(e, EntryTwoStep)
             @test isapprox(eVal_jV, vWork_jV)
         # end
+    end
+end
+
+
+# Check that small preference shocks give about the same answer as no preference shocks
+function small_pref_entry_test(switches)
+    rng = MersenneTwister(49);
+    @testset "Entry probs" begin
+        F1 = Float64;
+        ce.set_pref_scale!(switches, 0.001);
+        e = init_entry_decision(ObjectId(:entry), switches);
+        println("\n------------")
+        println(e);
+
+        J = n_types(e);
+        nc = n_colleges(e);
+        nl = n_locations(e);
+        vWork_jV, vCollege_jcM = CollegeEntry.values_for_test(rng, J, nc, nl);
+        admitV = [1, 3];
+        rejectV = [2];
+
+        prob_jcM, eVal_jV = entry_probs(e, vWork_jV, vCollege_jcM, admitV;
+            prefShocks = true);
+        @test all(prob_jcM .>= 0.0)
+        @test all(prob_jcM .<= 1.0)
+        @test size(prob_jcM) == (J, nc)
+        @test size(eVal_jV) == (J,)
+        @test all(prob_jcM[:, rejectV] .== 0.0)
+
+        prob2_jcM, eVal2_jV = entry_probs(e, vWork_jV, vCollege_jcM, admitV;
+            prefShocks = false);
+        @test isapprox(prob_jcM, prob2_jcM, atol = 0.01)
+        @test isapprox(eVal_jV, eVal2_jV, rtol = 0.01)
     end
 end
 
@@ -183,7 +221,10 @@ end
     for switches in test_entry_switches(J, nc)
         access_test(switches);
         subset_switches_test(switches);
-        entry_test(switches);
+        for prefShocks ∈ (true, false)
+            entry_test(switches, prefShocks);
+            small_pref_entry_test(switches);
+        end
         sim_entry_test(switches);
     end
 end

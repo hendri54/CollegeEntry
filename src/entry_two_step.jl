@@ -31,33 +31,49 @@ OUT:
 - Expected value by type
 """
 function entry_probs(e :: EntryTwoStep{F1}, vWork_jV :: Vector{F1},
-    vCollege_jcM :: Matrix{F1}, admitV) where F1 <: AbstractFloat
+    vCollege_jcM :: Matrix{F1}, admitV;
+    prefShocks :: Bool = true) where F1 <: AbstractFloat
 
-    prob_jxM = zeros(F1, size(vCollege_jcM));
+    J, nc = size(vCollege_jcM);
+    prob_jxM = zeros(F1, J, nc);
 
     if isempty(admitV)
-        eVal_jV = fill(F1(-1e8), size(vWork_jV));
+        eVal_jV = fill(F1(-1e8), J);
     else
-        d = ExtremeValueDecision(entry_pref_scale(e), true, false);
-        probM, eVal_jV = EconLH.extreme_value_decision(d, vCollege_jcM[:, admitV]);
-        prob_jxM[:, admitV] .= probM;
+        if prefShocks
+            probM, eVal_jV = EconLH.extreme_value_decision(
+                vCollege_jcM[:, admitV], entry_pref_scale(e); demeaned = true);
+            prob_jxM[:, admitV] .= probM;
+        else
+            eVal_jV, icV = max_choices(fill(F1(-1e8), J),
+                vCollege_jcM, admitV);
+            prob_jxM[:, icV] .= one(F1);
+        end
     end
     return prob_jxM, eVal_jV
 end
 
 # The same for one individual
 function entry_probs(e :: EntryTwoStep{F1}, 
-    vWork :: F1, vCollege_cV :: Vector{F1}, admitV) where F1 <: AbstractFloat
-
-    @assert !isempty(admitV)  "Two step entry cannot have empty admission set"
-    d = ExtremeValueDecision(entry_pref_scale(e), true, false);
-    # eVal is a one element vector and probV is a Matrix
-    probV, eVal = EconLH.extreme_value_decision(d, Matrix{F1}(vCollege_cV[admitV]'));
+    vWork :: F1, vCollege_cV :: Vector{F1}, admitV;
+    profShocks :: Bool = true) where F1 <: AbstractFloat
 
     nc = length(vCollege_cV);
     prob_cV = zeros(F1, nc);
-    prob_cV[admitV] .= vec(probV);
-    return prob_cV, eVal[1]
+
+    @assert !isempty(admitV)  "Two step entry cannot have empty admission set"
+    if prefShocks
+        # eVal is a one element vector and probV is a Matrix
+        probV, eVal = EconLH.extreme_value_decision_one(
+            vCollege_cV[admitV], entry_pref_scale(e); demeaned = true);
+        prob_cV[admitV] .= probV;
+    else
+        eVal, ic = max_choice(F1(-1e8), vCollege_cV, admitV);
+        (ic > 0)  &&  (prob_cV[ic] = one(F1));
+    end
+
+    @assert check_float(eVal)
+    return prob_cV, eVal
 end
 
 

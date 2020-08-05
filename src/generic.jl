@@ -1,5 +1,9 @@
 # Generic functions that apply to all (or most) objects
 
+set_pref_scale!(switches :: AbstractEntrySwitches{F1},
+    prefScale :: F1) where F1 =
+    switches.entryPrefScale = prefScale;
+
 
 """
 	$(SIGNATURES)
@@ -77,18 +81,37 @@ This function does not handle the sequential nature of admissions. It is mainly 
 It defaults to the one step entry protocol. If that does not apply for a protocol, need to define a new method (e.g. two step entry).
 """
 function entry_probs(e :: AbstractEntryDecision{F1}, 
-    vWork_jV :: Vector{F1}, vCollege_jcM :: Matrix{F1}, admitV) where F1 <: AbstractFloat
+    vWork_jV :: Vector{F1}, vCollege_jcM :: Matrix{F1}, admitV;
+    prefShocks :: Bool = true) where F1 <: AbstractFloat
 
-    return one_step_entry_probs(entry_pref_scale(e), vWork_jV, vCollege_jcM, admitV);
+    if prefShocks
+        prefScale = entry_pref_scale(e);
+    else
+        prefScale = zero(F1);
+    end
+    return one_step_entry_probs(prefScale, vWork_jV, vCollege_jcM, admitV);
 end
 
 # The same for one student
 function entry_probs(e :: AbstractEntryDecision{F1}, 
-    vWork :: F1, vCollege_cV :: Vector{F1}, admitV) where F1
+    vWork :: F1, vCollege_cV :: Vector{F1}, admitV;
+    prefShocks :: Bool = true) where F1
 
-    return one_step_entry_probs(entry_pref_scale(e), vWork, vCollege_cV, admitV)
+    if prefShocks
+        prefScale = entry_pref_scale(e);
+    else
+        prefScale = zero(F1);
+    end
+    return one_step_entry_probs(prefScale, vWork, vCollege_cV, admitV)
 end
 
+
+# The same shutting down preference shocks
+# function entry_probs_no_pref_shocks(e :: AbstractEntryDecision{F1}, 
+#     vWork :: F1, vCollege_cV :: Vector{F1}, admitV) where F1
+
+#     return one_step_entry_probs(zero(F1), vWork, vCollege_cV, admitV)
+# end
 
 
 # Generic entry decision. One step. Given pref shock scale.
@@ -96,26 +119,36 @@ end
 function one_step_entry_probs(entryPrefScale :: F1, 
     vWork_jV :: Vector{F1}, vCollege_jcM :: Matrix{F1}, admitV) where F1 <: AbstractFloat
 
-    J = size(vCollege_jcM, 1);
-    prob_jxM = zeros(F1, size(vCollege_jcM));
+    J, nc = size(vCollege_jcM);
+    prob_jxM = zeros(F1, J, nc);
     if isempty(admitV)
         eVal_jV = copy(vWork_jV);
     else
-        d = ExtremeValueDecision(entryPrefScale, true, false);
-        # Prob of work in column 1. Then admitted colleges.
-        probM, eVal_jV = EconLH.extreme_value_decision(d, 
-            hcat(vWork_jV, vCollege_jcM[:, admitV]));
-        for j = 1 : J
-            probV = probM[j,:];
-            make_valid_probs!(probV);
-            prob_jxM[j, admitV] .= probV[2 : end];
+        if entryPrefScale > 0.00001
+            # Prob of work in column 1. Then admitted colleges.
+            probM, eVal_jV = EconLH.extreme_value_decision( 
+                hcat(vWork_jV, vCollege_jcM[:, admitV]), 
+                entryPrefScale; demeaned = true);
+            for j = 1 : J
+                probV = probM[j,:];
+                make_valid_probs!(probV);
+                prob_jxM[j, admitV] .= probV[2 : end];
+            end
+        else
+            eVal_jV, icV = max_choices(vWork_jV, vCollege_jcM, admitV);
+            for j = 1 : J
+                if icV[j] > 0
+                    prob_jxM[j, icV[j]] = one(F1);
+                end
+            end
         end
     end
     return prob_jxM, eVal_jV
 end
 
 
-# The same for one type
+# The same for one type.
+# Preference shocks may be zero.
 function one_step_entry_probs(entryPrefScale :: F1,
     vWork :: F1, vCollege_cV :: Vector{F1}, admitV) where F1 <: AbstractFloat
 
@@ -124,14 +157,19 @@ function one_step_entry_probs(entryPrefScale :: F1,
     if isempty(admitV)
         eVal = vWork;
     else
-        d = ExtremeValueDecision(entryPrefScale, true, false);
-        # Prob of work in column 1. Then admitted colleges.
-        # eVal is a one element vector and probV is a Matrix
-        probV, eValV = EconLH.extreme_value_decision(d, 
-            hcat(vWork, Matrix{F1}(vCollege_cV[admitV]')));
-        make_valid_probs!(probV);
-        prob_cV[admitV] .= probV[2 : end];
-        eVal = eValV[1];
+        if entryPrefScale > 0.00001
+            probV, eVal = EconLH.extreme_value_decision_one(
+                vcat(vWork, vCollege_cV[admitV]), entryPrefScale;
+                demeaned = true);
+            make_valid_probs!(probV);
+            prob_cV[admitV] .= probV[2 : end];
+        else
+            # No preference shocks - just choose the best option
+            eVal, ic = max_choice(vWork, vCollege_cV, admitV);
+            if ic > 0
+                prob_cV[ic] = one(F1);
+            end
+        end
     end
     return prob_cV, eVal
 end
@@ -146,7 +184,8 @@ Always for multiple locations (matrix inputs). But one location is allowed.
 function entry_decisions_one_student(entryS :: AbstractEntryDecision{F1}, 
     admissionS :: AbstractAdmissionsRule{I1, F1}, 
     vWork :: F1, vCollege_cV :: AbstractVector{F1}, 
-    endowPct :: F1, full_clM :: AbstractMatrix{Bool}, l :: Integer)  where {I1, F1}
+    endowPct :: F1, full_clM :: AbstractMatrix{Bool}, l :: Integer;
+    prefShocks :: Bool = true)  where {I1, F1}
 
     nl = n_locations(entryS);
     nc = n_colleges(entryS);
@@ -163,15 +202,22 @@ function entry_decisions_one_student(entryS :: AbstractEntryDecision{F1},
         # Prob that each person draws this college set
         probSet = prob_coll_set(admissionS, iSet, endowPct);
         # Can only attend colleges that are not full
-        # Do not use falses here. It creates 
+        # Do not use falses here. It creates a BitArray
         avail_clM = fill(false, nc, nl);
         avail_clM[admitV, :] .= true;
         avail_clM[full_clM] .= false;
         @check size(avail_clM) == size(vCollege_clM)
 
         # Entry probs for this set
+        # if prefShocks
         prob_clV, eValSet = 
-            entry_probs(entryS, vWork, vec(vCollege_clM), vec(avail_clM));
+            entry_probs(entryS, vWork, vec(vCollege_clM), vec(avail_clM);
+                prefShocks = prefShocks);
+        # else
+        #     prob_clV, eValSet = 
+        #         entry_probs_no_pref_shocks(entryS, vWork, vec(vCollege_clM), 
+        #             vec(avail_clM));
+        # end
         # Tested separately that `reshape` undoes `vec`
         prob_clM = reshape(prob_clV, nc, nl);
         entryProb_clM .+= probSet .* prob_clM;
@@ -187,11 +233,13 @@ end
 function entry_decisions_one_student(entryS :: AbstractEntryDecision{F1}, 
     admissionS :: AbstractAdmissionsRule{I1, F1}, 
     vWork :: F1, vCollege_cV :: AbstractVector{F1}, 
-    endowPct :: F1, full_cV :: AbstractVector{Bool})  where {I1, F1}
+    endowPct :: F1, full_cV :: AbstractVector{Bool};
+    prefShocks :: Bool = true)  where {I1, F1}
 
-    entryProb_clM, eVal = entry_decisions_one_student(entryS, admissionS, vWork, 
-        vCollege_cV, endowPct,
-        repeat(full_cV, outer = (1,1)), 1);
+    # Just solve the multi-location version for the first location.
+    entryProb_clM, eVal = entry_decisions_one_student(entryS, admissionS, 
+        vWork, vCollege_cV, endowPct,  repeat(full_cV, outer = (1,1)), 1;
+        prefShocks = prefShocks);
 
     make_valid_probs!(entryProb_clM)
     return vec(entryProb_clM), eVal

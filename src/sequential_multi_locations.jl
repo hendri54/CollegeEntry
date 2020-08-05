@@ -84,13 +84,16 @@ It is possible to solve for a subset of types. Only those listed in `rank_jV` wi
 
 The type dimension of the `EntryResults` object matches that of the `EntryDecision`.
 
+Optional: solve each student's entry decision without preference shocks, but continue to update enrollments with preference shocks. This is useful to diagnose how important preference shocks are.
+
 Note that multiple locations only matter if they are not identical. If all colleges are available in all locations (and not full), the fraction going local (conditional on entry) is only a function of the number of locations and the value of going local. `vCollege_jcM` and `vWork_jV` do not matter. This is easy to check analytically.
 """
 function entry_decisions(entryS :: EntryDecision{F1}, 
     admissionS :: AbstractAdmissionsRule{I1, F1}, 
     vWork_jV :: Vector{F1}, vCollege_jcM :: Matrix{F1}, 
     endowPctV :: Vector{F1},
-    rank_jV :: Vector{I2}) where {I1, I2 <: Integer, F1}
+    rank_jV :: Vector{I2};
+    prefShocks :: Bool = true) where {I1, I2 <: Integer, F1}
 
     # nTypes = n_types(entryS);
     nc = n_colleges(entryS);
@@ -107,13 +110,21 @@ function entry_decisions(entryS :: EntryDecision{F1},
             # This is the standard one-step entry decision, but with colleges from all locations stacked.
             entryProb_clM, er.eVal_jlM[j, l] = entry_decisions_one_student(
                 entryS, admissionS, vWork_jV[j], vCollege_jcM[j,:],
-                endowPctV[j], full_clM, l);
+                endowPctV[j], full_clM, l; prefShocks = true);
 
             # Record enrollment
             typeMass = type_mass_jl(entryS, j, l);
             er.enroll_clM .+= typeMass .* entryProb_clM;
             er.enrollLocal_clM[:,l] .+= typeMass .* entryProb_clM[:,l];
 
+            if !prefShocks 
+                # Solve again without pref shocks
+                # But enrollment is determined by original problem
+                entryProb_clM, er.eVal_jlM[j, l] = entry_decisions_one_student(
+                    entryS, admissionS, vWork_jV[j], vCollege_jcM[j,:],
+                    endowPctV[j], full_clM, l; prefShocks = false);
+            end    
+    
             # Record entry probs
             entryProb_cV = vec(sum(entryProb_clM, dims = 2));
             make_valid_probs!(entryProb_cV);
@@ -124,7 +135,7 @@ function entry_decisions(entryS :: EntryDecision{F1},
         end
     end
 
-    @assert validate_er(er)
+    @assert validate_er(er; validateFracLocal = prefShocks)
     return er
 end
 
