@@ -64,6 +64,7 @@ end
 function test_entry_switches(J, nc)
     return [
         make_test_entry_sequ_multiloc(J, nc, nc + 1, 0.3 * J * nc),
+        make_test_entry_sequ_multiloc(J, nc, nc + 1, 0.3 * J * nc; localOnlyV = [1]),
         make_entry_switches_oneloc(J, nc)
     ];
 end
@@ -71,7 +72,9 @@ end
 
 # Inputs are
 # - `totalCapacity` of all colleges; in multiples of  total `typeMass`
-function make_test_entry_sequ_multiloc(J, nc, nl, totalCapacity)
+function make_test_entry_sequ_multiloc(J, nc, nl, totalCapacity;
+    localOnlyV = Vector{Int}())
+
     rng = MersenneTwister(45);
     typeMass_jlM = type_masses_for_test(rng, J, nl);
     totalMass = sum(typeMass_jlM);
@@ -90,6 +93,7 @@ function make_test_entry_sequ_multiloc(J, nc, nl, totalCapacity)
         typeMass_jlM = typeMass_jlM, capacity_clM = capacity_clM, 
         entryPrefScale = 1.2,
         calValueLocal = calValueLocal);
+    set_local_only_colleges!(switches, localOnlyV);
     @assert validate_es(switches)
     return switches
 end

@@ -48,6 +48,8 @@ Base.@kwdef mutable struct EntryDecisionSwitches{F1} <: AbstractEntrySwitches{F1
     typeMass_jlM :: Matrix{F1}
     # College capacity (in units of typeMass)
     capacity_clM :: Matrix{F1}
+    # Indices of colleges that can only be attended locally
+    localOnlyIdxV :: Vector{Int} = Vector{Int}()
 end
 
 """

@@ -24,9 +24,7 @@ function sim_one_student(entryS :: AbstractEntryDecision{F1},
     for iSet = 1 : nSets
         # Available colleges
         admitV = college_set(admissionS, iSet);
-        avail_clM = fill(false, nc, nl);
-        avail_clM[admitV, :] .= true;
-        avail_clM[full_clM] .= false;
+        avail_clM = available_colleges(entryS, full_clM, admitV, l);
 
         sIdxV = findall(aSetV .== iSet);
         probSet_clM, eValSet = sim_entry_probs(entryS,  

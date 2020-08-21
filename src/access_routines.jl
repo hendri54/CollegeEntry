@@ -18,6 +18,25 @@ fix_entry_probs!(switches :: AbstractEntrySwitches) = switches.fixEntryProbs = t
 entry_probs_fixed(e :: AbstractEntryDecision) = e.switches.fixEntryProbs;
 entry_pref_scale(e :: AbstractEntryDecision) = e.entryPrefScale;
 
+# Colleges that can only be attended locally
+local_only_colleges(switches :: AbstractEntrySwitches) = 
+    switches.localOnlyIdxV;
+local_only_colleges(e :: AbstractEntryDecision) = local_only_colleges(e.switches);
+
+"""
+	$(SIGNATURES)
+
+Mark which colleges can be attended by locals only.
+"""
+function set_local_only_colleges!(switches :: AbstractEntrySwitches, icV)
+    if !isempty(icV)
+        @assert all(icV .>= 1)  &&  all(icV .<= n_colleges(switches));
+        switches.localOnlyIdxV = deepcopy(icV);
+    end
+    return nothing
+end
+
+
 """
 	$(SIGNATURES)
 

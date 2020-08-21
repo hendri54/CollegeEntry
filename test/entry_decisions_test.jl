@@ -74,7 +74,8 @@ function entry_decisions_test(switches :: AbstractEntrySwitches{F1},
     elseif prefShocks
         @test 0.0 < frac_local(er) < 1.0
         @test all(0.0 .< frac_local_j(er) .< 1.0)
-        @test all(0.0 .< frac_local_c(er) .< 1.0)        
+        # Frac local can be 1 when a college is local only
+        @test all(0.0 .< frac_local_c(er) .<= 1.0)        
     end
 
     # Check implied properties

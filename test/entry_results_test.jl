@@ -65,7 +65,8 @@ function entry_results_test(switches)
             @test isa(fracLocal_jV, Vector)
             @test length(fracLocal_jV) == J
 
-            @test all(0.0 .< fracLocal_cV .< one(F1))
+            # Frac local can be 1 (when colleges are local only)
+            @test all(0.0 .< fracLocal_cV .<= one(F1))
             @test isa(fracLocal_cV, Vector)
             @test length(fracLocal_cV) == nc
         end

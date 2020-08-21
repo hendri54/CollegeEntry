@@ -90,6 +90,7 @@ init_entry_decision
 entry_decisions
 entry_probs
 scale_entry_probs!
+set_local_only_colleges!
 ```
 
 ### Extension: Diversity preferences.

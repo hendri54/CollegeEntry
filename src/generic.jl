@@ -201,11 +201,7 @@ function entry_decisions_one_student(entryS :: AbstractEntryDecision{F1},
     for (iSet, admitV) in enumerate(admissionS)
         # Prob that each person draws this college set
         probSet = prob_coll_set(admissionS, iSet, endowPct);
-        # Can only attend colleges that are not full
-        # Do not use falses here. It creates a BitArray
-        avail_clM = fill(false, nc, nl);
-        avail_clM[admitV, :] .= true;
-        avail_clM[full_clM] .= false;
+        avail_clM = available_colleges(entryS, full_clM, admitV, l);
         @check size(avail_clM) == size(vCollege_clM)
 
         # Entry probs for this set
@@ -226,6 +222,38 @@ function entry_decisions_one_student(entryS :: AbstractEntryDecision{F1},
 
     make_valid_probs!(entryProb_clM);
     return entryProb_clM, eVal
+end
+
+
+# Can only attend colleges that are not full, where student is admitted.
+function available_colleges(entryS :: AbstractEntryDecision{F1}, 
+    full_clM :: AbstractMatrix{Bool}, 
+    admitV, l :: Integer) where F1
+
+    # Do not use falses here. It creates a BitArray
+    avail_clM = fill(false, size(full_clM));
+    # Admitted counts for all locations
+    avail_clM[admitV, :] .= true;
+    avail_clM[full_clM] .= false;
+    # If there are local-only colleges, mark those as not available
+    mark_local_only_colleges!(entryS, avail_clM, l);
+    return avail_clM
+end
+
+
+# Mark local only colleges as unavailable when not local.
+function mark_local_only_colleges!(entryS :: AbstractEntryDecision{F1}, 
+    avail_clM, l) where F1
+
+    idxV = local_only_colleges(entryS);
+    if !isempty(idxV)
+        for ic ∈ idxV
+            aLocal = avail_clM[ic, l];
+            avail_clM[ic, :] .= false;
+            avail_clM[ic, l] = aLocal;
+        end
+    end
+    return nothing
 end
 
 
