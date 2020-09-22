@@ -33,6 +33,7 @@ mutable struct EndowPctRankingSwitches{F1} <: AbstractRankingSwitches{F1}
     doCal :: Bool
 end
 
+
 """
 	$(SIGNATURES)
 
@@ -45,5 +46,22 @@ mutable struct EndowPctRanking{F1} <: AbstractRanking{F1}
     wtV :: Vector{F1}
     switches :: EndowPctRankingSwitches{F1}
 end
+
+# ------  Access and show
+
+Base.show(io :: IO,  e :: EndowPctRankingSwitches{F1}) where F1 =
+    print(io, typeof(e), " with endowments ", endow_names(e));
+
+Base.show(io :: IO,  e :: EndowPctRanking{F1}) where F1 =
+    print(io, typeof(e), " with endowments ", endow_names(e),
+        " and weights ",  round.(weights(e), digits = 2));
+
+fixed_weights(switches :: EndowPctRankingSwitches{F1}) where F1 = 
+    [one(F1), switches.wtV...];
+weights(e :: EndowPctRanking{F1}) where F1 = [one(F1), e.wtV...];
+calibrate_weights(switches :: EndowPctRankingSwitches{F1}) where F1 = 
+    switches.doCal;
+calibrate_weights(e :: EndowPctRanking{F1}) where F1 = 
+    calibrate_weights(e.switches);
 
 # -----------------

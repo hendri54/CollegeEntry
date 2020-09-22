@@ -2,6 +2,6 @@
 
 Models of college entry and admissions.
 
-[Documentation](docs/build/index.html)
+[Documentation](lhendricks.org/julia/CollegeEntry/index.html)
 
 -----------

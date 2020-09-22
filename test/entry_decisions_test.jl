@@ -1,6 +1,9 @@
 using Random, Test
 using ModelParams, CollegeEntry
 
+ce = CollegeEntry;
+
+
 # The code uses the fact that reshape undoes vec. This is tested here.
 function reshape_test()
     @testset "reshape" begin
@@ -10,6 +13,21 @@ function reshape_test()
         v = vec(x);
         @test isapprox(x, reshape(v, sizeV...))
     end
+end
+
+
+function best_available_test()
+    @testset "best available" begin
+        nc = 4;
+        nl = 3;
+        avail_clM = falses(nc, nl);
+        avail_clM[1,2] = true;
+        @test ce.best_available(avail_clM) == 1
+        avail_clM[nc, nl] = true;
+        @test ce.best_available(avail_clM) == nc
+        avail_clM[1 : (nc-1),:] .= true;
+        @test ce.best_available(avail_clM) == nc
+	end
 end
 
 
@@ -84,7 +102,7 @@ function entry_decisions_test(switches :: AbstractEntrySwitches{F1},
     # Solving one student at a time should give the same answer IF no colleges are full.
     for j = 1 : J
         if nl == 1
-            entryProb_cV, eVal = CollegeEntry.entry_decisions_one_student(
+            entryProb_cV, eVal, entryProbBest_clM = ce.entry_decisions_one_student(
                 entryS, admissionS,
                 vWork_jV[j], vCollege_jcM[j,:], hsGpaPctV[j], fill(false, nc);
                 prefShocks = prefShocks);
@@ -103,7 +121,7 @@ function entry_decisions_test(switches :: AbstractEntrySwitches{F1},
         else
             # Solver for student in one location
             for l = 1 : nl
-                entryProb_clM, eVal = CollegeEntry.entry_decisions_one_student(
+                entryProb_clM, eVal, entryProbBest_clM = ce.entry_decisions_one_student(
                     entryS, admissionS,  vWork_jV[j], vCollege_jcM[j,:], 
                     hsGpaPctV[j], fill(false, nc, nl), l;
                     prefShocks = prefShocks);
@@ -169,7 +187,7 @@ function sim_entry_one_test(switches :: AbstractEntrySwitches{F1},
         full_clM[1,1] = false;
         l = nl;
 
-        prob_clM, eVal = CollegeEntry.entry_decisions_one_student(
+        prob_clM, eVal, entryProbBest_clM = ce.entry_decisions_one_student(
             entryS, admissionS, vWork, vCollege_cV, 
             endowPct, full_clM, l);
         # Check that bounded away from 0, 1

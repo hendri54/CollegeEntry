@@ -109,6 +109,8 @@ Steps:
 4. Call [`make_student_ranking`](@ref) to initialize an `AbstractRanking`.
 5. Call [`entry_decisions`](@ref) to compute entry probabilities by type and college and expected values at college entry. This accepts the endowment draws object as input and call `retrieve_draws` to retrieve named endowments.
 
+If student rankings and admissions are supposed to operate on the same object, that object needs to be a single endowment. For example, students can be admitted based on expected abiity given GPA and parental. This is constructed as an endowment draw.
+
 ```@docs
 AbstractRanking
 AbstractRankingSwitches

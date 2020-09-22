@@ -1,4 +1,4 @@
-using Documenter, CollegeEntry
+using Documenter, CollegeEntry, FilesLH
 
 makedocs(
     modules = [CollegeEntry],
@@ -10,6 +10,10 @@ makedocs(
     # clean = true,
     # checkdocs = :exports,
 )
+
+pkgDir = rstrip(normpath(@__DIR__, ".."), '/');
+@assert endswith(pkgDir, "CollegeEntry")
+deploy_docs(pkgDir);
 
 # deploydocs(
 #     repo = "github.com/hendri54/CollegeEntry.jl.git",

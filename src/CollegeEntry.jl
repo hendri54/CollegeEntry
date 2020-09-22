@@ -27,7 +27,7 @@ export rank_students, make_student_ranking, validate_ranking, validate_ranking_s
 
 # Results
 export AbstractEntryResults, EntryResults, validate_er
-export frac_local, frac_local_j, frac_local_c, n_locations, n_colleges, n_types, type_mass_jl, type_mass_j, capacities, enrollment_cl, enrollment_c, entry_probs_jlc, entry_probs_jc, entry_probs_j, expected_values_jl
+export frac_local, frac_local_j, frac_local_c, n_locations, n_colleges, n_types, type_mass_jl, type_mass_j, capacities, enrollment_cl, enrollment_c, entry_probs_jlc, entry_probs_jc, entry_probs_j, expected_values_jl, frac_best_c
 export make_test_entry_results
 
 include("helpers.jl")

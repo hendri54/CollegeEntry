@@ -180,6 +180,11 @@ end
 
 Entry probs for one student across all admissions sets. Handles the case where some colleges are full.
 Always for multiple locations (matrix inputs). But one location is allowed.
+
+# Outputs
+- `entryProb_clM`: probability of entering each college
+- `eVal`: expected value
+- `entryProbBest_clM`: fraction of students who enter college `c, l` and for who `c` is the best available college (in any location). For the top college, this is identical to the entry rate.
 """
 function entry_decisions_one_student(entryS :: AbstractEntryDecision{F1}, 
     admissionS :: AbstractAdmissionsRule{I1, F1}, 
@@ -197,6 +202,8 @@ function entry_decisions_one_student(entryS :: AbstractEntryDecision{F1},
 
     entryProb_clM = zeros(F1, nc, nl);
     eVal = zero(F1);
+    # Fraction of students who attend the best available college (regardless of location). By quality attended. For the best college, this equals `entryProb_cV`.
+    entryProbBest_clM = zeros(F1, nc, nl);
     # Admission rule gives admission to one college type in all locations
     for (iSet, admitV) in enumerate(admissionS)
         # Prob that each person draws this college set
@@ -205,23 +212,21 @@ function entry_decisions_one_student(entryS :: AbstractEntryDecision{F1},
         @check size(avail_clM) == size(vCollege_clM)
 
         # Entry probs for this set
-        # if prefShocks
         prob_clV, eValSet = 
             entry_probs(entryS, vWork, vec(vCollege_clM), vec(avail_clM);
                 prefShocks = prefShocks);
-        # else
-        #     prob_clV, eValSet = 
-        #         entry_probs_no_pref_shocks(entryS, vWork, vec(vCollege_clM), 
-        #             vec(avail_clM));
-        # end
         # Tested separately that `reshape` undoes `vec`
         prob_clM = reshape(prob_clV, nc, nl);
         entryProb_clM .+= probSet .* prob_clM;
         eVal += probSet * eValSet;
+
+        # Fraction attending best available.
+        cBest = best_available(avail_clM);
+        entryProbBest_clM[cBest,:] .+= probSet .* prob_clM[cBest, :];
     end
 
     make_valid_probs!(entryProb_clM);
-    return entryProb_clM, eVal
+    return entryProb_clM, eVal, entryProbBest_clM
 end
 
 
@@ -238,6 +243,17 @@ function available_colleges(entryS :: AbstractEntryDecision{F1},
     # If there are local-only colleges, mark those as not available
     mark_local_only_colleges!(entryS, avail_clM, l);
     return avail_clM
+end
+
+
+function best_available(avail_clM)
+    cBest = 1;
+    for ic = 2 : size(avail_clM, 1)
+        if any(avail_clM[ic,:])
+            cBest = ic;
+        end
+    end
+    return cBest
 end
 
 
@@ -265,12 +281,13 @@ function entry_decisions_one_student(entryS :: AbstractEntryDecision{F1},
     prefShocks :: Bool = true)  where {I1, F1}
 
     # Just solve the multi-location version for the first location.
-    entryProb_clM, eVal = entry_decisions_one_student(entryS, admissionS, 
+    entryProb_clM, eVal, entryProbBest_clM = 
+        entry_decisions_one_student(entryS, admissionS, 
         vWork, vCollege_cV, endowPct,  repeat(full_cV, outer = (1,1)), 1;
         prefShocks = prefShocks);
 
     make_valid_probs!(entryProb_clM)
-    return vec(entryProb_clM), eVal
+    return vec(entryProb_clM), eVal, entryProbBest_clM
 end
 
 

@@ -81,19 +81,23 @@ abstract type AbstractEntryResults{F1 <: AbstractFloat} end
 Entry results for multiple locations. Records:
 - `fracEnter_jlcM`: Fraction of students in (j,l) who attend college `c`
 - `fracLocal_jlcM`: The same, but for the local college `c` (if any).
+- `fracEnterBest_jlcM`: Fraction of students in (j,l) who attend college `c` and for who this is the best available college.
 - `enroll_clM`: total enrollment at college (c, l).
 - `enrollLocal_clM`: local enrollment at college (c, l).
+- `enrollBest_clM`: enrollment of students for who this is the best available college.
 - `eVal_jlM`: expected value of students in (j,l) at the start of the process.
 """
 struct EntryResults{F1} <: AbstractEntryResults{F1}
     switches :: AbstractEntrySwitches{F1}
     fracEnter_jlcM :: Array{F1, 3}
     fracLocal_jlcM :: Array{F1, 3}
+    fracEnterBest_jlcM :: Array{F1, 3}
     # Expected values of types
     eVal_jlM :: Matrix{F1}
     # Mass of enrollment in each college
     enroll_clM :: Matrix{F1}
     enrollLocal_clM :: Matrix{F1}
+    enrollBest_clM :: Matrix{F1}
 end
 
 

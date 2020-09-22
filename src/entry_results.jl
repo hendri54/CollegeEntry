@@ -19,9 +19,9 @@ function EntryResults(switches :: EntryDecisionSwitches{F1}) where F1
 	nc = n_colleges(switches);
 	nl = n_locations(switches);
 	return EntryResults(switches,  
-		zeros(F1, J, nl, nc),  zeros(F1, J, nl, nc),
+		zeros(F1, J, nl, nc), zeros(F1, J, nl, nc), zeros(F1, J, nl, nc),
 		zeros(F1, J, nl),  
-		zeros(F1, nc, nl), zeros(F1, nc, nl))
+		zeros(F1, nc, nl), zeros(F1, nc, nl), zeros(F1, nc, nl))
 end
 
 
@@ -40,6 +40,16 @@ function validate_er(er :: EntryResults{F1}; validateFracLocal :: Bool = true) w
 	if any(er.enrollLocal_clM .> er.enroll_clM .+ 1e-5)
 		isValid = false;
 		@warn "$er: Local enrollment > total enrollment"
+	end
+
+	nc = size(er.enroll_clM, 1);
+	if any(er.enroll_clM .< er.enrollBest_clM)
+		@warn "Total enrollment should be larger than best enrollment"
+		isValid = false;
+	end
+	if !isapprox(er.enroll_clM[nc,:], er.enrollBest_clM[nc,:])
+		@warn "For top college, total enrollment should equal best enrollment"
+		isValid = false;
 	end
 
 	# Computing fracLocal across colleges and across types should give the same answer
@@ -132,8 +142,9 @@ function subset_types(er :: EntryResults{F1}, idxV :: AbstractVector) where F1
 	newSwitches = deepcopy(er.switches);
 	subset_types!(newSwitches, idxV);
 	erOut = EntryResults(newSwitches, er.fracEnter_jlcM[idxV,:,:],
-		er.fracLocal_jlcM[idxV,:,:], er.eVal_jlM[idxV,:], 
-		er.enroll_clM, er.enrollLocal_clM);
+		er.fracLocal_jlcM[idxV,:,:], er.fracEnterBest_jlcM[idxV,:,:], 
+		er.eVal_jlM[idxV,:], 
+		er.enroll_clM, er.enrollLocal_clM, er.enrollBest_clM);
 	@assert validate_er(erOut; validateFracLocal = false)
 	return erOut
 end
@@ -173,6 +184,19 @@ Total enrollment by college; across all locations.
 """
 enrollment_c(e :: AbstractEntryResults{F1}, univ :: Symbol = :all) where F1 = 
 	vec(sum(enrollment_cl(e, univ), dims = 2));
+
+# Mass of students in each college for who this is the best college
+enroll_best_c(e :: AbstractEntryResults{F1}) where F1 =
+	vec(sum(e.enrollBest_clM, dims = 2));
+
+
+"""
+	$(SIGNATURES)
+
+Fraction of students in each college type for who this is the best available college (across all locations). For the top college, this is 1 by construction.
+"""
+frac_best_c(e :: AbstractEntryResults{F1}) where F1 =
+	enroll_best_c(e) ./ enrollment_c(e);
 
 
 ## ----------  Fraction local

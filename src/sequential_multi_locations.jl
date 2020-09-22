@@ -108,21 +108,24 @@ function entry_decisions(entryS :: EntryDecision{F1},
             full_clM = (enrollment_cl(er) .>= capacities(entryS));
 
             # This is the standard one-step entry decision, but with colleges from all locations stacked.
-            entryProb_clM, er.eVal_jlM[j, l] = entry_decisions_one_student(
-                entryS, admissionS, vWork_jV[j], vCollege_jcM[j,:],
-                endowPctV[j], full_clM, l; prefShocks = true);
+            entryProb_clM, er.eVal_jlM[j, l], entryProbBest_clM = 
+                entry_decisions_one_student(
+                    entryS, admissionS, vWork_jV[j], vCollege_jcM[j,:],
+                    endowPctV[j], full_clM, l; prefShocks = true);
 
             # Record enrollment
             typeMass = type_mass_jl(entryS, j, l);
             er.enroll_clM .+= typeMass .* entryProb_clM;
             er.enrollLocal_clM[:,l] .+= typeMass .* entryProb_clM[:,l];
+            er.enrollBest_clM .+= typeMass .* entryProbBest_clM;
 
             if !prefShocks 
                 # Solve again without pref shocks
                 # But enrollment is determined by original problem
-                entryProb_clM, er.eVal_jlM[j, l] = entry_decisions_one_student(
-                    entryS, admissionS, vWork_jV[j], vCollege_jcM[j,:],
-                    endowPctV[j], full_clM, l; prefShocks = false);
+                entryProb_clM, er.eVal_jlM[j, l], entryProbBest_clM = 
+                    entry_decisions_one_student(
+                        entryS, admissionS, vWork_jV[j], vCollege_jcM[j,:],
+                        endowPctV[j], full_clM, l; prefShocks = false);
             end    
     
             # Record entry probs
@@ -130,6 +133,10 @@ function entry_decisions(entryS :: EntryDecision{F1},
             make_valid_probs!(entryProb_cV);
             # Fraction entering any `c` college; local or not.
             er.fracEnter_jlcM[j,l,:] .= entryProb_cV;
+            # Probability of entering college `c` as the best college
+            entryProb_cV = vec(sum(entryProbBest_clM, dims = 2));
+            make_valid_probs!(entryProb_cV);
+            er.fracEnterBest_jlcM[j,l,:] .= entryProb_cV;
             # Fraction entering a local `c` college.
             er.fracLocal_jlcM[j,l,:] = entryProb_clM[:,l];
         end

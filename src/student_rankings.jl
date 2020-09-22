@@ -86,6 +86,7 @@ function validate_ranking_switches end
 function make_test_endowpct_switches(n ::Integer)
     eNameV = [:abilPct, :parentalPct, :hsGpaPct, :h0Pct];
     wtV = [0.3, 2.0, 3.0];
+    # This produces an [] wtV when n == 1
     e = EndowPctRankingSwitches(eNameV[1 : n], wtV[1 : (n-1)], true);
     @assert validate_ranking_switches(e);
     return e
@@ -121,18 +122,6 @@ function validate_ranking(e :: EndowPctRanking{F1}) where F1
     return isValid
 end
 
-
-# ------  Access and show
-
-Base.show(io :: IO,  e :: EndowPctRankingSwitches{F1}) where F1 =
-    print(io, typeof(e), " with endowments ", endow_names(e));
-
-Base.show(io :: IO,  e :: EndowPctRanking{F1}) where F1 =
-    print(io, typeof(e), " with endowments ", endow_names(e),
-        " and weights ",  round.(weights(e), digits = 2));
-
-
-weights(e :: EndowPctRanking{F1}) where F1 = [one(F1), e.wtV...];
 
 
 # ---------------
