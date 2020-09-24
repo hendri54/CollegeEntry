@@ -43,7 +43,7 @@ function validate_er(er :: EntryResults{F1}; validateFracLocal :: Bool = true) w
 	end
 
 	nc = size(er.enroll_clM, 1);
-	if any(er.enroll_clM .< er.enrollBest_clM)
+	if any(er.enroll_clM .< er.enrollBest_clM .- 0.001)
 		@warn "Total enrollment should be larger than best enrollment"
 		isValid = false;
 	end
@@ -51,7 +51,7 @@ function validate_er(er :: EntryResults{F1}; validateFracLocal :: Bool = true) w
 		@warn "For top college, total enrollment should equal best enrollment"
 		isValid = false;
 	end
-	if any(er.fracEnterBest_jlcM .> er.fracEnter_jlcM)
+	if any(map((x,y) -> x > y + 0.001,  er.fracEnterBest_jlcM, er.fracEnter_jlcM))
 		@warn "More students in best college than total"
 		isValid = false;
 	end
@@ -339,7 +339,9 @@ function scale_entry_probs!(er :: AbstractEntryResults{F1}) where F1
     minEntryProb = min_entry_prob(er.switches);
 	maxEntryProb = max_entry_prob(er.switches);
 	# This creates the risk that `fracEnterBest` may no longer be consistent with `fracEnter`. To avoid this, `fracEnterBest` is scaled the complicated way.
-	bestToAll_jlcM = er.fracEnterBest_jlcM ./ max.(minEntryProb, er.fracEnter_jlcM);
+	# The `min.(one, ...)` deals with numerical inaccuracies.
+	bestToAll_jlcM = min.(one(F1), 
+		er.fracEnterBest_jlcM ./ max.(minEntryProb, er.fracEnter_jlcM));
 	# Reach into object to ensure that we don't get a copy
 	scale_entry_probs!(er.fracEnter_jlcM, minEntryProb, maxEntryProb);
 	scale_entry_probs!(er.fracLocal_jlcM, minEntryProb, maxEntryProb);
