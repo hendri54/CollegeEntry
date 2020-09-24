@@ -134,9 +134,9 @@ function entry_decisions(entryS :: EntryDecision{F1},
             # Fraction entering any `c` college; local or not.
             er.fracEnter_jlcM[j,l,:] .= entryProb_cV;
             # Probability of entering college `c` as the best college
-            entryProb_cV = vec(sum(entryProbBest_clM, dims = 2));
-            make_valid_probs!(entryProb_cV);
-            er.fracEnterBest_jlcM[j,l,:] .= entryProb_cV;
+            entryProbBest_cV = vec(sum(entryProbBest_clM, dims = 2));
+            make_valid_probs!(entryProbBest_cV);
+            er.fracEnterBest_jlcM[j,l,:] .= entryProbBest_cV;
             # Fraction entering a local `c` college.
             er.fracLocal_jlcM[j,l,:] = entryProb_clM[:,l];
         end

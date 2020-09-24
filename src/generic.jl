@@ -226,6 +226,7 @@ function entry_decisions_one_student(entryS :: AbstractEntryDecision{F1},
     end
 
     make_valid_probs!(entryProb_clM);
+    make_valid_probs!(entryProbBest_clM);
     return entryProb_clM, eVal, entryProbBest_clM
 end
 
