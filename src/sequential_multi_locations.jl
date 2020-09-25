@@ -133,6 +133,7 @@ function entry_decisions(entryS :: EntryDecision{F1},
             make_valid_probs!(entryProb_cV);
             # Fraction entering any `c` college; local or not.
             er.fracEnter_jlcM[j,l,:] .= entryProb_cV;
+            
             # Probability of entering college `c` as the best college
             entryProbBest_cV = vec(sum(entryProbBest_clM, dims = 2));
             make_valid_probs!(entryProbBest_cV);

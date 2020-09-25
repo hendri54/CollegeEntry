@@ -52,7 +52,14 @@ function validate_er(er :: EntryResults{F1}; validateFracLocal :: Bool = true) w
 		isValid = false;
 	end
 	if any(map((x,y) -> x > y + 0.001,  er.fracEnterBest_jlcM, er.fracEnter_jlcM))
-		@warn "More students in best college than total"
+		maxGap, maxIdx = findmax(er.fracEnterBest_jlcM .- er.fracEnter_jlcM);
+		j = maxIdx[1];
+		@warn """
+			More students in best college than total.
+			Max gap: $maxGap for index $maxIdx
+			fracEnterBest: $(er.fracEnterBest_jlcM[j,:,:])
+			fracEnter:     $(er.fracEnter_jlcM[j,:,:])
+			"""
 		isValid = false;
 	end
 	if !isapprox(er.fracEnterBest_jlcM[:,:,nc], er.fracEnter_jlcM[:,:,nc])
@@ -346,6 +353,8 @@ function scale_entry_probs!(er :: AbstractEntryResults{F1}) where F1
 	scale_entry_probs!(er.fracEnter_jlcM, minEntryProb, maxEntryProb);
 	scale_entry_probs!(er.fracLocal_jlcM, minEntryProb, maxEntryProb);
 	er.fracEnterBest_jlcM .= er.fracEnter_jlcM .* bestToAll_jlcM;
+
+	@assert all_less(er.fracEnterBest_jlcM, er.fracEnter_jlcM; atol = 0.0001)
 	return nothing
 end
 

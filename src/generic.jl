@@ -227,6 +227,8 @@ function entry_decisions_one_student(entryS :: AbstractEntryDecision{F1},
 
     make_valid_probs!(entryProb_clM);
     make_valid_probs!(entryProbBest_clM);
+    # Deal with rounding errors that arise during scaling.
+    bracket_array!(entryProbBest_clM, zeros(F1, nc, nl), entryProb_clM);
     return entryProb_clM, eVal, entryProbBest_clM
 end
 
