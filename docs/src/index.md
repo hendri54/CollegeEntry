@@ -33,7 +33,7 @@ nl = 3;
 totalCapacity = J * nl * 0.4;
 switches = make_test_entry_sequ_multiloc(J, nc, nl, totalCapacity);
 # Initialize the entry decision
-entryS = init_entry_decision(ObjectId(:test), switches);
+entryS = init_entry_decision(ObjectId(:test), switches, st);
 
 # From model solution, get values of working and of studying
 # Provide the ranking of each student according to the indicator that determines the order in which students get to decide (rank_jV).
@@ -44,6 +44,8 @@ er = entry_decisions(entryS, admissionS,
 ```
 
 Notational note: Several functions have suffixes that indicate the dimensions of the objects to be returned. For example, `type_mass_jl` returns the mass of types by (type, location), whereas `type_mass_j` returns the total mass of each type across locations.
+
+Notation (Latex symbols) are provided into object constructors as `LatexLH.SymbolTable` objects. `make_test_symbol_table()` contains all the objects that need to be defined for all variations of entry scenarios.
 
 ## Admission rules
 
@@ -65,7 +67,7 @@ make_admissions
 
 An `AbstractEntryDecision` provides a structure according to which students make entry decisions, given a set of available colleges. The only concrete type right now is [`EntryDecision`](@ref), which can be set up for one location or for multiple with and without capacity constraints.
 
-The idea is to implement an assignment mechanism similar to Hendricks, Herrington, and Schoellman (2020 AEJM). The ingredients are:
+The idea is to implement an assignment mechanism similar to Hendricks, Herrington, and Schoellman (2021 AEJM). The ingredients are:
 
 1. There is a set of colleges with fixed qualities and capacities.
 2. A student ranking that determines the order in which students choose colleges. This is provided simply as an ordinal student ranking from outside of the package.

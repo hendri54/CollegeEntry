@@ -4,14 +4,15 @@ make_test_entry_two_step(J, nc) =
     EntryTwoStepSwitches{Float64}(nTypes = J, nColleges = nc);
 
 function init_entry_decision(objId :: ObjectId,
-    switches :: EntryTwoStepSwitches{F1}) where F1
-    # objId = make_child_id(model_id(), :entryDecision);
+    switches :: EntryTwoStepSwitches{F1},
+    st :: SymbolTable) where F1
     
-    pEntryPref = init_entry_prefscale(switches);
+    pEntryPref = init_entry_prefscale(switches, st);
 
     collPrefScale = switches.collPrefScale;
-    pCollPref = Param(:collPrefScale, "Collge choice preference shocks",
-        "\\piC", collPrefScale, collPrefScale, 0.1, 3.0, 
+    pCollPref = Param(:collPrefScale, 
+        description(st, :collPresScale), latex(st, :collPrefScale), 
+        collPrefScale, collPrefScale, 0.1, 3.0, 
         switches.calEntryPrefScale);
 
     pvec = ParamVector(objId, [pEntryPref]);

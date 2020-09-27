@@ -45,16 +45,18 @@ end
 ## ---------------  Entry Decision constructor
 
 function init_entry_decision(objId :: ObjectId, 
-    switches :: EntryDecisionSwitches{F1}) where F1
+    switches :: EntryDecisionSwitches{F1},
+    st :: SymbolTable) where F1
 
-    pEntryPref = init_entry_prefscale(switches);
-    pValueLocal = init_value_local(switches);
+    pEntryPref = init_entry_prefscale(switches, st);
+    pValueLocal = init_value_local(switches, st);
     pvec = ParamVector(objId, [pEntryPref, pValueLocal]);
     return EntryDecision(objId, pvec, ModelParams.value(pEntryPref), 
         ModelParams.value(pValueLocal), switches)
 end
 
-function init_value_local(switches :: EntryDecisionSwitches{F1}) where F1
+function init_value_local(switches :: EntryDecisionSwitches{F1},
+    st :: SymbolTable) where F1
     if n_locations(switches) == 1
         # Cannot have local value
         valueLocal = zero(F1);
@@ -65,8 +67,7 @@ function init_value_local(switches :: EntryDecisionSwitches{F1}) where F1
     end
 
     ub = max(F1(5.0), valueLocal + 2.0);
-    pEntryPref = Param(:valueLocal, "Value of local college",
-        "vLocal", valueLocal, valueLocal, F1(0.0), ub, 
+    pEntryPref = Param(:valueLocal, description(st, :uLocal), latex(st, :uLocal), valueLocal, valueLocal, F1(0.0), ub, 
         calValueLocal);
     return pEntryPref
 end

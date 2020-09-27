@@ -1,5 +1,7 @@
 using Test
-using ModelParams, CollegeEntry
+using LatexLH, ModelParams, CollegeEntry
+
+ce = CollegeEntry;
 
 make_test_endowment_draws(J :: Integer) = 
     range(1.0, 2.0, length = J) * range(0.5, 1.5, length = 4)';
@@ -21,7 +23,8 @@ function student_rankings_test(n :: Integer)
         println(switches)
         @test validate_ranking_switches(switches)
 
-        e = make_student_ranking(ObjectId(:ranking), switches);
+        st = ce.make_test_symbol_table();
+        e = make_student_ranking(ObjectId(:ranking), switches, st);
         println(e);
         @test validate_ranking(e)
 

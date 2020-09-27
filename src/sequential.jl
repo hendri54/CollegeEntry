@@ -18,9 +18,10 @@ function make_test_entry_sequential(J, nc, totalCapacity)
 end
 
 function init_entry_decision(objId :: ObjectId, 
-    switches :: EntrySequentialSwitches{F1}) where F1
+    switches :: EntrySequentialSwitches{F1},
+    st :: SymbolTable) where F1
 
-    pEntryPref = init_entry_prefscale(switches);
+    pEntryPref = init_entry_prefscale(switches, st);
     pvec = ParamVector(objId, [pEntryPref]);
     return EntrySequential(objId, pvec, ModelParams.value(pEntryPref), switches)
 end

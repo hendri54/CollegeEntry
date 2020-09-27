@@ -91,13 +91,14 @@ function make_test_entry_results(switches :: EntryDecisionSwitches{F1};
 	typicalValue :: F1 = 1.0) where F1
     rng = MersenneTwister(34);
 
+	st = make_test_symbol_table();
 	nc = n_colleges(switches);
 	J = n_types(switches);
 	nl = n_locations(switches);
 
     admissionS = make_test_admissions_cutoff(nc);
     objId = ObjectId(:entryOneStep);
-    entryS = init_entry_decision(objId, switches);
+    entryS = init_entry_decision(objId, switches, st);
 
 	vWork_jV, vCollege_jcM = values_for_test(rng, J, nc, nl; 
 		typicalValue = typicalValue);

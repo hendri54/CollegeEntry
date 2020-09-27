@@ -1,5 +1,5 @@
 using Random, Test
-using ModelParams, CollegeEntry
+using LatexLH, ModelParams, CollegeEntry
 
 ce = CollegeEntry;
 
@@ -16,7 +16,8 @@ function access_test(switches)
         println("\n--------------------------")
         println(switches);
         objId = ObjectId(:entryDecision);
-        e = init_entry_decision(objId, switches);
+        st = ce.make_test_symbol_table();
+        e = init_entry_decision(objId, switches, st);
         println(e);
 
         J = n_types(e);
@@ -72,7 +73,8 @@ function entry_test(switches, prefShocks :: Bool)
     rng = MersenneTwister(49);
     @testset "Entry probs" begin
         F1 = Float64;
-        e = init_entry_decision(ObjectId(:entry), switches);
+        st = ce.make_test_symbol_table();
+        e = init_entry_decision(ObjectId(:entry), switches, st);
         println("\n------------")
         println(e);
         println("Preference shocks: $prefShocks");
@@ -132,7 +134,8 @@ function small_pref_entry_test(switches)
     @testset "Entry probs" begin
         F1 = Float64;
         ce.set_pref_scale!(switches, 0.001);
-        e = init_entry_decision(ObjectId(:entry), switches);
+        st = ce.make_test_symbol_table();
+        e = init_entry_decision(ObjectId(:entry), switches, st);
         println("\n------------")
         println(e);
 
@@ -163,7 +166,8 @@ function sim_entry_test(switches)
     @testset "Simulate Entry probs" begin
         rng = MersenneTwister(123);
         F1 = Float64;
-        e = init_entry_decision(ObjectId(:entry), switches);
+        st = ce.make_test_symbol_table();
+        e = init_entry_decision(ObjectId(:entry), switches, st);
         println("\n------------")
         println(e);
 

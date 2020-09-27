@@ -62,10 +62,11 @@ function init_entry_decision end
 
 
 # Initialize entry preference scale parameter.
-function init_entry_prefscale(switches :: AbstractEntrySwitches{F1}) where F1
+function init_entry_prefscale(switches :: AbstractEntrySwitches{F1},
+    st :: SymbolTable) where F1
     entryPrefScale = switches.entryPrefScale;
-    pEntryPref = Param(:entryPrefScale, "Entry preference shocks",
-        "\\pi", entryPrefScale, entryPrefScale, F1(0.1), F1(3.0), 
+    pEntryPref = Param(:entryPrefScale, 
+    description(st, :pScaleEntry), latex(st, :pScaleEntry), entryPrefScale, entryPrefScale, F1(0.1), F1(3.0), 
         switches.calEntryPrefScale);
 end
 

@@ -6,4 +6,13 @@ function values_for_test(rng, J, nc, nl; typicalValue = 1.0)
     return vWork_jV, vCollege_jcM
 end
 
+function make_test_symbol_table()
+    st = SymbolTable();
+    add_symbol!(st, SymbolInfo(:rankWt, "\\alpha", "Ranking weight", "Admissions"));
+    add_symbol!(st, SymbolInfo(:collPrefScale, "\\pi_{c}", "College choice pref scale", "Admissions"));
+    add_symbol!(st, SymbolInfo(:pScaleEntry, "\\pi", "Entry pref scale", "Admissions"));
+    add_symbol!(st, SymbolInfo(:uLocal, "U_{local}", "Value local", "Admissions"));
+    return st
+end
+
 # ------------

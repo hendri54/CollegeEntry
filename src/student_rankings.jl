@@ -93,18 +93,21 @@ function make_test_endowpct_switches(n ::Integer)
 end
 
 function make_student_ranking(objId :: ObjectId, 
-    switches :: EndowPctRankingSwitches{F1}) where F1
+    switches :: EndowPctRankingSwitches{F1},
+    st :: SymbolTable) where F1
     # switches = make_test_endowpct_switches(n);
     # objId = make_child_id(parentId, :studentRanking);
-    pWtV = init_endow_pct_weights(switches);
+    pWtV = init_endow_pct_weights(switches, st);
     pvec = ParamVector(objId, [pWtV]);
     return EndowPctRanking(objId, pvec, ModelParams.value(pWtV), switches)
 end
 
-function init_endow_pct_weights(switches :: EndowPctRankingSwitches{F1}) where F1
+function init_endow_pct_weights(switches :: EndowPctRankingSwitches{F1},
+    st :: SymbolTable) where F1
     wtV = switches.wtV;
     n = length(wtV);
-    p = Param(:wtV, "Ranking weights", "wtV", 
+    p = Param(:wtV, 
+        description(st, :rankWt), latex(st, :rankWt), 
         wtV, wtV, zeros(F1, n), fill(F1(10.0), n), switches.doCal);
     return p
 end

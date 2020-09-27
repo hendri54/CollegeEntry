@@ -1,5 +1,7 @@
 [deps]
+CollegeEntry = "22901f0c-de03-487b-854c-cad37ed05a00"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+FilesLH = "69233b93-b644-4f5d-9b2e-8880c8b19068"
 
 [compat]
 Documenter = "~0.24"

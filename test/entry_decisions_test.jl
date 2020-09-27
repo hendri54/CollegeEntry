@@ -1,5 +1,5 @@
 using Random, Test
-using ModelParams, CollegeEntry
+using LatexLH, ModelParams, CollegeEntry
 
 ce = CollegeEntry;
 
@@ -38,7 +38,8 @@ function entry_decisions_test(switches :: AbstractEntrySwitches{F1},
     println("\n------------------------");
     println(switches);
     objId = ObjectId(:entryOneStep);
-    entryS = init_entry_decision(objId, switches);
+    st = ce.make_test_symbol_table();
+    entryS = init_entry_decision(objId, switches, st);
     println(entryS, "  Pref shocks: $prefShocks");
 
     if takeSubset
@@ -172,7 +173,8 @@ function sim_entry_one_test(switches :: AbstractEntrySwitches{F1},
         println("\n------------------------");
         println(switches);
         objId = ObjectId(:entryOneStep);
-        entryS = init_entry_decision(objId, switches);
+        st = ce.make_test_symbol_table();
+        entryS = init_entry_decision(objId, switches, st);
         println(entryS);
 
         nSim = Int(1e5);
