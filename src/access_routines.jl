@@ -130,6 +130,16 @@ end
 """
 	$(SIGNATURES)
 
+Increase one college capacities by a factor.
+"""
+increase_capacity!(switches :: AbstractEntrySwitches{F1}, 
+    cFactor :: F1, cIdx :: Integer) where F1 = 
+    switches.capacity_clM[cIdx,:] .*= cFactor;
+
+
+"""
+	$(SIGNATURES)
+
 Increase all college capacities by a common factor.
 """
 increase_capacities!(switches :: AbstractEntrySwitches{F1}, 

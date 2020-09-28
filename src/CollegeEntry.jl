@@ -18,7 +18,7 @@ export n_colleges, n_college_sets, percentile_var, college_set, open_admission, 
 # Complete entry decisions
 export entry_decisions
 export colleges_full, capacities, capacities_c, limited_capacity
-export set_capacities!, increase_capacities!, set_local_only_colleges!
+export set_capacities!, increase_capacity!, increase_capacities!, set_local_only_colleges!
 
 # Student rankings
 export AbstractRankingSwitches, AbstractRanking, EndowPctRankingSwitches, EndowPctRanking

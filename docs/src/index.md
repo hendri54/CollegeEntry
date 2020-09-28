@@ -93,6 +93,8 @@ entry_decisions
 entry_probs
 scale_entry_probs!
 set_local_only_colleges!
+increase_capacities!
+increase_capacity!
 ```
 
 ### Extension: Diversity preferences.
