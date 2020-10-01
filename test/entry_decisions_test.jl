@@ -6,7 +6,7 @@ ce = CollegeEntry;
 
 # The code uses the fact that reshape undoes vec. This is tested here.
 function reshape_test()
-    @testset "reshape" begin
+    @testset ExtendedTestSet "reshape" begin
         rng = MersenneTwister(123);
         sizeV = (4,3,2);
         x = rand(rng, sizeV...);
@@ -17,7 +17,7 @@ end
 
 
 function best_available_test()
-    @testset "best available" begin
+    @testset ExtendedTestSet "best available" begin
         nc = 4;
         nl = 3;
         avail_clM = falses(nc, nl);
@@ -169,7 +169,7 @@ function sim_entry_one_test(switches :: AbstractEntrySwitches{F1},
     admissionS) where F1
 
     rng = MersenneTwister(32);
-	@testset "Simulate entry decision one student" begin
+	@testset ExtendedTestSet "Simulate entry decision one student" begin
         println("\n------------------------");
         println(switches);
         objId = ObjectId(:entryOneStep);
@@ -215,7 +215,7 @@ function sim_entry_one_test(switches :: AbstractEntrySwitches{F1},
     end
 end
 
-@testset "Entry decisions" begin
+@testset ExtendedTestSet "Entry decisions" begin
     J = 8;
     nc = 4;
     admissionS = CollegeEntry.make_test_admissions_cutoff(nc);

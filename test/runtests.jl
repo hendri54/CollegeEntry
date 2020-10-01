@@ -1,5 +1,5 @@
 using CollegeEntry, ModelParams
-using Test
+using Test, TestSetExtensions
 
 include("test_helpers.jl")
 
