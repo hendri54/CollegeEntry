@@ -1,7 +1,7 @@
 name = "CollegeEntry"
 uuid = "22901f0c-de03-487b-854c-cad37ed05a00"
 authors = ["hendri54 <hendricksl@protonmail.com>"]
-version = "0.3.1"
+version = "0.3.2"
 
 [deps]
 ArgCheck = "dce04be8-c92d-5529-be00-80e4d2c0e197"
