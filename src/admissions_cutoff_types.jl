@@ -1,96 +1,42 @@
-# Admissions Rules
-#=
-All college sets have positive probability in each case. This ensures that we can observe each type in each college.
-=#
 
-## ----------  Generic functions
+## ----------  HS GPA or other endowment percentile cutoff
 
 """
 	$(SIGNATURES)
 
-Initialize an admission rule from its switches. 
+Switches governing admissions by cutoff rule.
 """
-function make_admissions(switches :: AbstractAdmissionsSwitches) end
-
-
-n_colleges(a :: AbstractAdmissionsRule) = a.switches.nColleges;
-n_college_sets(a :: AbstractAdmissionsRule) = n_colleges(a);
-college_set(a :: AbstractAdmissionsRule, iSet :: Integer) = 1 : iSet;
-open_admission(a :: AbstractAdmissionsRule) = false;
-open_admission(a :: AbstractAdmissionsSwitches) = false;
-
-# Iterate over college sets
-function Base.iterate(a :: AbstractAdmissionsRule, j)
-    if j > n_college_sets(a)
-        return nothing
-    else
-        return college_set(a, j), j+1
-    end
+mutable struct AdmissionsCutoffSwitches{I1, F1 <: AbstractFloat} <: AbstractAdmissionsSwitches{I1, F1}
+    nColleges :: I1
+    # The variable that holds the individual percentiles
+    pctVar :: Symbol
+    # Minimum HS GPA percentile required for each college; should be increasing
+    minPctV :: Vector{F1}
+    # Minimum probability of all college sets
+    minCollSetProb :: F1
 end
 
-Base.iterate(a :: AbstractAdmissionsRule) = Base.iterate(a, 1);
+"""
+	$(SIGNATURES)
 
-min_coll_set_prob(a :: AbstractAdmissionsRule{I1, F1}) where {I1, F1} = 
-    min_coll_set_prob(a.switches);
-min_coll_set_prob(a :: AbstractAdmissionsSwitches{I1, F1}) where {I1, F1} =     
-    a.minCollSetProb;
-
-# Probability of being admitted at each college
-function admission_probs(a :: AbstractAdmissionsRule{I1, F1}, pctV :: AbstractVector) where {I1, F1}
-
-    nSets = n_college_sets(a);
-    nc = n_colleges(a);
-    J = length(pctV);
-    prob_jcM = zeros(F1, J, nc);
-    for iSet = 1 : nSets
-        probV = prob_coll_set(a, iSet, pctV);
-        iCollV = college_set(a, iSet);
-        prob_jcM[:, iCollV] .+= probV;
-    end
-    return prob_jcM
+Admissions are governed by a single indicator, such as a test score. Students can attend colleges for which they qualify in the sense that their indicator exceeds the college's cutoff value. Students may be allowed to attend other colleges with a fixed probability.
+"""
+struct AdmissionsCutoff{I1, F1 <: AbstractFloat} <: AbstractAdmissionsRule{I1, F1}
+    switches :: AdmissionsCutoffSwitches{I1, F1}
 end
-
-
-## -----------  Open admissions
-
-# AdmissionOpenSwitches(nc :: Integer, pctVar :: Symbol)
-
-Base.show(io :: IO, a :: AdmissionsOpen) = print(io, typeof(a));
-
-n_college_sets(a :: AdmissionsOpen) = 1;
-college_set(a :: AdmissionsOpen, j :: Integer) = 1 : n_colleges(a);
-open_admission(a :: AdmissionsOpen) = true;
-open_admission(a :: AdmissionsOpenSwitches) = false;
-percentile_var(a :: AdmissionsOpen) = a.switches.pctVar;
-validate_admissions(a :: AdmissionsOpen) = true;
-
-# Prob of each college set.
-# Returns 0-dim array if `kwargs` are scalar.
-# Keyword args could be hsGpaPct; this way the same args can be passed to all admissions rules
-prob_coll_set(a :: AdmissionsOpen{I1, F1}, j :: Integer, pctV :: AbstractVector) where {I1, F1} =    (j==1) ? ones(F1, length(pctV)) : error("Invalid j: $j");
-
-prob_coll_set(a :: AdmissionsOpen{I1, F1}, j :: Integer, hsGpaPct :: F2) where 
-    {I1, F1 <: AbstractFloat, F2 <: Number}  =  one(F1);
-
-prob_coll_sets(a :: AdmissionsOpen{I1, F1}, pctV :: AbstractVector) where {I1, F1} =
-    ones(F1, length(pctV), 1);
-
-make_admissions(switches :: AdmissionsOpenSwitches{I1, F1}) where {I1, F1} = 
-    AdmissionsOpen{I1, F1}(switches);
-
-make_test_admissions_open(nc :: I1) where I1 = 
-    AdmissionsOpen{I1, Float64}(AdmissionsOpenSwitches{I1, Float64}(nc, :hsGpaPct));
-
-
-## --------------------------  HS GPA or other endowment cutoff
-# Type 1 colleges admit everyone
-# College sets are: 1, 1:2, ... 1:nc
 
 function Base.show(io :: IO, a :: AdmissionsCutoff)
     nc = n_colleges(a);
     print(io, typeof(a), " with cutoff percentiles",
         round.(min_percentiles(a), digits = 2));
 end
+
+StructLH.describe(a :: AdmissionsCutoffSwitches) = [
+    "Admission rule"  " ";
+    "Cutoff rule based on"  "$(a.pctVar)";
+    "Min $(a.pctVar) percentile by college"  "$(a.minPctV)"
+];
+
 
 function validate_admissions(a :: AdmissionsCutoff{I1, F1}) where {I1, F1}
     isValid = true;
@@ -185,13 +131,11 @@ function prob_coll_sets(a :: AdmissionsCutoff{I1, F1}, hsGpaPctV :: AbstractVect
     for j = 1 : n
         prob_jsM[j, :] = prob_coll_sets(a, hsGpaPctV[j]);
     end
-    if dbgHigh
-        @assert all_at_least(prob_jsM, a.switches.minCollSetProb)
-        @assert all_at_most(prob_jsM, 1.0)
-        @check all(isapprox.(sum(prob_jsM, dims = 2), 1.0, atol = 1e-6))
-    end
+
+    @assert all_at_least(prob_jsM, a.switches.minCollSetProb)
+    @assert all_at_most(prob_jsM, 1.0)
+    @check all(isapprox.(sum(prob_jsM, dims = 2), 1.0, atol = 1e-6))
     return prob_jsM
 end
 
-
-# ------------
+# ------------------

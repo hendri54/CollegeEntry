@@ -1,5 +1,5 @@
 using Test
-using CollegeEntry
+using CollegeEntry, StructLH
 
 function common_test(a :: T1) where T1 <: AbstractAdmissionsRule
     @testset "$a" begin
@@ -12,6 +12,7 @@ function common_test(a :: T1) where T1 <: AbstractAdmissionsRule
 
         @test validate_admissions(a)
         println(a);
+        println(StructLH.describe(a));
         nSets = n_college_sets(a);
         @test nSets >= 1
         @test n_colleges(a) > 1

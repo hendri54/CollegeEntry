@@ -66,6 +66,8 @@ mutable struct EntryDecision{F1} <: AbstractEntryDecision{F1}
 end
 
 
+
+
 ## ----------------  Results object
 
 """

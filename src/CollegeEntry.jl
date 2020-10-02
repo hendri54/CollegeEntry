@@ -2,7 +2,7 @@ module CollegeEntry
 
 # Distributions only needed for simulations.
 using ArgCheck, Distributions, DocStringExtensions, Random
-using CommonLH, EconLH, LatexLH, ModelParams
+using CommonLH, EconLH, LatexLH, StructLH, ModelParams
 
 # Entry decisions
 export AbstractEntryDecision, AbstractEntrySwitches, 
@@ -33,17 +33,17 @@ export make_test_entry_results
 include("helpers.jl")
 include("test_helpers.jl")
 
-include("ranking_types.jl")
-include("admissions_types.jl")
-include("types.jl")
+# Student rankings
+include("ranking_types.jl");
+include("ranking_endow_pct.jl");
 
 # Admissions rules
-include("admissions_rules.jl")
-
-# Student rankings
-include("student_rankings.jl")
+include("admissions_types.jl");
+include("admissions_open_types.jl");
+include("admissions_cutoff_types.jl");
 
 # Entry decisions
+include("types.jl")
 include("access_routines.jl")
 include("generic.jl")
 # include("entry_one_step.jl")

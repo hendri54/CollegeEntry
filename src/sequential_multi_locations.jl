@@ -2,6 +2,15 @@
 
 ## ------------- Switches
 
+function StructLH.describe(switches :: EntryDecisionSwitches{F1}) where F1
+    nLoc = n_locations(switches);
+    capStr = limited_capacity(switches)  ?  "limited"  :  "unlimited";
+    return [
+        "College Entry"  "Sequential. $nLoc locations";
+        "Capacities"  capStr]
+end
+
+
 """
     $(SIGNATURES)
 

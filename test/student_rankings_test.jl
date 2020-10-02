@@ -1,5 +1,5 @@
 using Test
-using LatexLH, ModelParams, CollegeEntry
+using LatexLH, StructLH, ModelParams, CollegeEntry
 
 ce = CollegeEntry;
 
@@ -21,6 +21,8 @@ function student_rankings_test(n :: Integer)
         println("\n-----------");
         switches = CollegeEntry.make_test_endowpct_switches(n);
         println(switches)
+        println(StructLH.describe(switches));
+        # StructLH.describe(switches)
         @test validate_ranking_switches(switches)
 
         st = ce.make_test_symbol_table();

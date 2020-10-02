@@ -1,5 +1,5 @@
 using Random, Test
-using LatexLH, ModelParams, CollegeEntry
+using LatexLH, StructLH, ModelParams, CollegeEntry
 
 ce = CollegeEntry;
 
@@ -37,6 +37,7 @@ function entry_decisions_test(switches :: AbstractEntrySwitches{F1},
     rng = MersenneTwister(12);
     println("\n------------------------");
     println(switches);
+    println(StructLH.describe(switches));
     objId = ObjectId(:entryOneStep);
     st = ce.make_test_symbol_table();
     entryS = init_entry_decision(objId, switches, st);

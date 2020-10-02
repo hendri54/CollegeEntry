@@ -14,54 +14,86 @@ Abstract student ranking type.
 """
 abstract type AbstractRanking{F1 <: AbstractFloat} <: ModelObject end
 
-## Rank is a weighted average of endowment percentiles
-
-"""
-	$(SIGNATURES)
-
-Switches for linear endowment percentile weights. 
-`eNameV` contains the endowments used for ranking. It must be possible to call `retrieve_draws(EndowmentDraws, eName)`.
-`wtV` are the weights to be used if not calibrated. This omits the first weight, which is fixed at 1. This is empty when there is only one endowment to rank on.
-`doCal` determines whether weights are calibrated or fixed.
-"""
-mutable struct EndowPctRankingSwitches{F1} <: AbstractRankingSwitches{F1}
-    # Endowments to rank on
-    eNameV :: Vector{Symbol}
-    # Weights on those endowments, if fixed. First is omitted as fixed.
-    wtV :: Vector{F1}
-    # Calibrate weights? The first is always fixed (normalization).
-    doCal :: Bool
-end
+StructLH.describe(x :: AbstractRanking) = nothing;
+StructLH.describe(switches :: AbstractRankingSwitches) = 
+    ["Generic student ranking"];
 
 
 """
 	$(SIGNATURES)
 
-Rank students by a linear combination of endowment percentiles.
+Initialize an `AbstractRanking` object from its switches.
 """
-mutable struct EndowPctRanking{F1} <: AbstractRanking{F1}
-    objId :: ObjectId
-    pvec :: ParamVector
-    # Weights, excluding the first, normalized one.
-    wtV :: Vector{F1}
-    switches :: EndowPctRankingSwitches{F1}
+function make_student_ranking end
+
+
+"""
+	$(SIGNATURES)
+
+Retrieve draws for endowment `eName`. Needs to be defined for objects passed into ranking functions.
+"""
+retrieve_draws(draws, eName) =
+    error("Caller must define `retrieve_draws` for input $(typeof(draws))");
+
+"""
+	$(SIGNATURES)
+
+Number of individuals in endowment draws. Needs to be defined for objects passed into ranking functions.
+"""
+n_draws(draws) = 
+    error("Caller must define `n_draws` for input $(typeof(draws))");
+
+
+"""
+	$(SIGNATURES)
+
+Rank students. Returns indices of students in rank order from best to worst.
+
+# Arguments
+- `draws`: must support `retrieve_draws`.
+"""
+function rank_students(e :: AbstractRanking{F1}, draws) where F1
+    return sortperm(score_students(e, draws), rev = true);
 end
 
-# ------  Access and show
+# Score students. Higher scores are better
+function score_students(e :: AbstractRanking{F1}, draws) where F1
+    scoreV = zeros(F1, n_draws(draws));
+    wtV = weights(e);
+    nameV = endow_names(e);
+    for (j, eName) in enumerate(nameV)
+        scoreV .+= retrieve_draws(draws, eName) .* wtV[j];
+    end
+    return scoreV
+end
 
-Base.show(io :: IO,  e :: EndowPctRankingSwitches{F1}) where F1 =
-    print(io, typeof(e), " with endowments ", endow_names(e));
+"""
+	$(SIGNATURES)
 
-Base.show(io :: IO,  e :: EndowPctRanking{F1}) where F1 =
-    print(io, typeof(e), " with endowments ", endow_names(e),
-        " and weights ",  round.(weights(e), digits = 2));
+Return endowment names.
+"""
+endow_names(e :: AbstractRankingSwitches{F1}) where F1 = e.eNameV;
 
-fixed_weights(switches :: EndowPctRankingSwitches{F1}) where F1 = 
-    [one(F1), switches.wtV...];
-weights(e :: EndowPctRanking{F1}) where F1 = [one(F1), e.wtV...];
-calibrate_weights(switches :: EndowPctRankingSwitches{F1}) where F1 = 
-    switches.doCal;
-calibrate_weights(e :: EndowPctRanking{F1}) where F1 = 
-    calibrate_weights(e.switches);
+"""
+	$(SIGNATURES)
+
+Return endowment names.
+"""
+endow_names(e :: AbstractRanking{F1}) where F1 = endow_names(e.switches);
+
+"""
+	$(SIGNATURES)
+
+Validate an `AbstractRanking`.
+"""
+function validate_ranking end
+
+"""
+	$(SIGNATURES)
+
+Validate switches for an `AbstractRanking`.
+"""
+function validate_ranking_switches end
+
 
 # -----------------
