@@ -66,7 +66,7 @@ function init_entry_prefscale(switches :: AbstractEntrySwitches{F1},
     st :: SymbolTable) where F1
     entryPrefScale = switches.entryPrefScale;
     pEntryPref = Param(:entryPrefScale, 
-    description(st, :pScaleEntry), latex(st, :pScaleEntry), entryPrefScale, entryPrefScale, F1(0.1), F1(3.0), 
+    LatexLH.description(st, :pScaleEntry), latex(st, :pScaleEntry), entryPrefScale, entryPrefScale, F1(0.1), F1(3.0), 
         switches.calEntryPrefScale);
 end
 

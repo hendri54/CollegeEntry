@@ -1,4 +1,4 @@
-using CollegeEntry, ModelParams
+using CollegeEntry, ModelObjectsLH, ModelParams
 using Test, TestSetExtensions
 
 include("test_helpers.jl")

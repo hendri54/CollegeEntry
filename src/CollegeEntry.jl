@@ -2,7 +2,7 @@ module CollegeEntry
 
 # Distributions only needed for simulations.
 using ArgCheck, Distributions, DocStringExtensions, Random
-using CommonLH, EconLH, LatexLH, StructLH, ModelParams
+using CommonLH, EconLH, LatexLH, StructLH, ModelObjectsLH, ModelParams
 
 # Entry decisions
 export AbstractEntryDecision, AbstractEntrySwitches, 

@@ -88,7 +88,7 @@ function init_endow_pct_weights(switches :: EndowPctRankingSwitches{F1},
     wtV = switches.wtV;
     n = length(wtV);
     p = Param(:wtV, 
-        description(st, :rankWt), latex(st, :rankWt), 
+        LatexLH.description(st, :rankWt), latex(st, :rankWt), 
         wtV, wtV, zeros(F1, n), fill(F1(10.0), n), switches.doCal);
     return p
 end

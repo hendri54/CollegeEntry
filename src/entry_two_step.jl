@@ -11,7 +11,7 @@ function init_entry_decision(objId :: ObjectId,
 
     collPrefScale = switches.collPrefScale;
     pCollPref = Param(:collPrefScale, 
-        description(st, :collPresScale), latex(st, :collPrefScale), 
+        LatexLH.description(st, :collPresScale), latex(st, :collPrefScale), 
         collPrefScale, collPrefScale, 0.1, 3.0, 
         switches.calEntryPrefScale);
 

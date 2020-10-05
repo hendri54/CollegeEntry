@@ -76,7 +76,7 @@ function init_value_local(switches :: EntryDecisionSwitches{F1},
     end
 
     ub = max(F1(5.0), valueLocal + 2.0);
-    pEntryPref = Param(:valueLocal, description(st, :uLocal), latex(st, :uLocal), valueLocal, valueLocal, F1(0.0), ub, 
+    pEntryPref = Param(:valueLocal, LatexLH.description(st, :uLocal), latex(st, :uLocal), valueLocal, valueLocal, F1(0.0), ub, 
         calValueLocal);
     return pEntryPref
 end
