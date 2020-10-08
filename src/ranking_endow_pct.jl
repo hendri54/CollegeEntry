@@ -6,6 +6,7 @@
 Switches for linear endowment percentile weights. 
 `eNameV` contains the endowments used for ranking. It must be possible to call `retrieve_draws(EndowmentDraws, eName)`.
 `wtV` are the weights to be used if not calibrated. This omits the first weight, which is fixed at 1. This is empty when there is only one endowment to rank on.
+Weights are bounded in the interval `lbV` to `ubV`. Weights may be negative.
 `doCal` determines whether weights are calibrated or fixed.
 """
 mutable struct EndowPctRankingSwitches{F1} <: AbstractRankingSwitches{F1}
@@ -13,6 +14,9 @@ mutable struct EndowPctRankingSwitches{F1} <: AbstractRankingSwitches{F1}
     eNameV :: Vector{Symbol}
     # Weights on those endowments, if fixed. First is omitted as fixed.
     wtV :: Vector{F1}
+    # Bounds on the weights (first again omitted)
+    lbV :: Vector{F1}
+    ubV :: Vector{F1}
     # Calibrate weights? The first is always fixed (normalization).
     doCal :: Bool
 end
@@ -61,14 +65,63 @@ calibrate_weights(switches :: EndowPctRankingSwitches{F1}) where F1 =
 calibrate_weights(e :: EndowPctRanking{F1}) where F1 = 
     calibrate_weights(e.switches);
 
+"""
+	$(SIGNATURES)
+
+Set bounds for one endowment.
+
+# Example
+```
+set_bounds!(switches, :ability, -1.0, 1.0);
+```
+"""
+function set_bounds!(switches :: EndowPctRankingSwitches{F1}, eName :: Symbol, 
+    lb :: F1, ub :: F1) where F1
+
+    idx = findfirst(endow_names(switches) .== eName);
+    @assert idx > 1  "Cannot set bounds for $eName in $switches"
+    switches.lbV[idx-1] = lb;
+    switches.ubV[idx-1] = ub;
+    switches.wtV[idx-1] = 0.5 * (lb + ub);
+    return nothing
+end
+
 
 # ------  Constructing
 
+"""
+	$(SIGNATURES)
+
+Constructor with keyword arguments.
+"""
+function EndowPctRankingSwitches(eNameV :: Vector{Symbol}; 
+    wtInV = nothing, lbInV = nothing, ubInV = nothing,
+    doCalIn :: Bool = true)
+
+    if length(eNameV) == 1
+        wtV = Vector{Float64}();
+        lbV = Vector{Float64}();
+        ubV = Vector{Float64}();
+        doCal = false;
+    else
+        n = length(eNameV) - 1;
+        wtV = fill(1.0, n);
+        lbV = zeros(n);
+        ubV = fill(3.0, n);
+        doCal = doCalIn;
+    end
+    return EndowPctRankingSwitches(eNameV, wtV, lbV, ubV, doCal);
+end
+
+
 function make_test_endowpct_switches(n ::Integer)
     eNameV = [:abilPct, :parentalPct, :hsGpaPct, :h0Pct];
-    wtV = [0.3, 2.0, 3.0];
+    lbV = [-1.0, 0.0, 0.2];
+    ubV = [0.0, 3.0, 2.0];
+    wtV = 0.6 .* lbV .+ 0.4 .* ubV;
     # This produces an [] wtV when n == 1
-    e = EndowPctRankingSwitches(eNameV[1 : n], wtV[1 : (n-1)], true);
+    e = EndowPctRankingSwitches(eNameV[1 : n], 
+        wtV[1 : (n-1)], lbV[1 : (n-1)], ubV[1 : (n-1)], true);
     @assert validate_ranking_switches(e);
     return e
 end
@@ -89,14 +142,30 @@ function init_endow_pct_weights(switches :: EndowPctRankingSwitches{F1},
     n = length(wtV);
     p = Param(:wtV, 
         LatexLH.description(st, :rankWt), latex(st, :rankWt), 
-        wtV, wtV, zeros(F1, n), fill(F1(10.0), n), switches.doCal);
+        wtV, wtV, switches.lbV, switches.ubV, switches.doCal);
     return p
 end
 
 function validate_ranking_switches(e :: EndowPctRankingSwitches{F1}) where F1
     isValid = true
-    isValid = isValid && (length(endow_names(e)) == 1 + length(e.wtV));
-    isValid = isValid &&  all(e.wtV .>= 0.0)  &&  !any(isinf.(e.wtV))
+    if !(length(endow_names(e)) == 1 + length(e.wtV))
+        @warn "Weights have wrong length: $e"
+        isValid = false;
+    end
+    if !isempty(e.wtV)
+        if !all_greater(e.wtV, e.lbV; atol = 1e-5)  ||  any(isinf.(e.wtV))
+            @warn "Invalid weights: $(e.wtV)"
+            isValid = false;
+        end
+        if !all(e.ubV .> e.lbV)
+            @warn "Invalid bounds: $(e.lbV), $(e.ubV)"
+            isValid = false;
+        end
+    end
+    if !(length(e.lbV) == length(e.ubV) == length(e.wtV))
+        @warn "Invalid sizes: $(e.lbV), $(e.wtV), $(e.ubV)"
+        isValid = false;
+    end
     return isValid
 end
 

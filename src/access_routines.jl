@@ -178,9 +178,13 @@ limited_capacity(switches:: AbstractEntrySwitches{F1}) where F1 =
     any(capacities(switches) .< CapacityInf);
 
 
-# Change the number of types
-# Useful for solving with a subset of types, keeping in mind that 
-# capacity constraints likely won't bind with fewer types.
+"""
+    $(SIGNATURES)
+
+Change the number of types
+Useful for solving with a subset of types, keeping in mind that 
+capacity constraints likely won't bind with fewer types.
+"""
 function subset_types!(switches :: EntryDecisionSwitches{F1}, typeV :: AbstractVector{I1}) where {F1, I1 <: Integer}
 
     @assert maximum(typeV) <= n_types(switches)

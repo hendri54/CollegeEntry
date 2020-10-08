@@ -22,7 +22,7 @@ export set_capacities!, increase_capacity!, increase_capacities!, set_local_only
 
 # Student rankings
 export AbstractRankingSwitches, AbstractRanking, EndowPctRankingSwitches, EndowPctRanking
-export make_entry_switches_oneloc, validate_es
+export make_entry_switches_oneloc, validate_es, set_bounds!
 export rank_students, make_student_ranking, validate_ranking, validate_ranking_switches, retrieve_draws, n_draws, endow_names
 
 # Results

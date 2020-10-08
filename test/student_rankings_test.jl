@@ -1,5 +1,5 @@
 using Test
-using LatexLH, StructLH, ModelParams, CollegeEntry
+using LatexLH, StructLH, ModelObjectsLH, ModelParams, CollegeEntry
 
 ce = CollegeEntry;
 
@@ -17,13 +17,21 @@ CollegeEntry.n_draws(draws :: Matrix{Float64}) = size(draws, 1);
 
 # Input: No of endowments to rank on.
 function student_rankings_test(n :: Integer)
-    @testset "Student rankings" begin
+    @testset "Student rankings $n" begin
         println("\n-----------");
         switches = CollegeEntry.make_test_endowpct_switches(n);
         println(switches)
         println(StructLH.describe(switches));
         # StructLH.describe(switches)
         @test validate_ranking_switches(switches)
+
+        if n > 1
+            nameV = endow_names(switches);
+            wtV = ce.fixed_weights(switches);
+            set_bounds!(switches, nameV[2], wtV[2] - 2.0, wtV[2] + 2.0);
+            @test validate_ranking_switches(switches);
+            @test isapprox(switches.lbV[1], wtV[2] - 2.0)
+        end
 
         st = ce.make_test_symbol_table();
         e = make_student_ranking(ObjectId(:ranking), switches, st);
@@ -38,9 +46,28 @@ function student_rankings_test(n :: Integer)
 	end
 end
 
+
+function construct_ranking_test(n)
+    @testset "Construct rankings $n" begin
+        eNameV = [Symbol("endow$j")  for j = 1 : n];
+        st = SymbolTable();
+        for eName ∈ eNameV
+            add_symbol!(st, SymbolInfo(eName, "$eName", "$eName", "Group"));
+        end
+        add_symbol!(st, SymbolInfo(:rankWt, "omega", "Ranking weight", "Group"));
+
+        switches = EndowPctRankingSwitches(eNameV);
+        @test validate_ranking_switches(switches);
+        r = make_student_ranking(ObjectId(:ranking), switches, st);
+        @test validate_ranking(r)
+	end
+end
+
+
 @testset "Student rankings" begin
     for n = 1 : 3
         student_rankings_test(n);
+        construct_ranking_test(n);
     end
 end
 
