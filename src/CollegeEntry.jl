@@ -1,13 +1,14 @@
 module CollegeEntry
 
 # Distributions only needed for simulations.
-using ArgCheck, Distributions, DocStringExtensions, Random
+using ArgCheck, Distributions, DocStringExtensions, Lazy, Random
 using CommonLH, EconLH, LatexLH, StructLH, ModelObjectsLH, ModelParams
 
 # Entry decisions
 export AbstractEntryDecision, AbstractEntrySwitches, 
     EntryDecision, EntryDecisionSwitches
 export init_entry_decision, entry_probs, fix_entry_probs!, scale_entry_probs!,
+    fix_entry_pref_scale!,
     min_entry_prob, max_entry_prob, entry_probs_fixed, entry_pref_scale, subset_types, subset_types!
 
 
