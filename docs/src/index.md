@@ -115,6 +115,8 @@ Steps:
 
 If student rankings and admissions are supposed to operate on the same object, that object needs to be a single endowment. For example, students can be admitted based on expected abiity given GPA and parental. This is constructed as an endowment draw.
 
+Random student rankings can be achieved by simply generating a random endowment draw.
+
 ```@docs
 AbstractRanking
 AbstractRankingSwitches

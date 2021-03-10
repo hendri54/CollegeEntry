@@ -5,7 +5,8 @@
 
 Switches for linear endowment percentile weights. 
 `eNameV` contains the endowments used for ranking. It must be possible to call `retrieve_draws(EndowmentDraws, eName)`.
-`wtV` are the weights to be used if not calibrated. This omits the first weight, which is fixed at 1. This is empty when there is only one endowment to rank on.
+`wtV` are the weights to be used if not calibrated. This omits the first weight, which is fixed at 1 (or -1). 
+This is empty when there is only one endowment to rank on.
 Weights are bounded in the interval `lbV` to `ubV`. Weights may be negative.
 `doCal` determines whether weights are calibrated or fixed.
 """
@@ -19,6 +20,8 @@ mutable struct EndowPctRankingSwitches{F1} <: AbstractRankingSwitches{F1}
     ubV :: Vector{F1}
     # Calibrate weights? The first is always fixed (normalization).
     doCal :: Bool
+    # High first endowments => rank first?
+    highDrawsFirst :: Bool
 end
 
 
@@ -55,15 +58,27 @@ function StructLH.describe(e :: EndowPctRankingSwitches{F1}) where F1
 end
 
 StructLH.describe(e :: EndowPctRanking) = StructLH.describe(e.switches);
-      
+
+high_draws_first(e :: EndowPctRanking{F1}) where F1 = 
+    high_draws_first(e.switches);
+
+high_draws_first(switches :: EndowPctRankingSwitches{F1}) where F1 = 
+    switches.highDrawsFirst;
+
+first_weight(switches :: EndowPctRankingSwitches{F1}) where F1 = 
+    high_draws_first(switches) ? one(F1) : -one(F1);
 
 fixed_weights(switches :: EndowPctRankingSwitches{F1}) where F1 = 
-    [one(F1), switches.wtV...];
-weights(e :: EndowPctRanking{F1}) where F1 = [one(F1), e.wtV...];
+    [first_weight(switches), switches.wtV...];
+
+weights(e :: EndowPctRanking{F1}) where F1 =
+    [first_weight(e.switches), e.wtV...];
+
 calibrate_weights(switches :: EndowPctRankingSwitches{F1}) where F1 = 
     switches.doCal;
 calibrate_weights(e :: EndowPctRanking{F1}) where F1 = 
     calibrate_weights(e.switches);
+
 
 """
 	$(SIGNATURES)
@@ -93,10 +108,11 @@ end
 	$(SIGNATURES)
 
 Constructor with keyword arguments.
+Properly handles the case of a single endowment.
 """
 function EndowPctRankingSwitches(eNameV :: Vector{Symbol}; 
     wtInV = nothing, lbInV = nothing, ubInV = nothing,
-    doCalIn :: Bool = true)
+    doCalIn :: Bool = true, highDrawsFirst :: Bool = true)
 
     if length(eNameV) == 1
         wtV = Vector{Float64}();
@@ -110,18 +126,26 @@ function EndowPctRankingSwitches(eNameV :: Vector{Symbol};
         ubV = fill(3.0, n);
         doCal = doCalIn;
     end
-    return EndowPctRankingSwitches(eNameV, wtV, lbV, ubV, doCal);
+    return EndowPctRankingSwitches(eNameV, wtV, lbV, ubV, doCal, highDrawsFirst);
 end
 
+"""
+	$(SIGNATURES)
 
-function make_test_endowpct_switches(n ::Integer)
+Rank on a single endowment.
+"""
+EndowPctRankingSwitches(eName :: Symbol; highDrawsFirst :: Bool = true) = 
+    EndowPctRankingSwitches([eName]; highDrawsFirst = highDrawsFirst);
+
+
+function make_test_endowpct_switches(n :: Integer, highDrawsFirst :: Bool)
     eNameV = [:abilPct, :parentalPct, :hsGpaPct, :h0Pct];
     lbV = [-1.0, 0.0, 0.2];
     ubV = [0.0, 3.0, 2.0];
     wtV = 0.6 .* lbV .+ 0.4 .* ubV;
     # This produces an [] wtV when n == 1
     e = EndowPctRankingSwitches(eNameV[1 : n], 
-        wtV[1 : (n-1)], lbV[1 : (n-1)], ubV[1 : (n-1)], true);
+        wtV[1 : (n-1)], lbV[1 : (n-1)], ubV[1 : (n-1)], true, highDrawsFirst);
     @assert validate_ranking_switches(e);
     return e
 end

@@ -7,7 +7,7 @@ make_test_endowment_draws(J :: Integer) =
     range(1.0, 2.0, length = J) * range(0.5, 1.5, length = 4)';
 
 function CollegeEntry.retrieve_draws(draws :: Matrix{Float64}, eName)
-    switches = CollegeEntry.make_test_endowpct_switches(4);
+    switches = CollegeEntry.make_test_endowpct_switches(4, true);
     eIdx = findfirst(eName .== endow_names(switches));
     return draws[:, eIdx]
 end
@@ -16,10 +16,10 @@ CollegeEntry.n_draws(draws :: Matrix{Float64}) = size(draws, 1);
 
 
 # Input: No of endowments to rank on.
-function student_rankings_test(n :: Integer)
-    @testset "Student rankings $n" begin
+function student_rankings_test(n :: Integer, highDrawsFirst :: Bool)
+    @testset "Student rankings $n, $highDrawsFirst" begin
         println("\n-----------");
-        switches = CollegeEntry.make_test_endowpct_switches(n);
+        switches = CollegeEntry.make_test_endowpct_switches(n, highDrawsFirst);
         println(switches)
         println(StructLH.describe(switches));
         # StructLH.describe(switches)
@@ -47,8 +47,8 @@ function student_rankings_test(n :: Integer)
 end
 
 
-function construct_ranking_test(n)
-    @testset "Construct rankings $n" begin
+function construct_ranking_test(n :: Integer, highDrawsFirst :: Bool)
+    @testset "Construct rankings $n, $highDrawsFirst" begin
         eNameV = [Symbol("endow$j")  for j = 1 : n];
         st = SymbolTable();
         for eName ∈ eNameV
@@ -56,7 +56,7 @@ function construct_ranking_test(n)
         end
         add_symbol!(st, SymbolInfo(:rankWt, "omega", "Ranking weight", "Group"));
 
-        switches = EndowPctRankingSwitches(eNameV);
+        switches = EndowPctRankingSwitches(eNameV; highDrawsFirst = highDrawsFirst);
         @test validate_ranking_switches(switches);
         r = make_student_ranking(ObjectId(:ranking), switches, st);
         @test validate_ranking(r)
@@ -66,8 +66,10 @@ end
 
 @testset "Student rankings" begin
     for n = 1 : 3
-        student_rankings_test(n);
-        construct_ranking_test(n);
+        for highDrawsFirst ∈ (true, false)
+            student_rankings_test(n, highDrawsFirst);
+            construct_ranking_test(n, highDrawsFirst);
+        end
     end
 end
 
