@@ -16,6 +16,11 @@ export init_entry_decision, entry_probs, fix_entry_probs!, scale_entry_probs!,
 export AbstractAdmissionsRule, AbstractAdmissionsSwitches, AdmissionsOpenSwitches, AdmissionsOpen, AdmissionsCutoffSwitches, AdmissionsCutoff
 export n_colleges, n_college_sets, percentile_var, college_set, open_admission, admission_probs, prob_coll_set, prob_coll_sets, make_admissions, validate_admissions
 
+# Admission probabilities
+export AbstractAdmProbFctSwitches, AbstractAdmProbFct, 
+    AdmProbFctLogisticSwitches, AdmProbFctLogistic
+export init_admprob_fct, make_admprob_function
+
 # Complete entry decisions
 export entry_decisions
 export colleges_full, capacities, capacities_c, limited_capacity
@@ -42,6 +47,10 @@ include("ranking_endow_pct.jl");
 include("admissions_types.jl");
 include("admissions_open_types.jl");
 include("admissions_cutoff_types.jl");
+include("admissions_one_indicator.jl");
+
+# Admission probabilities
+include("admission_prob_functions.jl");
 
 # Entry decisions
 include("types.jl")

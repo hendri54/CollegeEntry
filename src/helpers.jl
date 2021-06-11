@@ -1,4 +1,4 @@
-check_prob_array(m :: AbstractArray{F1}) where F1 <: AbstractFloat =
+check_prob_array(m :: AbstractArray{F1}) where F1 <: Real =
     check_float_array(m, zero(F1), one(F1));
 
 """
@@ -8,7 +8,7 @@ Given an array of probabilities: ensure that all are in [0, 1].
 Error if bounds violation larger than rounding errors.
 Make sure that sum does not exceed an upper bound.
 """
-function make_valid_probs!(m :: AbstractArray{F1}; maxSum :: F1 = one(F1)) where F1 <: AbstractFloat
+function make_valid_probs!(m :: AbstractArray{F1}; maxSum :: F1 = one(F1)) where F1 <: Real
 
     fSmall = F1(.0000001);
     pSum = sum(m);
@@ -35,7 +35,7 @@ matrix_from_vector(v :: AbstractVector{F1}) where F1 =
 
 # Given value work, value of colleges, vector of admitted colleges, return max value and college index (not among admitted ones)
 function max_choice(vWork :: F1, vCollegeV :: AbstractVector{F1},
-    admitV :: AbstractVector{Bool}) where {F1 <: AbstractFloat}
+    admitV :: AbstractVector{Bool}) where {F1 <: Real}
 
     v, idx = findmax(vcat(vWork, vCollegeV .- (.!admitV) .* F1(1e8)));
     ic = idx - 1;
@@ -44,7 +44,7 @@ end
 
 # The same with an index vector as `admitV`
 function max_choice(vWork :: F1, vCollegeV :: AbstractVector{F1},
-    admitIdxV :: AbstractVector{I1}) where {F1 <: AbstractFloat, I1 <: Integer}
+    admitIdxV :: AbstractVector{I1}) where {F1 <: Real, I1 <: Integer}
 
     admitV = falses(size(vCollegeV));
     admitV[admitIdxV] .= true;
@@ -54,7 +54,7 @@ end
 # The same for many agents
 function max_choices(vWork_jV :: AbstractVector{F1}, 
     vCollege_jcM :: AbstractMatrix{F1},
-    admitV :: AbstractVector{I1}) where {F1 <: AbstractFloat, I1}
+    admitV :: AbstractVector{I1}) where {F1 <: Real, I1}
 
     J = length(vWork_jV);
     valV = zeros(F1, J);

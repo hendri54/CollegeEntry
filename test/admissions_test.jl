@@ -11,7 +11,7 @@ function common_test(a :: T1) where T1 <: AbstractAdmissionsRule
         J = length(hsGpaPctV);
 
         @test validate_admissions(a)
-        println(a);
+        # println(a);
         println(StructLH.describe(a));
         nSets = n_college_sets(a);
         @test nSets >= 1
@@ -70,7 +70,8 @@ end
 @testset "Admission Rules" begin
     nc = 4;
     for a in [CollegeEntry.make_test_admissions_open(nc),
-        CollegeEntry.make_test_admissions_cutoff(nc)]
+        CollegeEntry.make_test_admissions_cutoff(nc),
+        CollegeEntry.make_test_admissions_onevar(nc)]
 
         common_test(a);
 

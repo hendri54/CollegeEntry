@@ -8,14 +8,14 @@ const CapacityInf = 1e8;
 
 Abstract type for entry decision protocols.
 """
-abstract type AbstractEntryDecision{F1 <: AbstractFloat} <: ModelObject end
+abstract type AbstractEntryDecision{F1 <: Real} <: ModelObject end
 
 """
 	$(SIGNATURES)
 
 Abstract type for switches governing entry decision protocols.
 """
-abstract type AbstractEntrySwitches{F1 <: AbstractFloat} end
+abstract type AbstractEntrySwitches{F1 <: Real} end
 
 
 ## ------------  Sequential assignment
@@ -75,7 +75,7 @@ end
 
 Abstract type for results from entry decisions.
 """
-abstract type AbstractEntryResults{F1 <: AbstractFloat} end
+abstract type AbstractEntryResults{F1 <: Real} end
 
 """
 	$(SIGNATURES)

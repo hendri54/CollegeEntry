@@ -33,7 +33,7 @@ OUT:
 """
 function entry_probs(e :: EntryTwoStep{F1}, vWork_jV :: Vector{F1},
     vCollege_jcM :: Matrix{F1}, admitV;
-    prefShocks :: Bool = true) where F1 <: AbstractFloat
+    prefShocks :: Bool = true) where F1 <: Real
 
     J, nc = size(vCollege_jcM);
     prob_jxM = zeros(F1, J, nc);
@@ -57,7 +57,7 @@ end
 # The same for one individual
 function entry_probs(e :: EntryTwoStep{F1}, 
     vWork :: F1, vCollege_cV :: Vector{F1}, admitV;
-    profShocks :: Bool = true) where F1 <: AbstractFloat
+    profShocks :: Bool = true) where F1 <: Real
 
     nc = length(vCollege_cV);
     prob_cV = zeros(F1, nc);

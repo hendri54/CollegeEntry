@@ -36,10 +36,11 @@ validate_admissions(a :: AdmissionsOpen) = true;
 # Prob of each college set.
 # Returns 0-dim array if `kwargs` are scalar.
 # Keyword args could be hsGpaPct; this way the same args can be passed to all admissions rules
-prob_coll_set(a :: AdmissionsOpen{I1, F1}, j :: Integer, pctV :: AbstractVector) where {I1, F1} =    (j==1) ? ones(F1, length(pctV)) : error("Invalid j: $j");
+prob_coll_set(a :: AdmissionsOpen{I1, F1}, j :: Integer, pctV :: AbstractVector{F2}) where {I1, F1, F2 <: Real} =    
+    (j==1) ? ones(F1, length(pctV)) : error("Invalid j: $j");
 
 prob_coll_set(a :: AdmissionsOpen{I1, F1}, j :: Integer, hsGpaPct :: F2) where 
-    {I1, F1 <: AbstractFloat, F2 <: Number}  =  one(F1);
+    {I1, F1 <: Real, F2 <: Number}  =  one(F1);
 
 prob_coll_sets(a :: AdmissionsOpen{I1, F1}, pctV :: AbstractVector) where {I1, F1} =
     ones(F1, length(pctV), 1);

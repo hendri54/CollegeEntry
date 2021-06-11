@@ -5,14 +5,14 @@
 
 Abstract type for switches governing student ranking.
 """
-abstract type AbstractRankingSwitches{F1 <: AbstractFloat} end
+abstract type AbstractRankingSwitches{F1 <: Real} end
 
 """
 	$(SIGNATURES)
 
 Abstract student ranking type.
 """
-abstract type AbstractRanking{F1 <: AbstractFloat} <: ModelObject end
+abstract type AbstractRanking{F1 <: Real} <: ModelObject end
 
 StructLH.describe(x :: AbstractRanking) = nothing;
 StructLH.describe(switches :: AbstractRankingSwitches) = 

@@ -13,7 +13,7 @@ Bound entry probs by (j,l) away from 1.
 Does not guarantee particular min values (that is hard to do).
 """
 function scale_entry_probs!(entryProb_jlcM :: Array{F1, 3},
-    minEntryProb :: F1, maxEntryProb :: F1) where F1 <: AbstractFloat
+    minEntryProb :: F1, maxEntryProb :: F1) where F1 <: Real
 
     J, nl, nc = size(entryProb_jlcM);
     for iType = 1 : J
@@ -83,7 +83,7 @@ It defaults to the one step entry protocol. If that does not apply for a protoco
 """
 function entry_probs(e :: AbstractEntryDecision{F1}, 
     vWork_jV :: Vector{F1}, vCollege_jcM :: Matrix{F1}, admitV;
-    prefShocks :: Bool = true) where F1 <: AbstractFloat
+    prefShocks :: Bool = true) where F1 <: Real
 
     if prefShocks
         prefScale = entry_pref_scale(e);
@@ -118,7 +118,7 @@ end
 # Generic entry decision. One step. Given pref shock scale.
 # Works for any entry protocol where entry works in one step (work/study and which college at the same time).
 function one_step_entry_probs(entryPrefScale :: F1, 
-    vWork_jV :: Vector{F1}, vCollege_jcM :: Matrix{F1}, admitV) where F1 <: AbstractFloat
+    vWork_jV :: Vector{F1}, vCollege_jcM :: Matrix{F1}, admitV) where F1 <: Real
 
     J, nc = size(vCollege_jcM);
     prob_jxM = zeros(F1, J, nc);
@@ -151,7 +151,7 @@ end
 # The same for one type.
 # Preference shocks may be zero.
 function one_step_entry_probs(entryPrefScale :: F1,
-    vWork :: F1, vCollege_cV :: Vector{F1}, admitV) where F1 <: AbstractFloat
+    vWork :: F1, vCollege_cV :: Vector{F1}, admitV) where F1 <: Real
 
     nc = length(vCollege_cV);
     prob_cV = zeros(F1, nc);
@@ -303,7 +303,7 @@ end
 # Compute college enrollment from type mass and entry probabilities.
 # """
 # function college_enrollment(entryProb_jcM :: Matrix{F1}, 
-#     typeMass_jV) where F1 <: AbstractFloat
+#     typeMass_jV) where F1 <: Real
 
 #     J, nc = size(entryProb_jcM);
 #     enrollV = zeros(F1, nc);
@@ -314,12 +314,12 @@ end
 # end
 
 # function college_enrollment(e :: AbstractEntryDecision{F1}, 
-#     entryProb_jcM :: Matrix{F1}) where F1 <: AbstractFloat
+#     entryProb_jcM :: Matrix{F1}) where F1 <: Real
 #     return college_enrollment(e.switches, entryProb_jcM);
 # end
 
 # function college_enrollment(e :: AbstractEntrySwitches{F1}, 
-#     entryProb_jcM :: Matrix{F1}) where F1 <: AbstractFloat
+#     entryProb_jcM :: Matrix{F1}) where F1 <: Real
 
 #     @assert n_locations(e) == 1
 #     J = size(entryProb_jcM, 1);
@@ -340,7 +340,7 @@ end
 # Return `Bool` vector that indicates which colleges are full. Only matters for entry structures with capacity constraints.
 # """
 # function colleges_full(e :: AbstractEntryDecision{F1}, 
-#     entryProb_jcM :: Matrix{F1}) where F1 <: AbstractFloat
+#     entryProb_jcM :: Matrix{F1}) where F1 <: Real
   
 #     @assert n_locations(e) == 1  "Not valid for multiple locations"
 #     return college_enrollment(e, entryProb_jcM) .>= capacities(e)

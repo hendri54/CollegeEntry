@@ -375,7 +375,7 @@ Respect the fraction of each type that goes to each (l, c). Also adjust `fracLoc
 
 `EntryResults` are no longer internally consistent after scaling. Only meant for testing / fixing poor outcomes during an optimization.
 """
-function fix_type_entry_probs!(er :: AbstractEntryResults{F1}, typeTotalV :: AbstractVector{F1}) where F1 <: AbstractFloat
+function fix_type_entry_probs!(er :: AbstractEntryResults{F1}, typeTotalV :: AbstractVector{F1}) where F1 <: Real
 
     @assert all_at_most(typeTotalV, one(F1))
 	@assert length(typeTotalV) == n_types(er)

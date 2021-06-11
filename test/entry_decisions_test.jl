@@ -1,5 +1,5 @@
-using Random, Test
-using LatexLH, StructLH, ModelParams, CollegeEntry
+using Random, Test, TestSetExtensions
+using LatexLH, StructLH, ModelObjectsLH, ModelParams, CollegeEntry
 
 ce = CollegeEntry;
 
@@ -216,16 +216,38 @@ function sim_entry_one_test(switches :: AbstractEntrySwitches{F1},
     end
 end
 
+
+# Simultaneous entry (no capacity constraints) with prob entry a function of a single indicator
+function admission_onevar_test(prefShocks)
+    J = 8;
+    nc = 4;
+    @testset "Admissions based on single indicator" begin
+        admissionS = ce.make_test_admissions_onevar(nc);
+        # No capacity constraints
+        switches = make_test_entry_sequ_multiloc(J, nc, nc + 1, 100 * J * nc;
+            localOnlyV = [1]);
+        for prefShocks ∈ [true, false]
+            entry_decisions_test(switches, admissionS, prefShocks);
+        end
+        sim_entry_one_test(switches, admissionS);
+    end
+end
+
+
 @testset ExtendedTestSet "Entry decisions" begin
     J = 8;
     nc = 4;
-    admissionS = CollegeEntry.make_test_admissions_cutoff(nc);
+    admissionS = ce.make_test_admissions_cutoff(nc);
     # The last case ensures that some colleges are full
     for switches in test_entry_switches(J, nc)
         for prefShocks ∈ [true, false]
             entry_decisions_test(switches, admissionS, prefShocks);
         end
         sim_entry_one_test(switches, admissionS);
+    end
+
+    for prefShocks ∈ [true, false]
+        admission_onevar_test(prefShocks);
     end
 
     # Test with subsetting

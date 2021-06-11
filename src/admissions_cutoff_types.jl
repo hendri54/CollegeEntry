@@ -1,4 +1,3 @@
-
 ## ----------  HS GPA or other endowment percentile cutoff
 
 """
@@ -6,9 +5,9 @@
 
 Switches governing admissions by cutoff rule.
 """
-mutable struct AdmissionsCutoffSwitches{I1, F1 <: AbstractFloat} <: AbstractAdmissionsSwitches{I1, F1}
+mutable struct AdmissionsCutoffSwitches{I1, F1 <: Real} <: AbstractAdmissionsSwitches{I1, F1}
     nColleges :: I1
-    # The variable that holds the individual percentiles
+    # Name of the variable that holds the individual percentiles
     pctVar :: Symbol
     # Minimum HS GPA percentile required for each college; should be increasing
     minPctV :: Vector{F1}
@@ -20,8 +19,10 @@ end
 	$(SIGNATURES)
 
 Admissions are governed by a single indicator, such as a test score. Students can attend colleges for which they qualify in the sense that their indicator exceeds the college's cutoff value. Students may be allowed to attend other colleges with a fixed probability.
+
+This means that there are only two probabilities. With a high probability, the student can attend colleges `1:n` where `n` is the best college for which the student qualifies. With a low probability, the student may draw each college set `1 : m` where `m != n`.
 """
-struct AdmissionsCutoff{I1, F1 <: AbstractFloat} <: AbstractAdmissionsRule{I1, F1}
+struct AdmissionsCutoff{I1, F1 <: Real} <: AbstractAdmissionsRule{I1, F1}
     switches :: AdmissionsCutoffSwitches{I1, F1}
 end
 
@@ -70,7 +71,7 @@ function highest_college(a :: AdmissionsCutoff{I1, F1}, endowPct :: F2) where
     return qIdx
 end
 
-function highest_college(a :: AdmissionsCutoff{I1, F1}, endowPctV :: AbstractVector{F2}) where {I1, F1, F2 <: AbstractFloat}
+function highest_college(a :: AdmissionsCutoff{I1, F1}, endowPctV :: AbstractVector{F2}) where {I1, F1, F2 <: Real}
 
     highV = Vector{Int}(undef, length(endowPctV));
     for (j, endowPct) in enumerate(endowPctV)
@@ -80,21 +81,9 @@ function highest_college(a :: AdmissionsCutoff{I1, F1}, endowPctV :: AbstractVec
 end
 
 
-# Prob of each college set.
-function prob_coll_set(a :: AdmissionsCutoff{I1, F1}, iSet :: Integer, 
-    hsGpaPctV :: AbstractVector{F2}) where {I1, F1, F2 <: AbstractFloat}
-
-    J = length(hsGpaPctV);
-    probV = Vector{F1}(undef, J);
-    for j = 1 : J
-        probV[j] = prob_coll_set(a, iSet, hsGpaPctV[j]);
-    end
-    return probV
-end
-
-
 # Probability that one student draws one college set
-function prob_coll_set(a :: AdmissionsCutoff{I1, F1}, iSet :: Integer, endowPct :: F2) where {I1, F1, F2 <: Real}
+function prob_coll_set(a :: AdmissionsCutoff{I1, F1}, 
+    iSet :: Integer, endowPct :: F2) where {I1, F1, F2 <: Real}
 
     qIdx = highest_college(a, endowPct);
     if qIdx == iSet
@@ -123,19 +112,19 @@ function prob_coll_sets(a :: AdmissionsCutoff{I1, F1}, endowPct :: F2) where {I1
 end
 
 
-function prob_coll_sets(a :: AdmissionsCutoff{I1, F1}, hsGpaPctV :: AbstractVector{F2}) where {I1, F1, F2 <: AbstractFloat}
+# function prob_coll_sets(a :: AdmissionsCutoff{I1, F1}, hsGpaPctV :: AbstractVector{F2}) where {I1, F1, F2 <: Real}
 
-    nSets = n_college_sets(a);
-    n = length(hsGpaPctV);
-    prob_jsM = Matrix{F1}(undef, n, nSets);
-    for j = 1 : n
-        prob_jsM[j, :] = prob_coll_sets(a, hsGpaPctV[j]);
-    end
+#     nSets = n_college_sets(a);
+#     n = length(hsGpaPctV);
+#     prob_jsM = Matrix{F1}(undef, n, nSets);
+#     for j = 1 : n
+#         prob_jsM[j, :] = prob_coll_sets(a, hsGpaPctV[j]);
+#     end
 
-    @assert all_at_least(prob_jsM, a.switches.minCollSetProb)
-    @assert all_at_most(prob_jsM, 1.0)
-    @check all(isapprox.(sum(prob_jsM, dims = 2), 1.0, atol = 1e-6))
-    return prob_jsM
-end
+#     @assert all_at_least(prob_jsM, a.switches.minCollSetProb)
+#     @assert all_at_most(prob_jsM, 1.0)
+#     @check all(isapprox.(sum(prob_jsM, dims = 2), 1.0, atol = 1e-6))
+#     return prob_jsM
+# end
 
 # ------------------
