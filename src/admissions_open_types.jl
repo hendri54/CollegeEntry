@@ -48,7 +48,7 @@ prob_coll_sets(a :: AdmissionsOpen{I1, F1}, pctV :: AbstractVector) where {I1, F
 make_admissions(switches :: AdmissionsOpenSwitches{I1, F1}) where {I1, F1} = 
     AdmissionsOpen{I1, F1}(switches);
 
-make_test_admissions_open(nc :: I1) where I1 = 
+make_test_admissions_open(nc :: I1; stashProbFunctions = false) where I1 = 
     AdmissionsOpen{I1, Float64}(AdmissionsOpenSwitches{I1, Float64}(nc, :hsGpaPct));
 
 

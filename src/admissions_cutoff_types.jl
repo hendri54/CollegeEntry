@@ -56,7 +56,7 @@ make_admissions(switches :: AdmissionsCutoffSwitches{I1, F1}) where {I1, F1} =
 make_test_adm_cutoff_switches(nc) = 
     AdmissionsCutoffSwitches(nc, :hsGpa, 
         collect(range(0.0, 0.8, length = nc)), 0.05);
-make_test_admissions_cutoff(nc) = 
+make_test_admissions_cutoff(nc; stashProbFunctions = false) = 
     AdmissionsCutoff(make_test_adm_cutoff_switches(nc));
 
 min_percentiles(a :: AdmissionsCutoff{I1, F1}) where {I1, F1} = a.switches.minPctV;

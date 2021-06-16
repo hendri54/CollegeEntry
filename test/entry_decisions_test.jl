@@ -34,102 +34,105 @@ end
 function entry_decisions_test(switches :: AbstractEntrySwitches{F1},
     admissionS, prefShocks :: Bool; takeSubset :: Bool = false) where F1
 
-    rng = MersenneTwister(12);
-    println("\n------------------------");
-    println(switches);
-    println(StructLH.describe(switches));
-    objId = ObjectId(:entryOneStep);
-    st = ce.make_test_symbol_table();
-    entryS = init_entry_decision(objId, switches, st);
-    println(entryS, "  Pref shocks: $prefShocks");
+    @testset ExtendedTestSet "Entry Decisions $(typeof(switches)), $(typeof(admissionS))" begin
+        rng = MersenneTwister(12);
+        # println(switches);
+        @test StructLH.describe(switches) isa Array{String};
+        objId = ObjectId(:entryOneStep);
+        st = ce.make_test_symbol_table();
+        entryS = init_entry_decision(objId, switches, st);
+        # println(entryS, "  Pref shocks: $prefShocks");
 
-    if takeSubset
-        idxV = 1 : 3 : n_types(switches);
-        subset_types!(entryS, idxV);
-        @test n_types(entryS) == length(idxV)
-        @test validate_es(entryS.switches)
-    end
+        if takeSubset
+            idxV = 1 : 3 : n_types(switches);
+            subset_types!(entryS, idxV);
+            @test n_types(entryS) == length(idxV)
+            @test validate_es(entryS.switches)
+        end
 
-    nc = n_colleges(switches);
-    J = n_types(switches);
-    nl = n_locations(switches)
-    vWork_jV, vCollege_jcM = CollegeEntry.values_for_test(rng, J, nc, nl);
-    hsGpaPctV = collect(range(0.1, 0.9, length = J));
-    rank_jV = vcat(2 : 2 : J, 1 : 2 : J);
+        nc = n_colleges(switches);
+        J = n_types(switches);
+        nl = n_locations(switches)
+        vWork_jV, vCollege_jcM = CollegeEntry.values_for_test(rng, J, nc, nl);
+        hsGpaPctV = collect(range(0.1, 0.9, length = J));
+        rank_jV = vcat(2 : 2 : J, 1 : 2 : J);
 
-    er = entry_decisions(entryS, admissionS,
-        vWork_jV, vCollege_jcM, hsGpaPctV, rank_jV; prefShocks = prefShocks);
-    @test validate_er(er; validateFracLocal = prefShocks)
-    entryProb_jcM = entry_probs_jc(er);
-    eValM = expected_values_jl(er);
-    # Need interior entry probs. Otherwise adjust values.
-    # Unless there are no pref shocks - then probs are always 0 and 1
-    if all(entry_probs_j(er) .< 0.2)  &&  prefShocks
-        @warn "Entry probs too low:  $(entry_probs_j(er))"
-        @test false
-    end
-    @test any(entry_probs_j(er) .< 0.8)
+        er = entry_decisions(entryS, admissionS,
+            vWork_jV, vCollege_jcM, hsGpaPctV, rank_jV; prefShocks = prefShocks);
+        @test validate_er(er; validateFracLocal = prefShocks)
+        entryProb_jcM = entry_probs_jc(er);
+        eValM = expected_values_jl(er);
+        # Need interior entry probs. Otherwise adjust values.
+        # Unless there are no pref shocks - then probs are always 0 and 1
+        if all(entry_probs_j(er) .< 0.2)  &&  prefShocks
+            @warn "Entry probs too low:  $(entry_probs_j(er))"
+            @test false
+        end
+        @test any(entry_probs_j(er) .< 0.8)
 
-    # Switching off preference shocks should not affect entry
-    if prefShocks
-        er2 = entry_decisions(entryS, admissionS,
-            vWork_jV, vCollege_jcM, hsGpaPctV, rank_jV; prefShocks = false);
-        @test isapprox(enrollment_cl(er2), enrollment_cl(er), rtol = 0.005);
-        @test isapprox(frac_local_c(er2), frac_local_c(er), atol = 0.005);
-    end
+        # Switching off preference shocks should not affect entry
+        if prefShocks
+            er2 = entry_decisions(entryS, admissionS,
+                vWork_jV, vCollege_jcM, hsGpaPctV, rank_jV; prefShocks = false);
+            @test isapprox(enrollment_cl(er2), enrollment_cl(er), rtol = 0.005);
+            @test isapprox(frac_local_c(er2), frac_local_c(er), atol = 0.005);
+        end
 
-    # # Computing fracLocal across colleges and across types should give the same answer
-    # fracLocal = frac_local(er);
-    # fracLocal2 = sum(frac_local_c(er) .* enrollment_c(er)) / sum(enrollment_c(er));
-    # @test isapprox(fracLocal, fracLocal2)
-    # entryMass_jV = entry_probs_j(er, :all) .* type_mass_j(er);
-    # fracLocal3 = sum(frac_local_j(er) .* entryMass_jV) / sum(entryMass_jV);
-    # @test isapprox(fracLocal3, fracLocal)
+        # # Computing fracLocal across colleges and across types should give the same answer
+        # fracLocal = frac_local(er);
+        # fracLocal2 = sum(frac_local_c(er) .* enrollment_c(er)) / sum(enrollment_c(er));
+        # @test isapprox(fracLocal, fracLocal2)
+        # entryMass_jV = entry_probs_j(er, :all) .* type_mass_j(er);
+        # fracLocal3 = sum(frac_local_j(er) .* entryMass_jV) / sum(entryMass_jV);
+        # @test isapprox(fracLocal3, fracLocal)
 
-    # Entry results methods
-    if n_locations(er) == 1
-        @test frac_local(er) == 1.0
-        @test all(frac_local_j(er) .== 1.0)
-        @test all(frac_local_c(er) .== 1.0)
-    elseif prefShocks
-        @test 0.0 < frac_local(er) < 1.0
-        @test all(0.0 .< frac_local_j(er) .< 1.0)
-        # Frac local can be 1 when a college is local only
-        @test all(0.0 .< frac_local_c(er) .<= 1.0)        
-    end
+        # Entry results methods
+        if n_locations(er) == 1
+            @test frac_local(er) == 1.0
+            @test all(frac_local_j(er) .== 1.0)
+            @test all(frac_local_c(er) .== 1.0)
+        elseif prefShocks
+            @test 0.0 < frac_local(er) < 1.0
+            @test all(0.0 .< frac_local_j(er) .< 1.0)
+            # Frac local can be 1 when a college is local only
+            @test all(0.0 .< frac_local_c(er) .<= 1.0)        
+        end
 
-    # Check implied properties
-    totalMass = sum(type_mass_jl(er));
-    
-    # Solving one student at a time should give the same answer IF no colleges are full.
-    for j = 1 : J
-        if nl == 1
-            entryProb_cV, eVal, entryProbBest_clM = ce.entry_decisions_one_student(
-                entryS, admissionS,
-                vWork_jV[j], vCollege_jcM[j,:], hsGpaPctV[j], fill(false, nc);
-                prefShocks = prefShocks);
-            @test sum(entryProb_cV) .<= 1.0
-            # Not having full colleges should increase value
-            @test eVal >= eValM[j]
-            # And it should increase entry - unless we have no pref shocks
-            if prefShocks
-                @test sum(entryProb_cV) > sum(entryProb_jcM[j,:] .- 1e-5)
-            end
-            if !any(colleges_full(er))
-                @test isapprox(entryProb_cV, entryProb_jcM[j,:])
-                @test isapprox(eVal, eValM[j])
-            end
-
-        else
-            # Solver for student in one location
-            for l = 1 : nl
-                entryProb_clM, eVal, entryProbBest_clM = ce.entry_decisions_one_student(
-                    entryS, admissionS,  vWork_jV[j], vCollege_jcM[j,:], 
-                    hsGpaPctV[j], fill(false, nc, nl), l;
-                    prefShocks = prefShocks);
-                @test all(sum(entryProb_clM, dims = 2) .<= 1.0)
+        # Check implied properties
+        totalMass = sum(type_mass_jl(er));
+        
+        # Solving one student at a time should give the same answer IF no colleges are full.
+        for j = 1 : J
+            if nl == 1
+                entryProb_cV, eVal, entryProbBest_clM = 
+                    ce.entry_decisions_one_student(
+                        entryS, admissionS,
+                        vWork_jV[j], vCollege_jcM[j,:], hsGpaPctV[j], 
+                        fill(false, nc);
+                        prefShocks = prefShocks);
+                @test sum(entryProb_cV) .<= 1.0
                 # Not having full colleges should increase value
-                @test eVal >= eValM[j, l]
+                @test eVal >= eValM[j]
+                # And it should increase entry - unless we have no pref shocks
+                if prefShocks
+                    @test sum(entryProb_cV) > sum(entryProb_jcM[j,:] .- 1e-5)
+                end
+                if !any(colleges_full(er))
+                    @test isapprox(entryProb_cV, entryProb_jcM[j,:])
+                    @test isapprox(eVal, eValM[j])
+                end
+
+            else
+                # Solver for student in one location
+                for l = 1 : nl
+                    entryProb_clM, eVal, entryProbBest_clM = ce.entry_decisions_one_student(
+                        entryS, admissionS,  vWork_jV[j], vCollege_jcM[j,:], 
+                        hsGpaPctV[j], fill(false, nc, nl), l;
+                        prefShocks = prefShocks);
+                    @test all(sum(entryProb_clM, dims = 2) .<= 1.0)
+                    # Not having full colleges should increase value
+                    @test eVal >= eValM[j, l]
+                end
             end
         end
     end
@@ -169,14 +172,12 @@ end
 function sim_entry_one_test(switches :: AbstractEntrySwitches{F1},
     admissionS) where F1
 
-    rng = MersenneTwister(32);
-	@testset ExtendedTestSet "Simulate entry decision one student" begin
-        println("\n------------------------");
-        println(switches);
+    @testset ExtendedTestSet "Sim entry $(typeof(switches)), $(typeof(admissionS))" begin
+        rng = MersenneTwister(32);
         objId = ObjectId(:entryOneStep);
         st = ce.make_test_symbol_table();
         entryS = init_entry_decision(objId, switches, st);
-        println(entryS);
+        # println(entryS);
 
         nSim = Int(1e5);
         nc = n_colleges(switches);
@@ -218,42 +219,59 @@ end
 
 
 # Simultaneous entry (no capacity constraints) with prob entry a function of a single indicator
-function admission_onevar_test(prefShocks)
-    J = 8;
-    nc = 4;
-    @testset "Admissions based on single indicator" begin
-        admissionS = ce.make_test_admissions_onevar(nc);
-        # No capacity constraints
-        switches = make_test_entry_sequ_multiloc(J, nc, nc + 1, 100 * J * nc;
-            localOnlyV = [1]);
-        for prefShocks ∈ [true, false]
-            entry_decisions_test(switches, admissionS, prefShocks);
-        end
-        sim_entry_one_test(switches, admissionS);
-    end
-end
+# function admission_onevar_test(prefShocks)
+#     J = 8;
+#     nc = 4;
+#     @testset "Admissions based on single indicator" begin
+#         admissionS = ce.make_test_admissions_onevar(nc);
+#         # No capacity constraints
+#         switches = make_test_entry_sequ_multiloc(J, nc, nc + 1, 100 * J * nc;
+#             localOnlyV = [1]);
+#         for prefShocks ∈ [true, false]
+#             entry_decisions_test(switches, admissionS, prefShocks);
+#         end
+#         sim_entry_one_test(switches, admissionS);
+#     end
+# end
 
 
 @testset ExtendedTestSet "Entry decisions" begin
     J = 8;
     nc = 4;
-    admissionS = ce.make_test_admissions_cutoff(nc);
-    # The last case ensures that some colleges are full
-    for switches in test_entry_switches(J, nc)
-        for prefShocks ∈ [true, false]
-            entry_decisions_test(switches, admissionS, prefShocks);
+    for admissionS in (
+        ce.make_test_admissions_cutoff(nc),
+        ce.make_test_admissions_onevar(nc)
+        )
+
+        if admissionS isa AdmissionsOneVar
+            # Currently only works without capacity constraints +++++
+            capacities = (:high, );
+            capFactor = 100.0;
+        else
+            capacities = (:high, :low);
+            capFactor = 0.3;
         end
-        sim_entry_one_test(switches, admissionS);
+
+        # The last case ensures that some colleges are full
+        for switches in test_entry_switches(J, nc; capacities = capacities);
+            for prefShocks ∈ [true, false]
+                entry_decisions_test(switches, admissionS, prefShocks);
+            end
+            sim_entry_one_test(switches, admissionS);
+        end
+
+        # Test with subsetting
+        J = 21;
+        switches = 
+            make_test_entry_sequ_multiloc(J, nc, nc + 1, capFactor * J * nc);
+        entry_decisions_test(switches, admissionS, true; takeSubset = true);
     end
 
-    for prefShocks ∈ [true, false]
-        admission_onevar_test(prefShocks);
-    end
+    # # Currently only works without capacity constraints +++++
+    # for prefShocks ∈ [true, false]
+    #     admission_onevar_test(prefShocks);
+    # end
 
-    # Test with subsetting
-    J = 21;
-    switches = make_test_entry_sequ_multiloc(J, nc, nc + 1, 0.3 * J * nc);
-    entry_decisions_test(switches, admissionS, true; takeSubset = true);
 
     reshape_test()
     # subset_types_test(admissionS)

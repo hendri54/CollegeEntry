@@ -1,6 +1,7 @@
 module CollegeEntry
 
 # Distributions only needed for simulations.
+using ModelParams: get_object_id
 using ArgCheck, Distributions, DocStringExtensions, Lazy, Random
 using CommonLH, EconLH, LatexLH, StructLH, ModelObjectsLH, ModelParams
 
@@ -13,13 +14,14 @@ export init_entry_decision, entry_probs, fix_entry_probs!, scale_entry_probs!,
 
 
 # Admissions rules
-export AbstractAdmissionsRule, AbstractAdmissionsSwitches, AdmissionsOpenSwitches, AdmissionsOpen, AdmissionsCutoffSwitches, AdmissionsCutoff
+export AbstractAdmissionsRule, AbstractAdmissionsSwitches, AdmissionsOpenSwitches, AdmissionsOpen, AdmissionsCutoffSwitches, AdmissionsCutoff, AdmissionsOneVarSwitches, AdmissionsOneVar
 export n_colleges, n_college_sets, percentile_var, college_set, open_admission, admission_probs, prob_coll_set, prob_coll_sets, make_admissions, validate_admissions
 
 # Admission probabilities
 export AbstractAdmProbFctSwitches, AbstractAdmProbFct, 
-    AdmProbFctLogisticSwitches, AdmProbFctLogistic
-export init_admprob_fct, make_admprob_function
+    AdmProbFctLogisticSwitches, AdmProbFctLogistic,
+    AdmProbFctOpenSwitches, AdmProbFctOpen
+export init_admprob_fct, make_admprob_function, stash_admprob_functions
 
 # Complete entry decisions
 export entry_decisions

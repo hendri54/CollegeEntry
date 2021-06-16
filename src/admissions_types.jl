@@ -2,6 +2,7 @@
 	$(SIGNATURES)
 
 Abstract type for admissions rules.
+Not a ModelObject. This is combined with an `AbstractAdmProbFct` that potentially contains calibrated parameters.
 """
 abstract type AbstractAdmissionsRule{I1, F1 <: Real} end
 
@@ -21,6 +22,15 @@ StructLH.describe(a :: AbstractAdmissionsRule) = StructLH.describe(a.switches);
 Initialize an admission rule from its switches. 
 """
 function make_admissions(switches :: AbstractAdmissionsSwitches) end
+
+
+"""
+	$(SIGNATURES)
+
+Stash admissions probability functions inside the object (usually not needed).
+"""
+function stash_admprob_functions(a :: AbstractAdmissionsRule, fctV) end
+
 
 
 n_colleges(a :: AbstractAdmissionsRule) = a.switches.nColleges;

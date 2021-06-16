@@ -25,7 +25,7 @@ College sets are of the form `1 : n`.
 Probability of being admitted to all colleges = admissions probability at top college.
 Probability of being admitted to `1 : n` = admissions probablity of college `n` times 1 minus admission probability at `n+1` or higher.
 """
-struct AdmissionsOneVar{I1, F1 <: Real} <: AbstractAdmissionsRule{I1, F1}
+mutable struct AdmissionsOneVar{I1, F1 <: Real} <: AbstractAdmissionsRule{I1, F1}
     switches :: AdmissionsOneVarSwitches{I1, F1}
     admissionProbFctV :: Vector
 end
@@ -50,17 +50,24 @@ function validate_admissions(a :: AdmissionsOneVar{I1, F1}) where {I1, F1}
     return isValid
 end
 
-make_admissions(switches :: AdmissionsOneVarSwitches{I1, F1},
-    admissionProbFctV) where {I1, F1} = 
-    AdmissionsOneVar(switches, admissionProbFctV);
+make_admissions(switches :: AdmissionsOneVarSwitches{I1, F1}) where {I1, F1} = 
+    AdmissionsOneVar(switches, Vector{Any}());
 
 make_test_adm_onevar_switches(nc) = 
     AdmissionsOneVarSwitches(nc, :hsGpa, 0.05);
 
-function make_test_admissions_onevar(nc)
-    admissionProbFctV = [x -> test_admission_prob_fct(x, ic)  for ic = 1 : nc];
-    return AdmissionsOneVar(make_test_adm_onevar_switches(nc),
-        admissionProbFctV);
+# By default: With the admission prob functions inside
+function make_test_admissions_onevar(nc; stashProbFunctions = true)
+    a = make_admissions(make_test_adm_onevar_switches(nc));
+    if stashProbFunctions
+        af = make_test_admprob_fct_logistic(nc);
+        stash_admprob_functions(a, af);
+    end
+    return a
+end
+
+function stash_admprob_functions(a :: AdmissionsOneVar{I1, F1}, af) where {I1, F1}
+    a.admissionProbFctV = [make_admprob_function(af, ic)  for ic = 1 : n_colleges(a)];
 end
 
 function test_admission_prob_fct(x :: Real, ic :: Integer)

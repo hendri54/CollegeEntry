@@ -61,10 +61,15 @@ function show_matrix(m :: Matrix{F1}; header = "Matrix:") where F1
 end
 
 # Low capacity sequential ensures that there are full colleges
-function test_entry_switches(J, nc)
+function test_entry_switches(J, nc; capacities = (:high, :low))
+    if any(capacities .== :low)
+        cap = 0.3 * J * nc;
+    else
+        cap = 100.0 * J * nc;
+    end
     return [
-        make_test_entry_sequ_multiloc(J, nc, nc + 1, 0.3 * J * nc),
-        make_test_entry_sequ_multiloc(J, nc, nc + 1, 0.3 * J * nc; localOnlyV = [1]),
+        make_test_entry_sequ_multiloc(J, nc, nc + 1, cap),
+        make_test_entry_sequ_multiloc(J, nc, nc + 1, cap; localOnlyV = [1]),
         make_entry_switches_oneloc(J, nc)
     ];
 end

@@ -1,10 +1,15 @@
 using Test
 using CollegeEntry, StructLH
 
+ce = CollegeEntry;
+
 function common_test(a :: T1) where T1 <: AbstractAdmissionsRule
     @testset "$a" begin
-        println("\n------------------");
-        println(a);
+        # println("\n------------------");
+        # println(a);
+        nc = n_colleges(a);
+        af = ce.make_test_admprob_fct_logistic(nc);
+        ce.stash_admprob_functions(a, af);
 
         # Want these increasing
         hsGpaPctV = 0.01 : 0.2 : 0.99;
@@ -12,7 +17,7 @@ function common_test(a :: T1) where T1 <: AbstractAdmissionsRule
 
         @test validate_admissions(a)
         # println(a);
-        println(StructLH.describe(a));
+        @test StructLH.describe(a) isa Matrix{String};
         nSets = n_college_sets(a);
         @test nSets >= 1
         @test n_colleges(a) > 1
@@ -50,7 +55,6 @@ function gpa_cutoff_test(a :: AdmissionsCutoff)
         println("\n----------------------");
         println(a);
         
-        # a = CollegeStrat.make_test_admissions_gpa(4);
         hsGpaPctV = 0.01 : 0.3 : 0.99;
         highV = CollegeEntry.highest_college(a, hsGpaPctV);
         @test isa(highV, Vector{<: Integer})
@@ -69,9 +73,12 @@ end
 
 @testset "Admission Rules" begin
     nc = 4;
-    for a in [CollegeEntry.make_test_admissions_open(nc),
-        CollegeEntry.make_test_admissions_cutoff(nc),
-        CollegeEntry.make_test_admissions_onevar(nc)]
+    # These also stash admission prob functions inside the objects (if needed).
+    for a in [
+        CollegeEntry.make_test_admissions_open(nc; stashProbFunctions = false),
+        CollegeEntry.make_test_admissions_cutoff(nc; stashProbFunctions = false),
+        CollegeEntry.make_test_admissions_onevar(nc; stashProbFunctions = false)
+        ]
 
         common_test(a);
 
