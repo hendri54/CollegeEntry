@@ -168,7 +168,7 @@ function init_m(nc :: Integer, isCalibrated :: Bool)
     sz = (nc, );
     pName = :mV;
     if nc > 1
-        v = LinRange(-0.4, 0.4, nc);
+        v = collect(LinRange(-0.4, 0.4, nc));
     else
         v = fill(0.4, sz);
     end
