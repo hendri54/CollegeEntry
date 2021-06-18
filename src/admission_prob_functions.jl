@@ -153,12 +153,13 @@ function init_q(nc :: Integer, isCalibrated :: Bool)
 end
 
 # Slope
+# Logistic maps [-Inf, Inf] -> [0, 1]. So B must be large.
 function init_b(nc :: Integer, isCalibrated :: Bool)
     sz = (nc, );
     pName = :bV;
-    v = fill(1.0, sz);
+    v = fill(5.0, sz);
     return Param(pName, "Logistic $pName", string(pName), v, v,
-        0.1 .* v, 10.0 .* v, isCalibrated);
+        fill(0.1, sz), fill(10.0, sz), isCalibrated);
 end
 
 # The input is a percentile. So M should also be on the order of [0, 1].
@@ -166,7 +167,11 @@ end
 function init_m(nc :: Integer, isCalibrated :: Bool)
     sz = (nc, );
     pName = :mV;
-    v = fill(0.4, sz);
+    if nc > 1
+        v = LinRange(-0.4, 0.4, nc);
+    else
+        v = fill(0.4, sz);
+    end
     sz = size(v);
     Param(pName, "Logistic $pName", string(pName), v, v,
         fill(-0.8, sz), fill(0.8, sz), isCalibrated);
@@ -327,7 +332,7 @@ function make_admprob_function(af :: AdmProbFctLogistic{F1},
 end
 
 logistic(x, pMin, pMax, q, b, m) = 
-    pMin .+ (pMax .- pMin) / (1.0 .+ q .+ exp(-b .* (x .- m)));
+    pMin .+ (pMax .- pMin) / (1.0 .+ q .* exp(-b .* (x .- m)));
 
 # function get_pMin(af :: AdmProbFctLogistic{F1}, iCollege :: Integer) where F1
 #     get_param(af, :pMin, iCollege)

@@ -267,12 +267,6 @@ end
         entry_decisions_test(switches, admissionS, true; takeSubset = true);
     end
 
-    # # Currently only works without capacity constraints +++++
-    # for prefShocks ∈ [true, false]
-    #     admission_onevar_test(prefShocks);
-    # end
-
-
     reshape_test()
     # subset_types_test(admissionS)
 end

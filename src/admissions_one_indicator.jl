@@ -132,10 +132,19 @@ function prob_coll_sets_from_probs(a :: AdmissionsOneVar{I1, F1},
     return probV
 end
 
-# Probability of being admitted into a specific college (just based on its admissions prob function).
+
+"""
+	$(SIGNATURES)
+
+Probability of being admitted into a specific college (just based on its admissions prob function).
+"""
 function prob_admit(a :: AdmissionsOneVar{I1, F1}, iCollege :: Integer, 
     hsGpa) where {I1, F1}
 
+    @assert length(a.admissionProbFctV) >= iCollege  """
+        Index out of bounds: $iCollege
+        Perhaps admissions prob functions were not stashed?
+        """
     prob_fct = a.admissionProbFctV[iCollege];
     return prob_fct.(hsGpa)
 end

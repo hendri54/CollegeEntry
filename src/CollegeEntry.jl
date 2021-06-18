@@ -21,7 +21,7 @@ export n_colleges, n_college_sets, percentile_var, college_set, open_admission, 
 export AbstractAdmProbFctSwitches, AbstractAdmProbFct, 
     AdmProbFctLogisticSwitches, AdmProbFctLogistic,
     AdmProbFctOpenSwitches, AdmProbFctOpen
-export init_admprob_fct_logistic_switches, init_admprob_fct, make_admprob_function, stash_admprob_functions
+export init_admprob_fct_logistic_switches, init_admprob_fct, make_admprob_function, stash_admprob_functions, prob_admit
 
 # Complete entry decisions
 export entry_decisions
