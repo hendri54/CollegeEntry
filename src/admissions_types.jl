@@ -14,7 +14,10 @@ Abstract type for switches from which admissions rules are constructed.
 abstract type AbstractAdmissionsSwitches{I1, F1 <: Real} end
 
 
-StructLH.describe(a :: AbstractAdmissionsRule) = StructLH.describe(a.switches);
+Lazy.@forward AbstractAdmissionsRule.switches (
+    StructLH.describe, open_admission, percentile_var
+    );
+
 
 """
 	$(SIGNATURES)
@@ -31,6 +34,13 @@ Stash admissions probability functions inside the object (usually not needed).
 """
 function stash_admprob_functions(a :: AbstractAdmissionsRule, fctV) end
 
+"""
+	$(SIGNATURES)
+
+Variable used to rank students in admissions rule.
+"""
+percentile_var(switches :: AbstractAdmissionsSwitches) =
+    switches.pctVar;
 
 
 n_colleges(a :: AbstractAdmissionsRule) = a.switches.nColleges;
@@ -38,8 +48,7 @@ n_colleges(a :: AbstractAdmissionsRule) = a.switches.nColleges;
 # By default, college sets are of the form `1:n`.
 n_college_sets(a :: AbstractAdmissionsRule) = n_colleges(a);
 college_set(a :: AbstractAdmissionsRule, iSet :: Integer) = 1 : iSet;
-open_admission(a :: AbstractAdmissionsRule) = false;
-open_admission(a :: AbstractAdmissionsSwitches) = false;
+open_admission(switches :: AbstractAdmissionsSwitches) = false;
 
 # Iterate over college sets
 function Base.iterate(a :: AbstractAdmissionsRule, j)
@@ -70,6 +79,8 @@ function admission_probs(a :: AbstractAdmissionsRule{I1, F1}, pctV :: AbstractVe
         iCollV = college_set(a, iSet);
         prob_jcM[:, iCollV] .+= probV;
     end
+    @assert check_float_array(prob_jcM, 0.0, 1.0001);
+    bracket_array!(prob_jcM, 0.0, 1.0);
     return prob_jcM
 end
 

@@ -18,11 +18,9 @@ CollegeEntry.n_draws(draws :: Matrix{Float64}) = size(draws, 1);
 # Input: No of endowments to rank on.
 function student_rankings_test(n :: Integer, highDrawsFirst :: Bool)
     @testset "Student rankings $n, $highDrawsFirst" begin
-        println("\n-----------");
         switches = CollegeEntry.make_test_endowpct_switches(n, highDrawsFirst);
-        println(switches)
-        println(StructLH.describe(switches));
-        # StructLH.describe(switches)
+        # println(switches)
+        @test StructLH.describe(switches) isa Matrix{String};
         @test validate_ranking_switches(switches)
 
         if n > 1
@@ -35,7 +33,7 @@ function student_rankings_test(n :: Integer, highDrawsFirst :: Bool)
 
         st = ce.make_test_symbol_table();
         e = make_student_ranking(ObjectId(:ranking), switches, st);
-        println(e);
+        # println(e);
         @test validate_ranking(e)
 
         J = 5;

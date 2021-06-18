@@ -4,21 +4,22 @@ using CollegeEntry
 
 ce = CollegeEntry;
 
-function adm_prob_test()
-    @testset "Admission prob fct" begin
-        nc = 4;
-        switches = ce.make_test_admprob_fct_logistic_switches(nc);
+function adm_prob_test(switches)
+    @testset "$switches" begin
         af = init_admprob_fct(switches);
         @test ce.validate_admprob_fct(af);
+        @test get_object_id(af) isa ObjectId;
+        @test get_object_id(switches) isa ObjectId;
 
-        @test !ce.by_college(switches, :pMinV);
-        ce.by_college!(switches, :pMinV);
-        @test ce.by_college(switches, :pMinV);
-        ce.not_by_college!(switches, :pMinV);
-        @test !ce.by_college(switches, :pMinV);
+        if af isa AdmProbFctLogistic
+            ce.by_college!(switches, :pMinV);
+            @test ce.by_college(switches, :pMinV);
+            ce.not_by_college!(switches, :pMinV);
+            @test !ce.by_college(switches, :pMinV);
+        end
 
         xV = 0.01 : 0.1 : 0.99;
-        for ic = 1 : nc
+        for ic = 1 : n_colleges(af)
             f = make_admprob_function(af, ic);
             probV = f.(xV);
             @test size(probV) == size(xV);
@@ -30,7 +31,13 @@ end
 
 
 @testset "Admission probs" begin
-    adm_prob_test();
+    nc = 4;
+    for switches in (
+        ce.make_test_admprob_fct_logistic_switches(nc),
+        AdmProbFctOpenSwitches{Float64}(ObjectId(:test), nc)
+        )
+        adm_prob_test(switches);
+    end
 end
 
 # ----------------

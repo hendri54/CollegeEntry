@@ -21,11 +21,11 @@ export n_colleges, n_college_sets, percentile_var, college_set, open_admission, 
 export AbstractAdmProbFctSwitches, AbstractAdmProbFct, 
     AdmProbFctLogisticSwitches, AdmProbFctLogistic,
     AdmProbFctOpenSwitches, AdmProbFctOpen
-export init_admprob_fct, make_admprob_function, stash_admprob_functions
+export init_admprob_fct_logistic_switches, init_admprob_fct, make_admprob_function, stash_admprob_functions
 
 # Complete entry decisions
 export entry_decisions
-export colleges_full, capacities, capacities_c, limited_capacity
+export colleges_full, capacities, capacities_c, limited_capacity, n_locations, n_types, total_mass
 export set_capacities!, increase_capacity!, increase_capacities!, set_local_only_colleges!
 
 # Student rankings

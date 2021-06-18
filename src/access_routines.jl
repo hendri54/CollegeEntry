@@ -76,6 +76,14 @@ value_local(switches :: AbstractEntrySwitches{F1}) where F1 = switches.valueLoca
 """
 	$(SIGNATURES)
 
+Total mass of students (not conditional on entry).
+"""
+total_mass(switches :: AbstractEntrySwitches{F1}) where F1 = 
+    n_types(switches) * n_locations(switches);
+
+"""
+	$(SIGNATURES)
+
 Number of student types.
 """
 n_types(switches :: AbstractEntrySwitches{F1}) where F1 = switches.nTypes;

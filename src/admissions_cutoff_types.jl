@@ -60,7 +60,8 @@ make_test_admissions_cutoff(nc; stashProbFunctions = false) =
     AdmissionsCutoff(make_test_adm_cutoff_switches(nc));
 
 min_percentiles(a :: AdmissionsCutoff{I1, F1}) where {I1, F1} = a.switches.minPctV;
-percentile_var(a :: AdmissionsCutoff{I1, F1}) where {I1, F1} = a.switches.pctVar;
+# percentile_var(switches :: AdmissionsCutoffSwitches{I1, F1}) where {I1, F1} = 
+#     switches.pctVar;
 
 # Highest college for which a student qualifies
 # Last GPA cutoff that is smaller than student's endowment percentile.

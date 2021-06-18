@@ -14,9 +14,13 @@ Abstract student ranking type.
 """
 abstract type AbstractRanking{F1 <: Real} <: ModelObject end
 
-StructLH.describe(x :: AbstractRanking) = nothing;
+# StructLH.describe(x :: AbstractRanking) = nothing;
 StructLH.describe(switches :: AbstractRankingSwitches) = 
     ["Generic student ranking"];
+
+Lazy.@forward AbstractRanking.switches (
+    StructLH.describe, high_draws_first, calibrate_weights
+)
 
 
 """

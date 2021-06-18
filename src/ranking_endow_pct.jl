@@ -57,10 +57,10 @@ function StructLH.describe(e :: EndowPctRankingSwitches{F1}) where F1
     ]
 end
 
-StructLH.describe(e :: EndowPctRanking) = StructLH.describe(e.switches);
+# StructLH.describe(e :: EndowPctRanking) = StructLH.describe(e.switches);
 
-high_draws_first(e :: EndowPctRanking{F1}) where F1 = 
-    high_draws_first(e.switches);
+# high_draws_first(e :: EndowPctRanking{F1}) where F1 = 
+#     high_draws_first(e.switches);
 
 high_draws_first(switches :: EndowPctRankingSwitches{F1}) where F1 = 
     switches.highDrawsFirst;
@@ -76,8 +76,8 @@ weights(e :: EndowPctRanking{F1}) where F1 =
 
 calibrate_weights(switches :: EndowPctRankingSwitches{F1}) where F1 = 
     switches.doCal;
-calibrate_weights(e :: EndowPctRanking{F1}) where F1 = 
-    calibrate_weights(e.switches);
+# calibrate_weights(e :: EndowPctRanking{F1}) where F1 = 
+#     calibrate_weights(e.switches);
 
 
 """

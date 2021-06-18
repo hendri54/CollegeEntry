@@ -28,9 +28,9 @@ StructLH.describe(a :: AdmissionsOpenSwitches) = ["College admissions"  "open"];
 
 n_college_sets(a :: AdmissionsOpen) = 1;
 college_set(a :: AdmissionsOpen, j :: Integer) = 1 : n_colleges(a);
-open_admission(a :: AdmissionsOpen) = true;
-open_admission(a :: AdmissionsOpenSwitches) = false;
-percentile_var(a :: AdmissionsOpen) = a.switches.pctVar;
+# open_admission(a :: AdmissionsOpen) = true;
+open_admission(a :: AdmissionsOpenSwitches) = true;
+# percentile_var(switches :: AdmissionsOpenSwitches) = switches.pctVar;
 validate_admissions(a :: AdmissionsOpen) = true;
 
 # Prob of each college set.

@@ -11,13 +11,26 @@ Still need to make the function for each college.
 """
 function init_admprob_fct(switches :: AbstractAdmProbFctSwitches{F1}) where F1 end
 
+n_colleges(switches :: AbstractAdmProbFctSwitches{F1}) where F1 = 
+    switches.nColleges;
+
+
 Lazy.@forward AbstractAdmProbFct.switches (
-    ModelParams.has_pvector
+    ModelParams.has_pvector, n_colleges, n_open_colleges
     );
+
+Base.show(io :: IO, af :: AbstractAdmProbFct{F1}) where F1 = 
+    print(io, typeof(af));
+Base.show(io :: IO, af :: AbstractAdmProbFctSwitches{F1}) where F1 = 
+    print(io, typeof(af));
+
 
 ## -----------  Open admission
 
-struct AdmProbFctOpenSwitches{F1} <: AbstractAdmProbFctSwitches{F1} end
+struct AdmProbFctOpenSwitches{F1} <: AbstractAdmProbFctSwitches{F1} 
+    objId :: ObjectId
+    nColleges :: Int
+end
 
 """
 	$(SIGNATURES)
@@ -30,11 +43,19 @@ struct AdmProbFctOpen{F1} <: AbstractAdmProbFct{F1}
 end
 
 ModelParams.has_pvector(switches :: AdmProbFctOpenSwitches{F1}) where F1 = false;
-# ModelParams.has_pvector(switches :: AdmProbFctOpen{F1}) where F1 = false;
+ModelParams.get_object_id(switches :: AdmProbFctOpenSwitches{F1}) where F1 = 
+    switches.objId;
 
 init_admprob_fct(switches :: AdmProbFctOpenSwitches{F1}) where F1 = 
-    AdmProbFctOpen{F1}(ObjectId(:admProbFctOpen), switches);
+    AdmProbFctOpen{F1}(get_object_id(switches), switches);
 
+n_open_colleges(switches :: AdmProbFctOpenSwitches{F1}) where F1 = 
+    n_colleges(switches);
+
+make_admprob_function(af :: AdmProbFctOpen{F1}, ic) where F1 = 
+    x -> one(F1);
+
+validate_admprob_fct(af :: AdmProbFctOpen{F1}) where F1 = true;
 
 
 ## -----------  Logistic
@@ -78,14 +99,16 @@ Set up switches for logistic admission probability functions.
 """
 function init_admprob_fct_logistic_switches(
     objId :: ObjectId,  nc :: Integer;
-    byCollegeV :: Vector{Symbol} = [:mV]
+    byCollegeV :: Vector{Symbol} = [:pMinV, :mV],
+    calibratedV :: Vector{Symbol} = [:pMinV, :bV, :mV]
     )
     nOpen = 1;
     pvecV = Vector{Param}();
     for pName in [:pMinV, :pMaxV, :qV, :bV, :mV]
         init_f = init_function(AdmProbFctLogisticSwitches, pName);
         nColl = pvec_length(nc, nOpen, byCollegeV, pName);
-        push!(pvecV, init_f(nColl));
+        isCalibrated = any(isequal.(pName, calibratedV));
+        push!(pvecV, init_f(nColl, isCalibrated));
     end
     pvec = ParamVector(objId, pvecV);
     switches = AdmProbFctLogisticSwitches{Float64}(pvec, nc, nOpen);
@@ -104,44 +127,49 @@ function pvec_length(nc, nOpen, byCollegeV, pName)
 end
 
 # notation from symbol table +++++
+# Min admission prob for each college.
 # Input is no of colleges that need parameters.
-function init_pmin(nc :: Integer)
+function init_pmin(nc :: Integer, isCalibrated :: Bool)
     sz = (nc, );
     return Param(:pMinV, "Min prob", "pMinV", 
-        fill(0.0, sz), fill(0.0, sz),
-        fill(0.0, sz), fill(0.4, sz), false);
+        fill(0.05, sz), fill(0.05, sz),
+        fill(0.01, sz), fill(0.45, sz), isCalibrated);
 end
 
-function init_pmax(nc :: Integer)
+function init_pmax(nc :: Integer, isCalibrated :: Bool)
     sz = (nc, );
     return Param(:pMaxV, "Max prob", "pMaxV", 
-        fill(1.0, sz), fill(1.0, sz),
-        fill(0.5, sz), fill(1.0, sz), false);
+        fill(0.95, sz), fill(0.95, sz),
+        fill(0.5, sz), fill(0.99, sz), isCalibrated);
 end
 
-function init_q(nc :: Integer)
+# Q is equivalent to M. So can be set to 1.
+function init_q(nc :: Integer, isCalibrated :: Bool)
     sz = (nc, );
     pName = :qV;
     v = fill(1.0, sz);
     return Param(pName, "Logistic $pName", string(pName), v, v,
-        0.1 .* v, 10.0 .* v, false);
+        0.1 .* v, 10.0 .* v, isCalibrated);
 end
 
-function init_b(nc :: Integer)
+# Slope
+function init_b(nc :: Integer, isCalibrated :: Bool)
     sz = (nc, );
     pName = :bV;
     v = fill(1.0, sz);
     return Param(pName, "Logistic $pName", string(pName), v, v,
-        0.1 .* v, 10.0 .* v, false);
+        0.1 .* v, 10.0 .* v, isCalibrated);
 end
 
-function init_m(nc :: Integer)
+# The input is a percentile. So M should also be on the order of [0, 1].
+# This can vary across colleges (shifts curve left/right).
+function init_m(nc :: Integer, isCalibrated :: Bool)
     sz = (nc, );
     pName = :mV;
     v = fill(0.4, sz);
     sz = size(v);
     Param(pName, "Logistic $pName", string(pName), v, v,
-        fill(-0.8, sz), fill(0.8, sz), true);
+        fill(-0.8, sz), fill(0.8, sz), isCalibrated);
 end
 
 function init_function(::Type{AdmProbFctLogisticSwitches}, pName) where F1
@@ -201,14 +229,14 @@ end
 ## ----------  Access
 
 Lazy.@forward AdmProbFctLogistic.switches (
-    by_college, n_colleges, n_open_colleges, college_index
+    by_college, college_index
     );
+
+ModelParams.has_pvector(switches :: AdmProbFctLogisticSwitches{F1}) where F1 = true;
 
 ModelParams.get_object_id(switches :: AdmProbFctLogisticSwitches{F1}) where F1 = 
     get_object_id(switches.pvec);
 
-n_colleges(switches :: AdmProbFctLogisticSwitches{F1}) where F1 = 
-    switches.nColleges;
 
 """
 	$(SIGNATURES)
@@ -228,10 +256,7 @@ end
 Switch a parameter to vary by college.
 """
 function by_college!(switches :: AdmProbFctLogisticSwitches{F1}, pName) where F1
-    by_college(switches, pName)  &&  (return nothing);
-    nColl = n_colleges(switches) - n_open_colleges(switches);
-    p = init_function(AdmProbFctLogisticSwitches, pName)(nColl);
-    ModelParams.replace!(get_pvector(switches), p);
+    set_by_college!(switches, pName, true);
 end
 
 """
@@ -240,8 +265,22 @@ end
 Switch a parameter NOT to vary by college.
 """
 function not_by_college!(switches :: AdmProbFctLogisticSwitches{F1}, pName) where F1
-    by_college(switches, pName)  ||  (return nothing);
-    p = init_function(AdmProbFctLogisticSwitches, pName)(1);
+    set_by_college!(switches, pName, false);
+end
+
+function set_by_college!(switches :: AdmProbFctLogisticSwitches{F1}, 
+    pName, byCollege :: Bool) where F1
+
+    # Check if we need to make a change
+    (by_college(switches, pName) == byCollege)  &&  (return nothing);
+    if byCollege
+        nColl = n_colleges(switches) - n_open_colleges(switches);
+    else
+        nColl = 1;
+    end
+    init_f = init_function(AdmProbFctLogisticSwitches, pName);
+    isCalibrated = is_calibrated(switches, pName);
+    p = init_f(nColl, isCalibrated);
     ModelParams.replace!(get_pvector(switches), p);
 end
 
