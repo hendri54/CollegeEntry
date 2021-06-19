@@ -3,15 +3,17 @@
 # Which colleges are full does not get updated within the student's decision problem.
 function sim_one_student(entryS :: AbstractEntryDecision{F1}, 
     admissionS :: AbstractAdmissionsRule{I1, F1}, 
+    admProbFct :: AF1,
     vWork :: F1, vCollege_cV :: AbstractVector{F1}, 
     endowPct :: F1, full_clM :: AbstractMatrix{Bool}, l :: Integer,
-    nSim :: Integer, rng :: AbstractRNG) where {I1, F1}
+    nSim :: Integer, rng :: AbstractRNG) where 
+    {AF1 <: AbstractAdmProbFct{<: Real}, I1, F1}
 
     nc = n_colleges(entryS);
     nl = n_locations(entryS);
 
     # Draw admissions sets
-    probSetV = prob_coll_sets(admissionS, endowPct);
+    probSetV = prob_coll_sets(admissionS, admProbFct, endowPct);
     nSets = length(probSetV);
     aSetV = rand(rng, 1 : length(probSetV), nSim);
 

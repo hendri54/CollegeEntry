@@ -189,9 +189,11 @@ Always for multiple locations (matrix inputs). But one location is allowed.
 """
 function entry_decisions_one_student(entryS :: AbstractEntryDecision{F1}, 
     admissionS :: AbstractAdmissionsRule{I1, F1}, 
+    admProbFct :: AF1,
     vWork :: F1, vCollege_cV :: AbstractVector{F1}, 
     endowPct :: F1, full_clM :: AbstractMatrix{Bool}, l :: Integer;
-    prefShocks :: Bool = true)  where {I1, F1}
+    prefShocks :: Bool = true)  where 
+    {AF1 <: AbstractAdmProbFct{<: Real}, I1, F1}
 
     nl = n_locations(entryS);
     nc = n_colleges(entryS);
@@ -208,7 +210,7 @@ function entry_decisions_one_student(entryS :: AbstractEntryDecision{F1},
     # Admission rule gives admission to one college type in all locations
     for (iSet, admitV) in enumerate(admissionS)
         # Prob that each person draws this college set
-        probSet = prob_coll_set(admissionS, iSet, endowPct);
+        probSet = prob_coll_set(admissionS, admProbFct, iSet, endowPct);
         avail_clM = available_colleges(entryS, full_clM, admitV, l);
         @check size(avail_clM) == size(vCollege_clM)
 
@@ -280,13 +282,15 @@ end
 # The same with one location. Simply calls the multi-location code with one location dimension.
 function entry_decisions_one_student(entryS :: AbstractEntryDecision{F1}, 
     admissionS :: AbstractAdmissionsRule{I1, F1}, 
+    admProbFct :: AF1,
     vWork :: F1, vCollege_cV :: AbstractVector{F1}, 
     endowPct :: F1, full_cV :: AbstractVector{Bool};
-    prefShocks :: Bool = true)  where {I1, F1}
+    prefShocks :: Bool = true)  where 
+    {AF1 <: AbstractAdmProbFct{<: Real}, I1, F1}
 
     # Just solve the multi-location version for the first location.
     entryProb_clM, eVal, entryProbBest_clM = 
-        entry_decisions_one_student(entryS, admissionS, 
+        entry_decisions_one_student(entryS, admissionS, admProbFct,
         vWork, vCollege_cV, endowPct,  repeat(full_cV, outer = (1,1)), 1;
         prefShocks = prefShocks);
 

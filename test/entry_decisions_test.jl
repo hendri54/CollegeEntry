@@ -41,6 +41,8 @@ function entry_decisions_test(switches :: AbstractEntrySwitches{F1},
         objId = ObjectId(:entryOneStep);
         st = ce.make_test_symbol_table();
         entryS = init_entry_decision(objId, switches, st);
+        nc = n_colleges(switches);
+        admProbFct = ce.make_test_admprob_fct_logistic(nc);
         # println(entryS, "  Pref shocks: $prefShocks");
 
         if takeSubset
@@ -50,14 +52,13 @@ function entry_decisions_test(switches :: AbstractEntrySwitches{F1},
             @test validate_es(entryS.switches)
         end
 
-        nc = n_colleges(switches);
         J = n_types(switches);
         nl = n_locations(switches)
         vWork_jV, vCollege_jcM = CollegeEntry.values_for_test(rng, J, nc, nl);
         hsGpaPctV = collect(range(0.1, 0.9, length = J));
         rank_jV = vcat(2 : 2 : J, 1 : 2 : J);
 
-        er = entry_decisions(entryS, admissionS,
+        er = entry_decisions(entryS, admissionS, admProbFct,
             vWork_jV, vCollege_jcM, hsGpaPctV, rank_jV; prefShocks = prefShocks);
         @test validate_er(er; validateFracLocal = prefShocks)
         entryProb_jcM = entry_probs_jc(er);
@@ -72,7 +73,7 @@ function entry_decisions_test(switches :: AbstractEntrySwitches{F1},
 
         # Switching off preference shocks should not affect entry
         if prefShocks
-            er2 = entry_decisions(entryS, admissionS,
+            er2 = entry_decisions(entryS, admissionS, admProbFct,
                 vWork_jV, vCollege_jcM, hsGpaPctV, rank_jV; prefShocks = false);
             @test isapprox(enrollment_cl(er2), enrollment_cl(er), rtol = 0.005);
             @test isapprox(frac_local_c(er2), frac_local_c(er), atol = 0.005);
@@ -106,7 +107,7 @@ function entry_decisions_test(switches :: AbstractEntrySwitches{F1},
             if nl == 1
                 entryProb_cV, eVal, entryProbBest_clM = 
                     ce.entry_decisions_one_student(
-                        entryS, admissionS,
+                        entryS, admissionS, admProbFct,
                         vWork_jV[j], vCollege_jcM[j,:], hsGpaPctV[j], 
                         fill(false, nc);
                         prefShocks = prefShocks);
@@ -126,7 +127,8 @@ function entry_decisions_test(switches :: AbstractEntrySwitches{F1},
                 # Solver for student in one location
                 for l = 1 : nl
                     entryProb_clM, eVal, entryProbBest_clM = ce.entry_decisions_one_student(
-                        entryS, admissionS,  vWork_jV[j], vCollege_jcM[j,:], 
+                        entryS, admissionS, admProbFct,
+                        vWork_jV[j], vCollege_jcM[j,:], 
                         hsGpaPctV[j], fill(false, nc, nl), l;
                         prefShocks = prefShocks);
                     @test all(sum(entryProb_clM, dims = 2) .<= 1.0)
@@ -177,10 +179,11 @@ function sim_entry_one_test(switches :: AbstractEntrySwitches{F1},
         objId = ObjectId(:entryOneStep);
         st = ce.make_test_symbol_table();
         entryS = init_entry_decision(objId, switches, st);
+        nc = n_colleges(switches);
+        admProbFct = CollegeEntry.make_test_admprob_fct_logistic(nc);
         # println(entryS);
 
         nSim = Int(1e5);
-        nc = n_colleges(switches);
         J = n_types(switches);
         nl = n_locations(switches)
         vWork_jV, vCollege_jcM = CollegeEntry.values_for_test(rng, J, nc, nl);
@@ -192,7 +195,7 @@ function sim_entry_one_test(switches :: AbstractEntrySwitches{F1},
         l = nl;
 
         prob_clM, eVal, entryProbBest_clM = ce.entry_decisions_one_student(
-            entryS, admissionS, vWork, vCollege_cV, 
+            entryS, admissionS, admProbFct, vWork, vCollege_cV, 
             endowPct, full_clM, l);
         # Check that bounded away from 0, 1
         @test sum(prob_clM) < 0.85
@@ -203,7 +206,7 @@ function sim_entry_one_test(switches :: AbstractEntrySwitches{F1},
         @test all(prob_clM .< 0.9)
 
         probSim_clM, eValSim = CollegeEntry.sim_one_student(
-            entryS, admissionS, vWork, vCollege_cV, 
+            entryS, admissionS, admProbFct, vWork, vCollege_cV, 
             endowPct, full_clM, l, nSim, rng);
         
         probGap = maximum(abs.(probSim_clM .- prob_clM));

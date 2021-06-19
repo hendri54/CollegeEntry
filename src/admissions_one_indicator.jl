@@ -27,7 +27,7 @@ Probability of being admitted to `1 : n` = admissions probablity of college `n` 
 """
 mutable struct AdmissionsOneVar{I1, F1 <: Real} <: AbstractAdmissionsRule{I1, F1}
     switches :: AdmissionsOneVarSwitches{I1, F1}
-    admissionProbFctV :: Vector
+    # admissionProbFctV :: Vector
 end
 
 function Base.show(io :: IO, a :: AdmissionsOneVar)
@@ -51,23 +51,15 @@ function validate_admissions(a :: AdmissionsOneVar{I1, F1}) where {I1, F1}
 end
 
 make_admissions(switches :: AdmissionsOneVarSwitches{I1, F1}) where {I1, F1} = 
-    AdmissionsOneVar(switches, Vector{Any}());
+    AdmissionsOneVar(switches);
 
 make_test_adm_onevar_switches(nc) = 
     AdmissionsOneVarSwitches(nc, :hsGpa, 0.05);
 
 # By default: With the admission prob functions inside
-function make_test_admissions_onevar(nc; stashProbFunctions = true)
+function make_test_admissions_onevar(nc)
     a = make_admissions(make_test_adm_onevar_switches(nc));
-    if stashProbFunctions
-        af = make_test_admprob_fct_logistic(nc);
-        stash_admprob_functions(a, af);
-    end
     return a
-end
-
-function stash_admprob_functions(a :: AdmissionsOneVar{I1, F1}, af) where {I1, F1}
-    a.admissionProbFctV = [make_admprob_function(af, ic)  for ic = 1 : n_colleges(a)];
 end
 
 function test_admission_prob_fct(x :: Real, ic :: Integer)
@@ -79,33 +71,24 @@ function test_admission_prob_fct(x :: Real, ic :: Integer)
     return prob
 end
 
-# test_admission_prob_fct(x :: AbstractVector)
-
-
-## ------------ Access
-
-# percentile_var(switches :: AdmissionsOneVarSwitches{I1, F1}) where {I1, F1} = 
-#     switches.pctVar;
-
-# Lazy.@forward AdmissionsOneVar.switches (
-#     ranking_var
-#     );
-
 
 ## ----------  Probability of being admitted to each college set
 
 function prob_coll_set(a :: AdmissionsOneVar{I1, F1}, 
-    iSet :: Integer, hsGpaPct :: F2) where {I1, F1, F2 <: Real}
+    admProbFct :: AF1,
+    iSet :: Integer, hsGpaPct :: F2) where 
+    {AF1 <: AbstractAdmProbFct{<: Real}, I1, F1, F2 <: Real}
 
-    return prob_coll_sets(a, hsGpaPct)[iSet];
+    return prob_coll_sets(a, admProbFct, hsGpaPct)[iSet];
 end
 
-
 function prob_coll_sets(a :: AdmissionsOneVar{I1, F1}, 
-    hsGpaPct :: F2) where {I1, F1, F2 <: Real}
+    admProbFct :: AF1,
+    hsGpaPct :: F2) where 
+    {AF1 <: AbstractAdmProbFct{<: Real}, I1, F1, F2 <: Real}
 
-    probAdmitV = 
-        [prob_admit(a, iCollege, hsGpaPct)  for iCollege = 1 : n_colleges(a)];
+    probAdmitV = [prob_admit(admProbFct, iCollege, hsGpaPct)  
+        for iCollege = 1 : n_colleges(a)];
     @assert all(0.0 .<= probAdmitV .<= 1.0)  "Out of bounds: $probAdmitV"
     return prob_coll_sets_from_probs(a, probAdmitV)
 end
@@ -130,23 +113,6 @@ function prob_coll_sets_from_probs(a :: AdmissionsOneVar{I1, F1},
     end
     @check sum(probV) ≈ 1.0
     return probV
-end
-
-
-"""
-	$(SIGNATURES)
-
-Probability of being admitted into a specific college (just based on its admissions prob function).
-"""
-function prob_admit(a :: AdmissionsOneVar{I1, F1}, iCollege :: Integer, 
-    hsGpa) where {I1, F1}
-
-    @assert length(a.admissionProbFctV) >= iCollege  """
-        Index out of bounds: $iCollege
-        Perhaps admissions prob functions were not stashed?
-        """
-    prob_fct = a.admissionProbFctV[iCollege];
-    return prob_fct.(hsGpa)
 end
 
 

@@ -100,10 +100,12 @@ Note that multiple locations only matter if they are not identical. If all colle
 """
 function entry_decisions(entryS :: EntryDecision{F1}, 
     admissionS :: AbstractAdmissionsRule{I1, F1}, 
+    admProbFct :: AF1,
     vWork_jV :: Vector{F1}, vCollege_jcM :: Matrix{F1}, 
     endowPctV :: Vector{F1},
     rank_jV :: Vector{I2};
-    prefShocks :: Bool = true) where {I1, I2 <: Integer, F1}
+    prefShocks :: Bool = true) where 
+    {AF1 <: AbstractAdmProbFct{<: Real}, I1, I2 <: Integer, F1}
 
     # nTypes = n_types(entryS);
     nc = n_colleges(entryS);
@@ -120,7 +122,8 @@ function entry_decisions(entryS :: EntryDecision{F1},
             # This is the standard one-step entry decision, but with colleges from all locations stacked.
             entryProb_clM, er.eVal_jlM[j, l], entryProbBest_clM = 
                 entry_decisions_one_student(
-                    entryS, admissionS, vWork_jV[j], vCollege_jcM[j,:],
+                    entryS, admissionS, admProbFct, 
+                    vWork_jV[j], vCollege_jcM[j,:],
                     endowPctV[j], full_clM, l; prefShocks = true);
 
             # Record enrollment
@@ -134,7 +137,8 @@ function entry_decisions(entryS :: EntryDecision{F1},
                 # But enrollment is determined by original problem
                 entryProb_clM, er.eVal_jlM[j, l], entryProbBest_clM = 
                     entry_decisions_one_student(
-                        entryS, admissionS, vWork_jV[j], vCollege_jcM[j,:],
+                        entryS, admissionS, admProbFct,
+                        vWork_jV[j], vCollege_jcM[j,:],
                         endowPctV[j], full_clM, l; prefShocks = false);
             end    
     

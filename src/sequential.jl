@@ -32,12 +32,14 @@ end
 # Just a wrapper for consistent interface.
 function entry_decisions(entryS :: EntrySequential{F1}, 
     admissionS :: AbstractAdmissionsRule{I1, F1}, 
+    admProbFct :: AF1,
     vWork_jV :: Vector{F1}, vCollege_jcM :: Matrix{F1}, 
     endowPctV :: Vector{F1},
     rank_jV :: Vector{I2};
-    prefShocks :: Bool = true) where {I1, I2 <: Integer, F1}
+    prefShocks :: Bool = true) where 
+    {AF1 <: AbstractAdmProbFct{<: Real}, I1, I2 <: Integer, F1}
 
-    return entry_sequential(entryS,  admissionS, 
+    return entry_sequential(entryS,  admissionS,  admProbFct,
         vWork_jV, vCollege_jcM, endowPctV,  rank_jV;
         prefShocks = prefShocks);
 end

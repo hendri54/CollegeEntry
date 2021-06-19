@@ -103,13 +103,14 @@ function make_test_entry_results(switches :: EntryDecisionSwitches{F1};
     admissionS = make_test_admissions_cutoff(nc);
     objId = ObjectId(:entryOneStep);
     entryS = init_entry_decision(objId, switches, st);
+	admProbFct = make_test_admprob_fct_logistic(nc);
 
 	vWork_jV, vCollege_jcM = values_for_test(rng, J, nc, nl; 
 		typicalValue = typicalValue);
     hsGpaPctV = collect(range(0.1, 0.9, length = J));
     rank_jV = vcat(2 : 2 : J, 1 : 2 : J);
 
-    er = entry_decisions(entryS, admissionS,
+    er = entry_decisions(entryS, admissionS, admProbFct,
         vWork_jV, vCollege_jcM, hsGpaPctV, rank_jV);
 	# er = EntryResults(switches);
 	# for j = 1 : J

@@ -21,7 +21,7 @@ export n_colleges, n_college_sets, percentile_var, college_set, open_admission, 
 export AbstractAdmProbFctSwitches, AbstractAdmProbFct, 
     AdmProbFctLogisticSwitches, AdmProbFctLogistic,
     AdmProbFctOpenSwitches, AdmProbFctOpen
-export init_admprob_fct_logistic_switches, init_admprob_fct, make_admprob_function, stash_admprob_functions, prob_admit
+export init_admprob_fct_logistic_switches, init_admprob_fct, make_admprob_function,  prob_admit
 
 # Complete entry decisions
 export entry_decisions
@@ -45,14 +45,14 @@ include("test_helpers.jl")
 include("ranking_types.jl");
 include("ranking_endow_pct.jl");
 
+# Admission probabilities
+include("admission_prob_functions.jl");
+
 # Admissions rules
 include("admissions_types.jl");
 include("admissions_open_types.jl");
 include("admissions_cutoff_types.jl");
 include("admissions_one_indicator.jl");
-
-# Admission probabilities
-include("admission_prob_functions.jl");
 
 # Entry decisions
 include("types.jl")

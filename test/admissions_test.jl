@@ -9,7 +9,6 @@ function common_test(a :: T1) where T1 <: AbstractAdmissionsRule
         # println(a);
         nc = n_colleges(a);
         af = ce.make_test_admprob_fct_logistic(nc);
-        ce.stash_admprob_functions(a, af);
 
         # Want these increasing
         hsGpaPctV = 0.01 : 0.2 : 0.99;
@@ -26,7 +25,7 @@ function common_test(a :: T1) where T1 <: AbstractAdmissionsRule
         for (iSet, cs) in enumerate(a)
             @test isa(collect(cs), Vector{<: Integer})
             @test isequal(cs,  college_set(a, iSet))
-            setProbV = prob_coll_set(a, iSet, hsGpaPctV);
+            setProbV = prob_coll_set(a, af, iSet, hsGpaPctV);
             @test all(setProbV .>= 0.0)
             @test all(setProbV .<= 1.0)
             # Cannot compare size b/c the size of a scalar is `nothing`
@@ -40,7 +39,7 @@ function common_test(a :: T1) where T1 <: AbstractAdmissionsRule
         end
         @test all(isapprox.(sum(prob_jsM, dims = 2), 1.0, atol = 1e-6))
 
-        prob_jcM = admission_probs(a, hsGpaPctV);
+        prob_jcM = admission_probs(a, af, hsGpaPctV);
         @test all(prob_jcM .>= 0.0)  &&  all(prob_jcM .<= 1.0)
         # Higher GPA students should be more likely to get into each college
         @test all(diff(prob_jcM, dims = 1) .>= -1e-8)
@@ -51,10 +50,7 @@ end
 
 
 function gpa_cutoff_test(a :: AdmissionsCutoff)
-    @testset "GPA cutoff" begin
-        println("\n----------------------");
-        println(a);
-        
+    @testset "GPA cutoff" begin      
         hsGpaPctV = 0.01 : 0.3 : 0.99;
         highV = CollegeEntry.highest_college(a, hsGpaPctV);
         @test isa(highV, Vector{<: Integer})
@@ -64,7 +60,8 @@ function gpa_cutoff_test(a :: AdmissionsCutoff)
 
         # Better students should have higher prob of "better" college set
         nSets = n_college_sets(a);
-        probV = prob_coll_set(a, nSets, hsGpaPctV);
+        admProbFct = CollegeEntry.make_test_admprob_fct_open(n_colleges(a));
+        probV = prob_coll_set(a, admProbFct, nSets, hsGpaPctV);
         @test all(diff(probV) .>= 0)
         @test probV[end] > probV[1]
     end
@@ -73,11 +70,10 @@ end
 
 @testset "Admission Rules" begin
     nc = 4;
-    # These also stash admission prob functions inside the objects (if needed).
     for a in [
-        CollegeEntry.make_test_admissions_open(nc; stashProbFunctions = false),
-        CollegeEntry.make_test_admissions_cutoff(nc; stashProbFunctions = false),
-        CollegeEntry.make_test_admissions_onevar(nc; stashProbFunctions = false)
+        CollegeEntry.make_test_admissions_open(nc),
+        CollegeEntry.make_test_admissions_cutoff(nc),
+        CollegeEntry.make_test_admissions_onevar(nc)
         ]
 
         common_test(a);

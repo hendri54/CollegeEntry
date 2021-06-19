@@ -56,7 +56,7 @@ make_admissions(switches :: AdmissionsCutoffSwitches{I1, F1}) where {I1, F1} =
 make_test_adm_cutoff_switches(nc) = 
     AdmissionsCutoffSwitches(nc, :hsGpa, 
         collect(range(0.0, 0.8, length = nc)), 0.05);
-make_test_admissions_cutoff(nc; stashProbFunctions = false) = 
+make_test_admissions_cutoff(nc) = 
     AdmissionsCutoff(make_test_adm_cutoff_switches(nc));
 
 min_percentiles(a :: AdmissionsCutoff{I1, F1}) where {I1, F1} = a.switches.minPctV;
@@ -84,7 +84,9 @@ end
 
 # Probability that one student draws one college set
 function prob_coll_set(a :: AdmissionsCutoff{I1, F1}, 
-    iSet :: Integer, endowPct :: F2) where {I1, F1, F2 <: Real}
+    admProbFct :: AF1,
+    iSet :: Integer, endowPct :: F2) where 
+    {AF1 <: AbstractAdmProbFct{<: Real}, I1, F1, F2 <: Real}
 
     qIdx = highest_college(a, endowPct);
     if qIdx == iSet
@@ -105,9 +107,12 @@ end
 # If student qualifies for college 2 out of 5, the probabilities are:
 #   (1 - minProb * 3) / 2  for first 2 (where he qualifies)
 #   minProb for the last 3 where he does not qualify
-function prob_coll_sets(a :: AdmissionsCutoff{I1, F1}, endowPct :: F2) where {I1, F1, F2 <: Real}
+function prob_coll_sets(a :: AdmissionsCutoff{I1, F1}, 
+    admProbFct :: AF1,
+    endowPct :: F2) where {AF1 <: AbstractAdmProbFct{<: Real}, I1, F1, F2 <: Real}
+    
     nSets = n_college_sets(a);
-    probV = [prob_coll_set(a, iSet, endowPct)  for iSet = 1 : nSets];
+    probV = [prob_coll_set(a, admProbFct, iSet, endowPct)  for iSet = 1 : nSets];
     @check sum(probV) ≈ 1
     return probV
 end

@@ -25,6 +25,20 @@ Base.show(io :: IO, af :: AbstractAdmProbFctSwitches{F1}) where F1 =
     print(io, typeof(af));
 
 
+"""
+	$(SIGNATURES)
+
+Probability of being admitted into a specific college (just based on its admissions prob function).
+"""
+function prob_admit(admProbFct :: AF1,
+    iCollege :: Integer, hsGpa) where {AF1 <: AbstractAdmProbFct{<: Real}, I1, F1}
+
+    # This is expensive, but hard to avoid. Need to ensure that current parameters are used when admission prob fct is constructed.
+    prob_fct = make_admprob_function(admProbFct, iCollege);
+    return prob_fct.(hsGpa)
+end
+
+
 ## -----------  Open admission
 
 struct AdmProbFctOpenSwitches{F1} <: AbstractAdmProbFctSwitches{F1} 
@@ -56,6 +70,11 @@ make_admprob_function(af :: AdmProbFctOpen{F1}, ic) where F1 =
     x -> one(F1);
 
 validate_admprob_fct(af :: AdmProbFctOpen{F1}) where F1 = true;
+
+make_test_admprob_fct_open_switches(nc) = 
+    AdmProbFctOpenSwitches{Float64}(ObjectId(:admProbFctOpen), nc);
+make_test_admprob_fct_open(nc) = 
+    init_admprob_fct(make_test_admprob_fct_open_switches(nc));
 
 
 ## -----------  Logistic
@@ -91,6 +110,14 @@ end
 function make_test_admprob_fct_logistic_switches(nc)
     init_admprob_fct_logistic_switches(ObjectId(:test), nc);
 end
+
+function make_test_admprob_fct_logistic(nc)
+    switches = make_test_admprob_fct_logistic_switches(nc);
+    af = init_admprob_fct(switches);
+    @assert validate_admprob_fct(af);
+    return af
+end
+
 
 """
 	$(SIGNATURES)
@@ -198,15 +225,6 @@ end
 function validate_admprob_fct_switches(switches :: AdmProbFctLogisticSwitches{F1}) where F1
     isValid = true;
     return isValid;
-end
-
-# Initializes the `AdmProbFctLogistic` object. 
-# The function for each college still needs to be made with `make_admprob_function`.
-function make_test_admprob_fct_logistic(nc)
-    switches = make_test_admprob_fct_logistic_switches(nc);
-    af = init_admprob_fct(switches);
-    @assert validate_admprob_fct(af);
-    return af
 end
 
 
