@@ -25,18 +25,13 @@ Base.show(io :: IO, af :: AbstractAdmProbFctSwitches{F1}) where F1 =
     print(io, typeof(af));
 
 
-"""
-	$(SIGNATURES)
+# function prob_admit(admProbFct :: AF1,
+#     iCollege :: Integer, hsGpa) where {AF1 <: AbstractAdmProbFct{<: Real}, I1, F1}
 
-Probability of being admitted into a specific college (just based on its admissions prob function).
-"""
-function prob_admit(admProbFct :: AF1,
-    iCollege :: Integer, hsGpa) where {AF1 <: AbstractAdmProbFct{<: Real}, I1, F1}
-
-    # This is expensive, but hard to avoid. Need to ensure that current parameters are used when admission prob fct is constructed.
-    prob_fct = make_admprob_function(admProbFct, iCollege);
-    return prob_fct.(hsGpa)
-end
+#     # This is expensive, but hard to avoid. Need to ensure that current parameters are used when admission prob fct is constructed.
+#     prob_fct = make_admprob_function(admProbFct, iCollege);
+#     return prob_fct.(hsGpa)
+# end
 
 
 ## -----------  Open admission
@@ -69,6 +64,17 @@ n_open_colleges(switches :: AdmProbFctOpenSwitches{F1}) where F1 =
 make_admprob_function(af :: AdmProbFctOpen{F1}, ic) where F1 = 
     x -> one(F1);
 
+prob_admit(af :: AdmProbFctOpen{F1}, iCollege :: Integer, hsGpa) where {I1, F1} = 
+    prob_admit_open(hsGpa);
+
+# prob_admit(af :: AdmProbFctOpen{F1}, iCollege :: Integer, 
+#     hsGpa :: AbstractArray{F1}) where {I1, F1} = ones(F1, size(hsGpa));
+
+prob_admit_open(hsGpa :: F1) where F1 <: Real = one(F1);
+prob_admit_open(hsGpa :: AbstractArray{F1}) where F1 <: Real = 
+    ones(F1, size(hsGpa));
+
+    
 validate_admprob_fct(af :: AdmProbFctOpen{F1}) where F1 = true;
 
 make_test_admprob_fct_open_switches(nc) = 
@@ -349,12 +355,28 @@ function make_admprob_function(af :: AdmProbFctLogistic{F1},
     return fct
 end
 
-logistic(x, pMin, pMax, q, b, m) = 
-    pMin .+ (pMax .- pMin) / (1.0 .+ q .* exp(-b .* (x .- m)));
+"""
+	$(SIGNATURES)
 
-# function get_pMin(af :: AdmProbFctLogistic{F1}, iCollege :: Integer) where F1
-#     get_param(af, :pMin, iCollege)
-# end
+Probability of being admitted into a specific college (just based on its admissions prob function).
+"""
+function prob_admit(af :: AdmProbFctLogistic{F1}, iCollege :: Integer, hsGpa) where F1
+    if iCollege <= n_open_colleges(af)
+        probV = prob_admit_open(hsGpa);
+    else
+        probV = logistic(hsGpa, 
+            get_param(af, :pMinV, iCollege),
+            get_param(af, :pMaxV, iCollege),
+            get_param(af, :qV, iCollege),
+            get_param(af, :bV, iCollege),
+            get_param(af, :mV, iCollege));
+    end
+    return probV
+end
+
+logistic(x, pMin, pMax, q, b, m) = 
+    pMin .+ (pMax .- pMin) ./ (1.0 .+ q .* exp.(-b .* (x .- m)));
+
 
 """
 	$(SIGNATURES)

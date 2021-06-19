@@ -25,6 +25,9 @@ function adm_prob_test(switches)
             @test size(probV) == size(xV);
             @test all(0.0 .<= probV .<= 1.0);
             @test all(diff(probV) .>= 0.0);
+
+            prob2V = prob_admit(af, ic, xV);
+            @test isapprox(probV, prob2V);
         end
     end
 end

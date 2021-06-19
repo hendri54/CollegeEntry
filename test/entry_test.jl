@@ -13,12 +13,12 @@ end
 
 function access_test(switches)
     @testset "Access routines" begin
-        println("\n--------------------------")
-        println(switches);
+        # println("\n--------------------------")
+        # println(switches);
         objId = ObjectId(:entryDecision);
         st = ce.make_test_symbol_table();
         e = init_entry_decision(objId, switches, st);
-        println(e);
+        # println(e);
 
         J = n_types(e);
         nc = n_colleges(e);
@@ -71,13 +71,13 @@ end
 # Test `entry_probs` which has no notion of locations
 function entry_test(switches, prefShocks :: Bool)
     rng = MersenneTwister(49);
-    @testset "Entry probs" begin
+    @testset "Entry probs: $switches" begin
         F1 = Float64;
         st = ce.make_test_symbol_table();
         e = init_entry_decision(ObjectId(:entry), switches, st);
-        println("\n------------")
-        println(e);
-        println("Preference shocks: $prefShocks");
+        # println("\n------------")
+        # println(e);
+        # println("Preference shocks: $prefShocks");
 
         J = n_types(e);
         nc = n_colleges(e);
@@ -136,8 +136,8 @@ function small_pref_entry_test(switches)
         ce.set_pref_scale!(switches, 0.001);
         st = ce.make_test_symbol_table();
         e = init_entry_decision(ObjectId(:entry), switches, st);
-        println("\n------------")
-        println(e);
+        # println("\n------------")
+        # println(e);
 
         J = n_types(e);
         nc = n_colleges(e);
@@ -168,8 +168,8 @@ function sim_entry_test(switches)
         F1 = Float64;
         st = ce.make_test_symbol_table();
         e = init_entry_decision(ObjectId(:entry), switches, st);
-        println("\n------------")
-        println(e);
+        # println("\n------------")
+        # println(e);
 
         J = n_types(e);
         nc = n_colleges(e);
