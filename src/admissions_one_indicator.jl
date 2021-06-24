@@ -8,7 +8,7 @@ Switches governing admissions that are function of a single indicator.
 mutable struct AdmissionsOneVarSwitches{I1, F1 <: Real} <: AbstractAdmissionsSwitches{I1, F1}
     nColleges :: I1
     # Name of the variable that determines admissions probability
-    pctVar :: Symbol
+    # pctVar :: Symbol
     # Minimum probability of all college sets
     minCollSetProb :: F1
 end
@@ -32,15 +32,15 @@ end
 
 function Base.show(io :: IO, a :: AdmissionsOneVar)
     nc = n_colleges(a);
-    rankVar = percentile_var(a);
-    print(io, typeof(a), " with ranking variable $rankVar");
+    # rankVar = percentile_var(a);
+    print(io, typeof(a));  # , " with ranking variable $rankVar");
 end
 
 function StructLH.describe(a :: AdmissionsOneVarSwitches)
-    rankVar = percentile_var(a);
+    # rankVar = percentile_var(a);
     return [
-        "Admission rule"  " ";
-        "Admission probability determined by"  "$rankVar";
+        "Admission rule"  "based on one indicator";
+        # "Admission probability determined by"  "$rankVar";
     ];
 end
 
@@ -54,7 +54,7 @@ make_admissions(switches :: AdmissionsOneVarSwitches{I1, F1}) where {I1, F1} =
     AdmissionsOneVar(switches);
 
 make_test_adm_onevar_switches(nc) = 
-    AdmissionsOneVarSwitches(nc, :hsGpa, 0.05);
+    AdmissionsOneVarSwitches(nc, 0.05);
 
 # By default: With the admission prob functions inside
 function make_test_admissions_onevar(nc)

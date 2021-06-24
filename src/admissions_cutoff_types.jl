@@ -8,7 +8,7 @@ Switches governing admissions by cutoff rule.
 mutable struct AdmissionsCutoffSwitches{I1, F1 <: Real} <: AbstractAdmissionsSwitches{I1, F1}
     nColleges :: I1
     # Name of the variable that holds the individual percentiles
-    pctVar :: Symbol
+    # pctVar :: Symbol
     # Minimum HS GPA percentile required for each college; should be increasing
     minPctV :: Vector{F1}
     # Minimum probability of all college sets
@@ -34,8 +34,8 @@ end
 
 StructLH.describe(a :: AdmissionsCutoffSwitches) = [
     "Admission rule"  " ";
-    "Cutoff rule based on"  "$(a.pctVar)";
-    "Min $(a.pctVar) percentile by college"  "$(a.minPctV)"
+    # "Cutoff rule based on"  "$(a.pctVar)";
+    "Min percentile by college"  "$(a.minPctV)"
 ];
 
 
@@ -54,7 +54,7 @@ make_admissions(switches :: AdmissionsCutoffSwitches{I1, F1}) where {I1, F1} =
     AdmissionsCutoff(switches);
 
 make_test_adm_cutoff_switches(nc) = 
-    AdmissionsCutoffSwitches(nc, :hsGpa, 
+    AdmissionsCutoffSwitches(nc,  
         collect(range(0.0, 0.8, length = nc)), 0.05);
 make_test_admissions_cutoff(nc) = 
     AdmissionsCutoff(make_test_adm_cutoff_switches(nc));
@@ -67,6 +67,8 @@ min_percentiles(a :: AdmissionsCutoff{I1, F1}) where {I1, F1} = a.switches.minPc
 # Last GPA cutoff that is smaller than student's endowment percentile.
 function highest_college(a :: AdmissionsCutoff{I1, F1}, endowPct :: F2) where 
     {I1, F1, F2 <: Real}
+
+    @assert (zero(F2) <= endowPct <= one(F2))  "Expecting percentiles between 0 and 1";
     qIdx = findlast(x -> x <= endowPct, min_percentiles(a));
     @check qIdx >= 1
     return qIdx
@@ -88,6 +90,7 @@ function prob_coll_set(a :: AdmissionsCutoff{I1, F1},
     iSet :: Integer, endowPct :: F2) where 
     {AF1 <: AbstractAdmProbFct{<: Real}, I1, F1, F2 <: Real}
 
+    @assert (zero(F2) <= endowPct <= one(F2))  "Expecting percentiles between 0 and 1";
     qIdx = highest_college(a, endowPct);
     if qIdx == iSet
         # Best college the student qualifies for
@@ -111,6 +114,7 @@ function prob_coll_sets(a :: AdmissionsCutoff{I1, F1},
     admProbFct :: AF1,
     endowPct :: F2) where {AF1 <: AbstractAdmProbFct{<: Real}, I1, F1, F2 <: Real}
     
+    @assert (zero(F2) <= endowPct <= one(F2))  "Expecting percentiles between 0 and 1";
     nSets = n_college_sets(a);
     probV = [prob_coll_set(a, admProbFct, iSet, endowPct)  for iSet = 1 : nSets];
     @check sum(probV) ≈ 1

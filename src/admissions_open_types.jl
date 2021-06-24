@@ -8,7 +8,7 @@ Switches governing open admissions protocol.
 mutable struct AdmissionsOpenSwitches{I1, F1} <: AbstractAdmissionsSwitches{I1, F1}
     nColleges :: I1
     # The variable that holds the individual percentiles (here for interface consistency)
-    pctVar :: Symbol
+    # pctVar :: Symbol
 end
 
 
@@ -59,7 +59,7 @@ make_admissions(switches :: AdmissionsOpenSwitches{I1, F1}) where {I1, F1} =
     AdmissionsOpen{I1, F1}(switches);
 
 make_test_admissions_open(nc :: I1) where I1 = 
-    AdmissionsOpen{I1, Float64}(AdmissionsOpenSwitches{I1, Float64}(nc, :hsGpaPct));
+    AdmissionsOpen{I1, Float64}(AdmissionsOpenSwitches{I1, Float64}(nc));
 
 
 # ----------------

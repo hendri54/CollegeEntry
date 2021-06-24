@@ -4,10 +4,13 @@
 	$(SIGNATURES)
 
 Switches for linear endowment percentile weights. 
+
 `eNameV` contains the endowments used for ranking. It must be possible to call `retrieve_draws(EndowmentDraws, eName)`.
+
 `wtV` are the weights to be used if not calibrated. This omits the first weight, which is fixed at 1 (or -1). 
 This is empty when there is only one endowment to rank on.
 Weights are bounded in the interval `lbV` to `ubV`. Weights may be negative.
+
 `doCal` determines whether weights are calibrated or fixed.
 """
 mutable struct EndowPctRankingSwitches{F1} <: AbstractRankingSwitches{F1}
@@ -121,9 +124,9 @@ function EndowPctRankingSwitches(eNameV :: Vector{Symbol};
         doCal = false;
     else
         n = length(eNameV) - 1;
-        wtV = fill(1.0, n);
-        lbV = zeros(n);
-        ubV = fill(3.0, n);
+        wtV = isnothing(wtInV) ? fill(1.0, n) : wtInV;
+        lbV = isnothing(lbInV) ? zeros(n) : lbInV;
+        ubV = isnothing(ubInV) ? fill(3.0, n) : ubInV;
         doCal = doCalIn;
     end
     return EndowPctRankingSwitches(eNameV, wtV, lbV, ubV, doCal, highDrawsFirst);

@@ -60,7 +60,14 @@ function rank_students(e :: AbstractRanking{F1}, draws) where F1
     return sortperm(score_students(e, draws), rev = true);
 end
 
-# Score students. Higher scores are better
+
+"""
+	$(SIGNATURES)
+
+Score students. Higher scores are better.
+Scores are simply weighted sums of endowment draws. 
+Not scaled. Scores can be positive or negative.
+"""
 function score_students(e :: AbstractRanking{F1}, draws) where F1
     scoreV = zeros(F1, n_draws(draws));
     wtV = weights(e);
@@ -70,6 +77,7 @@ function score_students(e :: AbstractRanking{F1}, draws) where F1
     end
     return scoreV
 end
+
 
 """
 	$(SIGNATURES)

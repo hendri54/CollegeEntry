@@ -15,13 +15,14 @@ export init_entry_decision, entry_probs, fix_entry_probs!, scale_entry_probs!,
 
 # Admissions rules
 export AbstractAdmissionsRule, AbstractAdmissionsSwitches, AdmissionsOpenSwitches, AdmissionsOpen, AdmissionsCutoffSwitches, AdmissionsCutoff, AdmissionsOneVarSwitches, AdmissionsOneVar
-export n_colleges, n_college_sets, percentile_var, college_set, open_admission, admission_probs, prob_coll_set, prob_coll_sets, make_admissions, validate_admissions
+export n_colleges, n_college_sets, college_set, open_admission, admission_probs, prob_coll_set, prob_coll_sets, make_admissions, validate_admissions
 
 # Admission probabilities
 export AbstractAdmProbFctSwitches, AbstractAdmProbFct, 
     AdmProbFctLogisticSwitches, AdmProbFctLogistic,
     AdmProbFctOpenSwitches, AdmProbFctOpen
 export init_admprob_fct_logistic_switches, init_admprob_fct, make_admprob_function,  prob_admit
+export by_college, by_college!
 
 # Complete entry decisions
 export entry_decisions
@@ -31,7 +32,7 @@ export set_capacities!, increase_capacity!, increase_capacities!, set_local_only
 # Student rankings
 export AbstractRankingSwitches, AbstractRanking, EndowPctRankingSwitches, EndowPctRanking
 export make_entry_switches_oneloc, validate_es, set_bounds!
-export rank_students, make_student_ranking, validate_ranking, validate_ranking_switches, retrieve_draws, n_draws, endow_names
+export rank_students, score_students, make_student_ranking, validate_ranking, validate_ranking_switches, retrieve_draws, n_draws, endow_names
 
 # Results
 export AbstractEntryResults, EntryResults, validate_er

@@ -90,6 +90,10 @@ make_test_admprob_fct_open(nc) =
 
 Admission probability = pMin + (pMax - pMin) / (1 + Q exp(-B (x - M))).
 
+`M` is essentially a left-right shifter.
+`B` is a slope parameter. Needs to be high b/c logistic maps [-Inf, Inf] -> [0, 1].
+`Q` is mostly redundant and can be fixed.
+
 Parameters may vary by college (as indicated by switches). But some colleges are open admission. They have no parameters.
 
 All students get into the lowest college. Parameters only need to be set for colleges 2+.
@@ -132,8 +136,8 @@ Set up switches for logistic admission probability functions.
 """
 function init_admprob_fct_logistic_switches(
     objId :: ObjectId,  nc :: Integer;
-    byCollegeV :: Vector{Symbol} = [:pMinV, :mV],
-    calibratedV :: Vector{Symbol} = [:pMinV, :bV, :mV]
+    byCollegeV :: Vector{Symbol} = [:bV, :mV],
+    calibratedV :: Vector{Symbol} = [:bV, :mV]
     )
     nOpen = 1;
     pvecV = Vector{Param}();
@@ -165,15 +169,15 @@ end
 function init_pmin(nc :: Integer, isCalibrated :: Bool)
     sz = (nc, );
     return Param(:pMinV, "Min prob", "pMinV", 
-        fill(0.05, sz), fill(0.05, sz),
-        fill(0.01, sz), fill(0.45, sz), isCalibrated);
+        fill(0.05, sz), fill(0.01, sz),
+        fill(0.005, sz), fill(0.45, sz), isCalibrated);
 end
 
 function init_pmax(nc :: Integer, isCalibrated :: Bool)
     sz = (nc, );
     return Param(:pMaxV, "Max prob", "pMaxV", 
-        fill(0.95, sz), fill(0.95, sz),
-        fill(0.5, sz), fill(0.99, sz), isCalibrated);
+        fill(0.95, sz), fill(0.99, sz),
+        fill(0.5, sz), fill(0.995, sz), isCalibrated);
 end
 
 # Q is equivalent to M. So can be set to 1.
@@ -192,7 +196,7 @@ function init_b(nc :: Integer, isCalibrated :: Bool)
     pName = :bV;
     v = fill(5.0, sz);
     return Param(pName, "Logistic $pName", string(pName), v, v,
-        fill(0.1, sz), fill(10.0, sz), isCalibrated);
+        fill(0.1, sz), fill(20.0, sz), isCalibrated);
 end
 
 # The input is a percentile. So M should also be on the order of [0, 1].
@@ -258,7 +262,7 @@ end
 ## ----------  Access
 
 Lazy.@forward AdmProbFctLogistic.switches (
-    by_college, college_index
+    by_college, by_college!, college_index
     );
 
 ModelParams.has_pvector(switches :: AdmProbFctLogisticSwitches{F1}) where F1 = true;

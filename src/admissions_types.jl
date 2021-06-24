@@ -15,7 +15,7 @@ abstract type AbstractAdmissionsSwitches{I1, F1 <: Real} end
 
 
 Lazy.@forward AbstractAdmissionsRule.switches (
-    StructLH.describe, open_admission, percentile_var
+    StructLH.describe, open_admission, min_coll_set_prob, n_colleges
     );
 
 
@@ -27,16 +27,16 @@ Initialize an admission rule from its switches.
 function make_admissions(switches :: AbstractAdmissionsSwitches) end
 
 
-"""
-	$(SIGNATURES)
+# """
+# 	$(SIGNATURES)
 
-Variable used to rank students in admissions rule.
-"""
-percentile_var(switches :: AbstractAdmissionsSwitches) =
-    switches.pctVar;
+# Variable used to use in admissions rule. Distinct from the ranking variable used in sequential admissions.
+# """
+# percentile_var(switches :: AbstractAdmissionsSwitches) =
+#     switches.pctVar;
 
 
-n_colleges(a :: AbstractAdmissionsRule) = a.switches.nColleges;
+n_colleges(a :: AbstractAdmissionsSwitches) = a.nColleges;
 
 # By default, college sets are of the form `1:n`.
 n_college_sets(a :: AbstractAdmissionsRule) = n_colleges(a);
@@ -54,8 +54,8 @@ end
 
 Base.iterate(a :: AbstractAdmissionsRule) = Base.iterate(a, 1);
 
-min_coll_set_prob(a :: AbstractAdmissionsRule{I1, F1}) where {I1, F1} = 
-    min_coll_set_prob(a.switches);
+# min_coll_set_prob(a :: AbstractAdmissionsRule{I1, F1}) where {I1, F1} = 
+#     min_coll_set_prob(a.switches);
 min_coll_set_prob(a :: AbstractAdmissionsSwitches{I1, F1}) where {I1, F1} =     
     a.minCollSetProb;
 
@@ -81,17 +81,17 @@ end
 
 
 # Prob of each college set. Vector input. Each type defines this for scalar input.
-# Inefficient ++++++
+# Inefficient +++
 function prob_coll_set(a :: AbstractAdmissionsRule{I1, F1}, 
     admProbFct :: AF1,
     iSet :: Integer, 
-    hsGpaPctV :: AbstractVector{F2}) where 
+    scoreV :: AbstractVector{F2}) where 
     {AF1 <: AbstractAdmProbFct{<: Real}, I1, F1, F2 <: Real}
 
-    J = length(hsGpaPctV);
+    J = length(scoreV);
     probV = Vector{F1}(undef, J);
     for j = 1 : J
-        probV[j] = prob_coll_set(a, admProbFct, iSet, hsGpaPctV[j]);
+        probV[j] = prob_coll_set(a, admProbFct, iSet, scoreV[j]);
     end
     return probV
 end
@@ -100,11 +100,11 @@ end
 # Prob college sets for several types.
 function prob_coll_sets(a :: AbstractAdmissionsRule{I1, F1}, 
     admProbFct :: AF1,
-    hsGpaPctV :: AbstractVector{F2}) where 
+    scoreV :: AbstractVector{F2}) where 
     {AF1 <: AbstractAdmProbFct{<: Real}, I1, F1, F2 <: Real}
 
     nSets = n_college_sets(a);
-    n = length(hsGpaPctV);
+    n = length(scoreV);
     prob_jsM = Matrix{F1}(undef, n, nSets);
     for j = 1 : n
         prob_jsM[j, :] = prob_coll_sets(a, admProbFct, hsGpaPctV[j]);
