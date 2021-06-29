@@ -158,8 +158,7 @@ increase_capacity!(switches :: AbstractEntrySwitches{F1},
 
 Increase all college capacities by a common factor.
 """
-increase_capacities!(switches :: AbstractEntrySwitches{F1}, 
-    cFactor :: F1) where F1 = 
+increase_capacities!(switches :: AbstractEntrySwitches{F1}, cFactor) where F1 = 
     switches.capacity_clM .*= cFactor;
 
 """

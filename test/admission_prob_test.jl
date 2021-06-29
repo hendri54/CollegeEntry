@@ -11,11 +11,14 @@ function adm_prob_test(switches)
         @test get_object_id(af) isa ObjectId;
         @test get_object_id(switches) isa ObjectId;
 
-        if af isa AdmProbFctLogistic
-            ce.by_college!(switches, :pMinV);
-            @test ce.by_college(switches, :pMinV);
-            ce.not_by_college!(switches, :pMinV);
-            @test !ce.by_college(switches, :pMinV);
+        pNameV = ce.param_names(af);
+        if !isnothing(ce.param_names(af))
+            for pName in pNameV
+                ce.by_college!(switches, pName);
+                @test ce.by_college(switches, pName);
+                ce.not_by_college!(switches, pName);
+                @test !ce.by_college(switches, pName);
+            end
         end
 
         xV = 0.01 : 0.1 : 0.99;
@@ -37,6 +40,7 @@ end
     nc = 4;
     for switches in (
         ce.make_test_admprob_fct_logistic_switches(nc),
+        ce.make_test_admprob_fct_linear_switches(nc),
         AdmProbFctOpenSwitches{Float64}(ObjectId(:test), nc)
         )
         adm_prob_test(switches);

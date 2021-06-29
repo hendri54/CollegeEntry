@@ -16,7 +16,8 @@ n_colleges(switches :: AbstractAdmProbFctSwitches{F1}) where F1 =
 
 
 Lazy.@forward AbstractAdmProbFct.switches (
-    ModelParams.has_pvector, n_colleges, n_open_colleges
+    ModelParams.has_pvector, n_colleges, n_open_colleges,
+    by_college, by_college!, college_index, param_names
     );
 
 Base.show(io :: IO, af :: AbstractAdmProbFct{F1}) where F1 = 
@@ -24,7 +25,11 @@ Base.show(io :: IO, af :: AbstractAdmProbFct{F1}) where F1 =
 Base.show(io :: IO, af :: AbstractAdmProbFctSwitches{F1}) where F1 = 
     print(io, typeof(af));
 
+ModelParams.has_pvector(switches :: AbstractAdmProbFctSwitches{F1}) where F1 = true;
 
+ModelParams.get_object_id(switches :: AbstractAdmProbFctSwitches{F1}) where F1 = 
+    get_object_id(switches.pvec);
+    
 # function prob_admit(admProbFct :: AF1,
 #     iCollege :: Integer, hsGpa) where {AF1 <: AbstractAdmProbFct{<: Real}, I1, F1}
 
@@ -34,124 +39,22 @@ Base.show(io :: IO, af :: AbstractAdmProbFctSwitches{F1}) where F1 =
 # end
 
 
-## -----------  Open admission
+function make_admprob_fct_switches(objId :: ObjectId, switchType :: DataType, 
+    nc, nOpen, byCollegeV, calibratedV)
 
-struct AdmProbFctOpenSwitches{F1} <: AbstractAdmProbFctSwitches{F1} 
-    objId :: ObjectId
-    nColleges :: Int
-end
-
-"""
-	$(SIGNATURES)
-
-This is really a dummy for cases where an admission probability function is not needed.
-"""
-struct AdmProbFctOpen{F1} <: AbstractAdmProbFct{F1} 
-    objId :: ObjectId
-    switches :: AdmProbFctOpenSwitches{F1}
-end
-
-ModelParams.has_pvector(switches :: AdmProbFctOpenSwitches{F1}) where F1 = false;
-ModelParams.get_object_id(switches :: AdmProbFctOpenSwitches{F1}) where F1 = 
-    switches.objId;
-
-init_admprob_fct(switches :: AdmProbFctOpenSwitches{F1}) where F1 = 
-    AdmProbFctOpen{F1}(get_object_id(switches), switches);
-
-n_open_colleges(switches :: AdmProbFctOpenSwitches{F1}) where F1 = 
-    n_colleges(switches);
-
-make_admprob_function(af :: AdmProbFctOpen{F1}, ic) where F1 = 
-    x -> one(F1);
-
-prob_admit(af :: AdmProbFctOpen{F1}, iCollege :: Integer, hsGpa) where {I1, F1} = 
-    prob_admit_open(hsGpa);
-
-# prob_admit(af :: AdmProbFctOpen{F1}, iCollege :: Integer, 
-#     hsGpa :: AbstractArray{F1}) where {I1, F1} = ones(F1, size(hsGpa));
-
-prob_admit_open(hsGpa :: F1) where F1 <: Real = one(F1);
-prob_admit_open(hsGpa :: AbstractArray{F1}) where F1 <: Real = 
-    ones(F1, size(hsGpa));
-
-    
-validate_admprob_fct(af :: AdmProbFctOpen{F1}) where F1 = true;
-
-make_test_admprob_fct_open_switches(nc) = 
-    AdmProbFctOpenSwitches{Float64}(ObjectId(:admProbFctOpen), nc);
-make_test_admprob_fct_open(nc) = 
-    init_admprob_fct(make_test_admprob_fct_open_switches(nc));
-
-
-## -----------  Logistic
-
-"""
-	$(SIGNATURES)
-
-Admission probability = pMin + (pMax - pMin) / (1 + Q exp(-B (x - M))).
-
-`M` is essentially a left-right shifter.
-`B` is a slope parameter. Needs to be high b/c logistic maps [-Inf, Inf] -> [0, 1].
-`Q` is mostly redundant and can be fixed.
-
-Parameters may vary by college (as indicated by switches). But some colleges are open admission. They have no parameters.
-
-All students get into the lowest college. Parameters only need to be set for colleges 2+.
-"""
-mutable struct AdmProbFctLogisticSwitches{F1} <: AbstractAdmProbFctSwitches{F1}
-    pvec :: ParamVector
-    nColleges :: Int
-    nOpenColleges :: Int
-end
-
-mutable struct AdmProbFctLogistic{F1} <: AbstractAdmProbFct{F1}
-    objId :: ObjectId
-    switches :: AdmProbFctLogisticSwitches{F1}
-    pMinV :: Vector{F1}
-    pMaxV :: Vector{F1}
-    qV :: Vector{F1}
-    bV :: Vector{F1}
-    mV :: Vector{F1}
-end
-
-## -------  Constructors
-
-# nc: total no of colleges
-function make_test_admprob_fct_logistic_switches(nc)
-    init_admprob_fct_logistic_switches(ObjectId(:test), nc);
-end
-
-function make_test_admprob_fct_logistic(nc)
-    switches = make_test_admprob_fct_logistic_switches(nc);
-    af = init_admprob_fct(switches);
-    @assert validate_admprob_fct(af);
-    return af
-end
-
-
-"""
-	$(SIGNATURES)
-
-Set up switches for logistic admission probability functions.
-"""
-function init_admprob_fct_logistic_switches(
-    objId :: ObjectId,  nc :: Integer;
-    byCollegeV :: Vector{Symbol} = [:bV, :mV],
-    calibratedV :: Vector{Symbol} = [:bV, :mV]
-    )
-    nOpen = 1;
     pvecV = Vector{Param}();
-    for pName in [:pMinV, :pMaxV, :qV, :bV, :mV]
-        init_f = init_function(AdmProbFctLogisticSwitches, pName);
+    for pName in param_names(switchType)
         nColl = pvec_length(nc, nOpen, byCollegeV, pName);
         isCalibrated = any(isequal.(pName, calibratedV));
-        push!(pvecV, init_f(nColl, isCalibrated));
+        push!(pvecV, init_param(switchType, pName, nColl, isCalibrated));
     end
     pvec = ParamVector(objId, pvecV);
-    switches = AdmProbFctLogisticSwitches{Float64}(pvec, nc, nOpen);
+
+    switches = switchType(pvec, nc, nOpen);
     @assert validate_admprob_fct_switches(switches);
     return switches
 end
+
 
 # Returns the no of colleges with parameters for a parameter.
 # Exammple: `pvec_length(4, 1, [:mV], :bV) == 1`.
@@ -163,112 +66,13 @@ function pvec_length(nc, nOpen, byCollegeV, pName)
     end
 end
 
-# notation from symbol table +++++
-# Min admission prob for each college.
-# Input is no of colleges that need parameters.
-function init_pmin(nc :: Integer, isCalibrated :: Bool)
-    sz = (nc, );
-    return Param(:pMinV, "Min prob", "pMinV", 
-        fill(0.05, sz), fill(0.01, sz),
-        fill(0.005, sz), fill(0.45, sz), isCalibrated);
+
+## ------------  Access
+
+# Index into parameters that vary by college.
+function college_index(switches :: AbstractAdmProbFctSwitches{F1}, iCollege) where F1
+    return iCollege .- n_open_colleges(switches);
 end
-
-function init_pmax(nc :: Integer, isCalibrated :: Bool)
-    sz = (nc, );
-    return Param(:pMaxV, "Max prob", "pMaxV", 
-        fill(0.95, sz), fill(0.99, sz),
-        fill(0.5, sz), fill(0.995, sz), isCalibrated);
-end
-
-# Q is equivalent to M. So can be set to 1.
-function init_q(nc :: Integer, isCalibrated :: Bool)
-    sz = (nc, );
-    pName = :qV;
-    v = fill(1.0, sz);
-    return Param(pName, "Logistic $pName", string(pName), v, v,
-        0.1 .* v, 10.0 .* v, isCalibrated);
-end
-
-# Slope
-# Logistic maps [-Inf, Inf] -> [0, 1]. So B must be large.
-function init_b(nc :: Integer, isCalibrated :: Bool)
-    sz = (nc, );
-    pName = :bV;
-    v = fill(5.0, sz);
-    return Param(pName, "Logistic $pName", string(pName), v, v,
-        fill(0.1, sz), fill(20.0, sz), isCalibrated);
-end
-
-# The input is a percentile. So M should also be on the order of [0, 1].
-# This can vary across colleges (shifts curve left/right).
-function init_m(nc :: Integer, isCalibrated :: Bool)
-    sz = (nc, );
-    pName = :mV;
-    if nc > 1
-        v = collect(LinRange(-0.4, 0.4, nc));
-    else
-        v = fill(0.4, sz);
-    end
-    sz = size(v);
-    Param(pName, "Logistic $pName", string(pName), v, v,
-        fill(-0.8, sz), fill(0.8, sz), isCalibrated);
-end
-
-function init_function(::Type{AdmProbFctLogisticSwitches}, pName) where F1
-    if pName == :pMinV
-        return init_pmin;
-    elseif pName == :pMaxV
-        return init_pmax;
-    elseif pName == :mV
-        return init_m;
-    elseif pName == :bV
-        return init_b;
-    elseif pName == :qV
-        return init_q;
-    else
-        error("Invalid: $pName");
-    end
-end
-
-
-# stub ++++++
-function validate_admprob_fct_switches(switches :: AdmProbFctLogisticSwitches{F1}) where F1
-    isValid = true;
-    return isValid;
-end
-
-
-"""
-	$(SIGNATURES)
-
-Make the object that holds the admission probability functions for a set of colleges.
-"""
-function init_admprob_fct(switches :: AdmProbFctLogisticSwitches{F1}) where F1
-    af = AdmProbFctLogistic(get_object_id(switches), switches, 
-        param_default_value(switches, :pMinV), param_default_value(switches, :pMaxV), 
-        param_default_value(switches, :qV), param_default_value(switches, :bV), 
-        param_default_value(switches, :mV)); 
-    @assert validate_admprob_fct(af);
-    return af
-end
-
-
-function validate_admprob_fct(switches :: AdmProbFctLogistic{F1}) where F1
-    isValid = true;
-    return isValid;
-end
-
-
-## ----------  Access
-
-Lazy.@forward AdmProbFctLogistic.switches (
-    by_college, by_college!, college_index
-    );
-
-ModelParams.has_pvector(switches :: AdmProbFctLogisticSwitches{F1}) where F1 = true;
-
-ModelParams.get_object_id(switches :: AdmProbFctLogisticSwitches{F1}) where F1 = 
-    get_object_id(switches.pvec);
 
 
 """
@@ -276,19 +80,18 @@ ModelParams.get_object_id(switches :: AdmProbFctLogisticSwitches{F1}) where F1 =
 
 Does the parameter `pName` vary by college?
 """
-function by_college(switches :: AdmProbFctLogisticSwitches{F1}, pName) where F1
+function by_college(switches :: AbstractAdmProbFctSwitches{F1}, pName) where F1
     v = param_value(switches, pName);
     @assert !isnothing(v)  "Not found: $pName";
     return length(v) > 1
 end
-
 
 """
 	$(SIGNATURES)
 
 Switch a parameter to vary by college.
 """
-function by_college!(switches :: AdmProbFctLogisticSwitches{F1}, pName) where F1
+function by_college!(switches :: AbstractAdmProbFctSwitches{F1}, pName) where F1
     set_by_college!(switches, pName, true);
 end
 
@@ -297,11 +100,11 @@ end
 
 Switch a parameter NOT to vary by college.
 """
-function not_by_college!(switches :: AdmProbFctLogisticSwitches{F1}, pName) where F1
+function not_by_college!(switches :: AbstractAdmProbFctSwitches{F1}, pName) where F1
     set_by_college!(switches, pName, false);
 end
 
-function set_by_college!(switches :: AdmProbFctLogisticSwitches{F1}, 
+function set_by_college!(switches :: AbstractAdmProbFctSwitches{F1}, 
     pName, byCollege :: Bool) where F1
 
     # Check if we need to make a change
@@ -311,75 +114,13 @@ function set_by_college!(switches :: AdmProbFctLogisticSwitches{F1},
     else
         nColl = 1;
     end
-    init_f = init_function(AdmProbFctLogisticSwitches, pName);
     isCalibrated = is_calibrated(switches, pName);
-    p = init_f(nColl, isCalibrated);
+    p = init_param(typeof(switches), pName, nColl, isCalibrated);
     ModelParams.replace!(get_pvector(switches), p);
 end
 
-n_open_colleges(switches :: AdmProbFctLogisticSwitches{F1}) where F1 = 
+n_open_colleges(switches :: AbstractAdmProbFctSwitches{F1}) where F1 = 
     switches.nOpenColleges;
-
-# Index into parameters that vary by college.
-function college_index(switches :: AdmProbFctLogisticSwitches{F1}, iCollege) where F1
-    return iCollege .- n_open_colleges(switches);
-end
-
-
-# Maps a parameter name such as `:pMinV` into "pMin"
-# function sym_from_name(pName)
-#     pStr = string(pName);
-#     @assert last(pStr) == 'V'  "Should end in V: $pName";
-#     pStr2 = pStr[1 : (end-1)];
-#     return pStr2
-# end
-
-
-## ---------  Admission prob for one college
-
-
-"""
-	$(SIGNATURES)
-
-Make admission probability function for one college. Maps endowment percentile into [0, 1].
-"""
-function make_admprob_function(af :: AdmProbFctLogistic{F1}, 
-    iCollege :: Integer) where F1
-
-    if iCollege <= n_open_colleges(af)
-        fct = x -> 1.0;
-    else
-        pMin = get_param(af, :pMinV, iCollege);
-        pMax = get_param(af, :pMaxV, iCollege);
-        q = get_param(af, :qV, iCollege);
-        b = get_param(af, :bV, iCollege);
-        m = get_param(af, :mV, iCollege);
-        fct = x -> logistic(x, pMin, pMax, q, b, m);
-    end
-    return fct
-end
-
-"""
-	$(SIGNATURES)
-
-Probability of being admitted into a specific college (just based on its admissions prob function).
-"""
-function prob_admit(af :: AdmProbFctLogistic{F1}, iCollege :: Integer, hsGpa) where F1
-    if iCollege <= n_open_colleges(af)
-        probV = prob_admit_open(hsGpa);
-    else
-        probV = logistic(hsGpa, 
-            get_param(af, :pMinV, iCollege),
-            get_param(af, :pMaxV, iCollege),
-            get_param(af, :qV, iCollege),
-            get_param(af, :bV, iCollege),
-            get_param(af, :mV, iCollege));
-    end
-    return probV
-end
-
-logistic(x, pMin, pMax, q, b, m) = 
-    pMin .+ (pMax .- pMin) ./ (1.0 .+ q .* exp.(-b .* (x .- m)));
 
 
 """
@@ -388,7 +129,7 @@ logistic(x, pMin, pMax, q, b, m) =
 Get a parameter that may or may not vary by college for college `iCollege`.
 For college 1, throw an error.
 """
-function get_param(af :: AdmProbFctLogistic{F1}, pName, 
+function get_param(af :: AbstractAdmProbFct{F1}, pName, 
     iCollege :: Integer) where F1
 
     @assert (iCollege > n_open_colleges(af))  "No parameters for college $iCollege";
@@ -401,6 +142,12 @@ function get_param(af :: AdmProbFctLogistic{F1}, pName,
     return getproperty(af, pName)[idx]
 end
 
+get_params(af :: AbstractAdmProbFct{F1}, iCollege :: Integer) where F1 = 
+    [get_param(af, varName, iCollege)  for varName in param_names(af)];
 
+
+include("admprob_fct_open.jl");
+include("admprob_fct_logistic.jl");
+include("admprob_fct_linear.jl");
 
 # -------------

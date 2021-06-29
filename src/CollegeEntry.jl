@@ -20,7 +20,8 @@ export n_colleges, n_college_sets, college_set, open_admission, admission_probs,
 # Admission probabilities
 export AbstractAdmProbFctSwitches, AbstractAdmProbFct, 
     AdmProbFctLogisticSwitches, AdmProbFctLogistic,
-    AdmProbFctOpenSwitches, AdmProbFctOpen
+    AdmProbFctOpenSwitches, AdmProbFctOpen,
+    AdmProbFctLinearSwitches, AdmProbFctLinear
 export init_admprob_fct_logistic_switches, init_admprob_fct, make_admprob_function,  prob_admit
 export by_college, by_college!
 
@@ -32,7 +33,7 @@ export set_capacities!, increase_capacity!, increase_capacities!, set_local_only
 # Student rankings
 export AbstractRankingSwitches, AbstractRanking, EndowPctRankingSwitches, EndowPctRanking
 export make_entry_switches_oneloc, validate_es, set_bounds!
-export rank_students, score_students, make_student_ranking, validate_ranking, validate_ranking_switches, retrieve_draws, n_draws, endow_names
+export rank_students, score_students, scale_scores, range_of_scores, make_student_ranking, validate_ranking, validate_ranking_switches, retrieve_draws, n_draws, endow_names
 
 # Results
 export AbstractEntryResults, EntryResults, validate_er

@@ -3,8 +3,11 @@ using LatexLH, StructLH, ModelObjectsLH, ModelParams, CollegeEntry
 
 ce = CollegeEntry;
 
-make_test_endowment_draws(J :: Integer) = 
-    range(1.0, 2.0, length = J) * range(0.5, 1.5, length = 4)';
+# Scale in [0, 1] consistent with percentiles
+function make_test_endowment_draws(J :: Integer)
+    drawM = range(0.0, 1.0, length = J) * range(0.05, 0.95, length = 4)';
+    return drawM
+end
 
 function CollegeEntry.retrieve_draws(draws :: Matrix{Float64}, eName)
     switches = CollegeEntry.make_test_endowpct_switches(4, true);
@@ -26,7 +29,7 @@ function student_rankings_test(n :: Integer, highDrawsFirst :: Bool)
         if n > 1
             nameV = endow_names(switches);
             wtV = ce.fixed_weights(switches);
-            set_bounds!(switches, nameV[2], wtV[2] - 2.0, wtV[2] + 2.0);
+            ce.set_bounds!(switches, nameV[2], wtV[2] - 2.0, wtV[2] + 2.0);
             @test validate_ranking_switches(switches);
             @test isapprox(switches.lbV[1], wtV[2] - 2.0)
         end
@@ -41,6 +44,18 @@ function student_rankings_test(n :: Integer, highDrawsFirst :: Bool)
         rank_jV = rank_students(e, draws);
         @test isa(rank_jV, Vector{<: Integer})
         @test sort(rank_jV) == collect(1 : J)
+
+        scoreV = score_students(e, draws);
+        if highDrawsFirst
+            @test all(diff(scoreV[rank_jV]) .< 0.0);
+        else
+            @test all(diff(scoreV[rank_jV]) .> 0.0);
+        end
+
+        lb, ub = range_of_scores(e);
+        @test all(lb .<= scoreV .<= ub);
+        scaledV = scale_scores(e, scoreV);
+        @test all(0.0 .<= scaledV .<= 1.0);
 	end
 end
 

@@ -1,5 +1,5 @@
 using Random, Test
-using LatexLH, ModelParams, CollegeEntry
+using LatexLH, ModelObjectsLH, ModelParams, CollegeEntry
 
 ce = CollegeEntry;
 
@@ -184,13 +184,15 @@ function sim_entry_test(switches)
         prob_clM = reshape(prob_clV, nc, nl);
         @test !any(prob_clM[.!avail_clM] .> 0.0)
 
+        # Tests expected value by simulation
         nSim = Int(1e5);
         prob2_clM, eVal2 = CollegeEntry.sim_entry_probs(e, 
             vWork, vCollege_clM, avail_clM, 
             nSim, rng);
         @test !any(prob2_clM[.!avail_clM] .> 0.0)
 
-        @test isapprox(eVal, eVal2, atol = 0.05)
+        @test isapprox(eVal, eVal2, atol = 1e-4)
+        # @show eVal, eVal2;
         @test isapprox(prob_clM, prob2_clM, atol = 0.02)
     end
 end

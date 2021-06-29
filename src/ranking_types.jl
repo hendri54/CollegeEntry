@@ -57,7 +57,7 @@ Rank students. Returns indices of students in rank order from best to worst.
 - `draws`: must support `retrieve_draws`.
 """
 function rank_students(e :: AbstractRanking{F1}, draws) where F1
-    return sortperm(score_students(e, draws), rev = true);
+    return sortperm(score_students(e, draws), rev = high_draws_first(e));
 end
 
 
@@ -75,8 +75,51 @@ function score_students(e :: AbstractRanking{F1}, draws) where F1
     for (j, eName) in enumerate(nameV)
         scoreV .+= retrieve_draws(draws, eName) .* wtV[j];
     end
+    # scaled  &&  scale_scores(e, scoreV);
     return scoreV
 end
+
+
+"""
+	$(SIGNATURES)
+
+Range of scores, given ranges for the scoring variables.
+"""
+function range_of_scores(e :: AbstractRanking{F1};
+    lbV = lower_bounds(e), ubV = upper_bounds(e)) where F1
+    wtV = weights(e);
+    lb = sum(min.(wtV .* lbV, wtV .* ubV));
+    ub = sum(max.(wtV .* lbV, wtV .* ubV));
+    return lb, ub
+end
+
+"""
+	$(SIGNATURES)
+
+Scale scores to lie in [0, 1].
+"""
+function scale_scores(e :: AbstractRanking{F1}, scoreV;
+    lbV = lower_bounds(e),
+    ubV = upper_bounds(e)) where F1
+
+    lb, ub = range_of_scores(e; lbV, ubV);
+    scoreV = (scoreV .- lb) ./ (ub .- lb);
+    return scoreV
+end
+
+"""
+	$(SIGNATURES)
+
+Lower bounds of scoring variables.
+"""
+function lower_bounds(e :: AbstractRanking{F1}) where F1 end
+
+"""
+	$(SIGNATURES)
+
+Upper bounds of scoring variables.
+"""
+function upper_bounds(e :: AbstractRanking{F1}) where F1 end
 
 
 """

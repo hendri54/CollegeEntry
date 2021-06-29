@@ -82,6 +82,9 @@ calibrate_weights(switches :: EndowPctRankingSwitches{F1}) where F1 =
 # calibrate_weights(e :: EndowPctRanking{F1}) where F1 = 
 #     calibrate_weights(e.switches);
 
+lower_bounds(e :: EndowPctRanking{F1}) where F1 = zeros(F1, length(endow_names(e)));
+upper_bounds(e :: EndowPctRanking{F1}) where F1 = ones(F1, length(endow_names(e)));
+
 
 """
 	$(SIGNATURES)
