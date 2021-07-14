@@ -21,8 +21,9 @@ export n_colleges, n_college_sets, college_set, open_admission, admission_probs,
 export AbstractAdmProbFctSwitches, AbstractAdmProbFct, 
     AdmProbFctLogisticSwitches, AdmProbFctLogistic,
     AdmProbFctOpenSwitches, AdmProbFctOpen,
-    AdmProbFctLinearSwitches, AdmProbFctLinear
-export init_admprob_fct_logistic_switches, init_admprob_fct, make_admprob_function,  prob_admit
+    AdmProbFctLinearSwitches, AdmProbFctLinear,
+    AdmProbFctStepSwitches, AdmProbFctStep
+export init_admprob_fct_logistic_switches, init_admprob_fct_step_switches, init_admprob_fct, make_admprob_function,  prob_admit
 export by_college, by_college!
 
 # Complete entry decisions

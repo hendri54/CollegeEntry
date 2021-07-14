@@ -62,7 +62,7 @@ function validate_er(er :: EntryResults{F1}; validateFracLocal :: Bool = true) w
 			"""
 		isValid = false;
 	end
-	if !isapprox(er.fracEnterBest_jlcM[:,:,nc], er.fracEnter_jlcM[:,:,nc])
+	if !isapprox(er.fracEnterBest_jlcM[:,:,nc], er.fracEnter_jlcM[:,:,nc]; atol = 1e-7)
 		maxGap = maximum(abs.(er.fracEnterBest_jlcM[:,:,nc] .- er.fracEnter_jlcM[:,:,nc]));
 		@warn """
 			For top college, total entry should equal best entry.

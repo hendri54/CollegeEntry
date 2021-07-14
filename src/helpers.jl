@@ -67,4 +67,16 @@ function max_choices(vWork_jV :: AbstractVector{F1},
 end
 
 
+function find_class(x :: F1, cutoffV) where F1 <: Real
+    if x > last(cutoffV)
+        j = length(cutoffV) + 1;
+    elseif x < first(cutoffV)
+        j = 1;
+    else
+        j = findfirst(cutoff -> x < cutoff, cutoffV);
+    end
+    return j
+end
+
+
 # ---------------

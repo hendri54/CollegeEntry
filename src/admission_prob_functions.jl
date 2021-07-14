@@ -149,5 +149,6 @@ get_params(af :: AbstractAdmProbFct{F1}, iCollege :: Integer) where F1 =
 include("admprob_fct_open.jl");
 include("admprob_fct_logistic.jl");
 include("admprob_fct_linear.jl");
+include("admprob_fct_step.jl");
 
 # -------------
