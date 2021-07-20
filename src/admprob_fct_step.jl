@@ -8,23 +8,31 @@ There are `nc` colleges.
 For each college / endowment pair, some entry probs are fixed (e.g. close to 0 or 1); others are calibrated.
 """
 mutable struct AdmProbFctStepSwitches{F1} <: AbstractAdmProbFctSwitches{F1}
-    objId :: ObjectId
+    pvec :: ParamVector
     nColleges :: Int
     nOpenColleges :: Int
     # nGroups :: Int
     cutoffV :: Vector{F1}
-    caSwitches :: CalibratedArraySwitches{F1, 2}
+    # caSwitches :: CalibratedArraySwitches{F1, 2}
 end
 
 mutable struct AdmProbFctStep{F1} <: AbstractAdmProbFct{F1}
     objId :: ObjectId
     switches :: AdmProbFctStepSwitches{F1}
-    calArray :: CalibratedArray{F1, 2}
+    # calArray :: CalibratedArray{F1, 2}
+    probMatrix :: Matrix{F1}
 end
 
-ModelParams.get_object_id(switches :: AdmProbFctStepSwitches{F1}) where F1 = 
-    switches.objId;
-ModelParams.has_pvector(switches :: AdmProbFctStepSwitches{F1}) where F1 = false;
+Lazy.@forward  AdmProbFctStepSwitches.pvec (
+    ModelParams.get_object_id
+    );
+Lazy.@forward AdmProbFctStep.switches (
+    ModelParams.get_pvector, ModelParams.has_pvector
+    );
+
+# ModelParams.get_object_id(switches :: AdmProbFctStepSwitches{F1}) where F1 = 
+#     get_object_id(switches.pvec);
+ModelParams.has_pvector(switches :: AdmProbFctStepSwitches{F1}) where F1 = true;
 
 param_names(switches :: AdmProbFctStepSwitches{F1}) where F1 = nothing;
 
@@ -51,13 +59,17 @@ function init_admprob_fct_step_switches(
 
     lbM = fill(0.01, size(defaultProbM));
     ubM = fill(0.99, size(defaultProbM));
-    caSwitches = CalibratedArraySwitches(
-        make_child_id(objId, :probMatrix),
-        defaultProbM, lbM, ubM, isCalM);
+    pCA = CalArray(:probMatrix, "Admission probabilities", "admProb",
+        copy(defaultProbM), defaultProbM, lbM, ubM, isCalM);
+    pvec = ParamVector(objId, [pCA]);
+    # caSwitches = CalibratedArraySwitches(
+    #     make_child_id(objId, :probMatrix),
+    #     defaultProbM, lbM, ubM, isCalM);
 
     nc = size(defaultProbM, 2);
     nOpen = 1;
-    return AdmProbFctStepSwitches(objId, nc, nOpen, cutoffV, caSwitches)
+    return AdmProbFctStepSwitches(pvec, nc, nOpen, cutoffV)
+    # return AdmProbFctStepSwitches(objId, nc, nOpen, cutoffV, caSwitches)
 end
 
 function make_test_admprob_fct_step_switches(nc)
@@ -76,8 +88,9 @@ function make_test_admprob_fct_step_switches(nc)
 end
 
 function init_admprob_fct(switches :: AdmProbFctStepSwitches{F1}) where F1
-    calArray = CalibratedArray(switches.caSwitches);
-    af = AdmProbFctStep(switches.objId, switches, calArray);
+    # calArray = CalibratedArray(switches.caSwitches);
+    probM = copy(param_value(switches, :probMatrix));
+    af = AdmProbFctStep(get_object_id(switches), switches, probM);
     @assert validate_admprob_fct(af);
     return af
 end
@@ -106,7 +119,8 @@ function make_admprob_function(af :: AdmProbFctStep{F1},
     if iCollege <= n_open_colleges(af)
         fct = x -> 1.0;
     else
-        prob_gcM = ModelParams.values(af.calArray);
+        # prob_gcM = ModelParams.values(af.calArray);
+        prob_gcM = af.probMatrix;
         fct = x -> step_adm_prob(x, af.switches.cutoffV, prob_gcM[:, iCollege]);
     end
     return fct
@@ -117,12 +131,11 @@ function prob_admit(af :: AdmProbFctStep{F1}, iCollege :: Integer, hsGpa) where 
     if iCollege <= n_open_colleges(af)
         probV = prob_admit_open(hsGpa);
     else
-        prob_gcM = ModelParams.values(af.calArray);
+        prob_gcM = af.probMatrix; #  ModelParams.values(af.calArray);
         probV = step_adm_prob(hsGpa, af.switches.cutoffV, prob_gcM[:, iCollege]);
     end
     return probV
 end
-
 
 
 # ----------------
