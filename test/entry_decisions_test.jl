@@ -41,7 +41,7 @@ function entry_decisions_test(switches :: AbstractEntrySwitches{F1},
         objId = ObjectId(:entryOneStep);
         st = ce.make_test_symbol_table();
         entryS = init_entry_decision(objId, switches, st);
-        nc = n_colleges(switches);
+        nc = ce.n_colleges(switches);
         admProbFct = ce.make_test_admprob_fct_logistic(nc);
         # println(entryS, "  Pref shocks: $prefShocks");
 
@@ -179,7 +179,7 @@ function sim_entry_one_test(switches :: AbstractEntrySwitches{F1},
         objId = ObjectId(:entryOneStep);
         st = ce.make_test_symbol_table();
         entryS = init_entry_decision(objId, switches, st);
-        nc = n_colleges(switches);
+        nc = ce.n_colleges(switches);
         admProbFct = CollegeEntry.make_test_admprob_fct_logistic(nc);
         # println(entryS);
 

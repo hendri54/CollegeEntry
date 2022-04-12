@@ -15,7 +15,7 @@ export init_entry_decision, entry_probs, fix_entry_probs!, scale_entry_probs!,
 
 # Admissions rules
 export AbstractAdmissionsRule, AbstractAdmissionsSwitches, AdmissionsOpenSwitches, AdmissionsOpen, AdmissionsCutoffSwitches, AdmissionsCutoff, AdmissionsOneVarSwitches, AdmissionsOneVar
-export n_colleges, n_college_sets, college_set, open_admission, admission_probs, prob_coll_set, prob_coll_sets, make_admissions, validate_admissions
+export n_college_sets, college_set, open_admission, admission_probs, prob_coll_set, prob_coll_sets, make_admissions, validate_admissions
 
 # Admission probabilities
 export AbstractAdmProbFctSwitches, AbstractAdmProbFct, 
@@ -38,7 +38,7 @@ export rank_students, score_students, scale_scores, range_of_scores, make_studen
 
 # Results
 export AbstractEntryResults, EntryResults, validate_er
-export frac_local, frac_local_j, frac_local_c, n_locations, n_colleges, n_types, type_mass_jl, type_mass_j, capacities, enrollment_cl, enrollment_c, entry_probs_jlc, entry_probs_jc, entry_probs_j, expected_values_jl, frac_best_c
+export frac_local, frac_local_j, frac_local_c, n_locations, type_mass_jl, type_mass_j, capacities, enrollment_cl, enrollment_c, entry_probs_jlc, entry_probs_jc, entry_probs_j, expected_values_jl, frac_best_c
 export make_test_entry_results
 
 include("helpers.jl")

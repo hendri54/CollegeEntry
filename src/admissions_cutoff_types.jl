@@ -21,6 +21,8 @@ end
 Admissions are governed by a single indicator, such as a test score. Students can attend colleges for which they qualify in the sense that their indicator exceeds the college's cutoff value. Students may be allowed to attend other colleges with a fixed probability.
 
 This means that there are only two probabilities. With a high probability, the student can attend colleges `1:n` where `n` is the best college for which the student qualifies. With a low probability, the student may draw each college set `1 : m` where `m != n`.
+
+There is no role for and admissions probability function.
 """
 struct AdmissionsCutoff{I1, F1 <: Real} <: AbstractAdmissionsRule{I1, F1}
     switches :: AdmissionsCutoffSwitches{I1, F1}
@@ -35,7 +37,7 @@ end
 StructLH.describe(a :: AdmissionsCutoffSwitches) = [
     "Admission rule"  " ";
     # "Cutoff rule based on"  "$(a.pctVar)";
-    "Min percentile by college"  "$(a.minPctV)"
+    "Min percentile by college"  "fixed at $(a.minPctV)"
 ];
 
 
@@ -45,7 +47,8 @@ function validate_admissions(a :: AdmissionsCutoff{I1, F1}) where {I1, F1}
         @warn "Min percentiles should be increasing"
         isValid = false;
     end
-    isValid  ||  println(a)
+    isValid  =  isValid  &&  validate_percentiles(min_percentiles(a));
+    isValid  ||  println(a);
     return isValid
 end
 

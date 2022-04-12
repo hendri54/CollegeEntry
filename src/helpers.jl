@@ -1,6 +1,17 @@
 check_prob_array(m :: AbstractArray{F1}) where F1 <: Real =
     check_float_array(m, zero(F1), one(F1));
 
+function validate_percentiles(pctM)
+    isValid = true;
+    pMin, pMax = extrema(pctM);
+    if (pMin < 0.0)  ||  (pMax > 1.0)
+        isValid = false;
+        @warn "Invalid percentiles in range $pMin to $pMax";
+    end
+    return isValid
+end
+
+
 """
     $(SIGNATURES)
 

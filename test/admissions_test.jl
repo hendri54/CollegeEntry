@@ -7,7 +7,7 @@ function common_test(a :: T1) where T1 <: AbstractAdmissionsRule
     @testset "$a" begin
         # println("\n------------------");
         # println(a);
-        nc = n_colleges(a);
+        nc = ce.n_colleges(a);
         af = ce.make_test_admprob_fct_logistic(nc);
 
         # Want these increasing
@@ -19,7 +19,7 @@ function common_test(a :: T1) where T1 <: AbstractAdmissionsRule
         @test StructLH.describe(a) isa Matrix{String};
         nSets = n_college_sets(a);
         @test nSets >= 1
-        @test n_colleges(a) > 1
+        @test ce.n_colleges(a) > 1
 
         prob_jsM = zeros(J, nSets);
         for (iSet, cs) in enumerate(a)
@@ -56,11 +56,11 @@ function gpa_cutoff_test(a :: AdmissionsCutoff)
         @test isa(highV, Vector{<: Integer})
         @test all(diff(highV) .>= 0)
         @test highV[1] == 1
-        @test highV[end] == n_colleges(a);
+        @test highV[end] == ce.n_colleges(a);
 
         # Better students should have higher prob of "better" college set
         nSets = n_college_sets(a);
-        admProbFct = CollegeEntry.make_test_admprob_fct_open(n_colleges(a));
+        admProbFct = CollegeEntry.make_test_admprob_fct_open(ce.n_colleges(a));
         probV = prob_coll_set(a, admProbFct, nSets, hsGpaPctV);
         @test all(diff(probV) .>= 0)
         @test probV[end] > probV[1]

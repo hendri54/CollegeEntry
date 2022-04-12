@@ -9,7 +9,7 @@ function entry_results_test(switches)
         er = make_test_entry_results(switches);
 
         J = n_types(switches);
-        nc = n_colleges(switches);
+        nc = ce.n_colleges(switches);
         nl = n_locations(switches);
 
         @test all(capacities(er) .>= 0.0)

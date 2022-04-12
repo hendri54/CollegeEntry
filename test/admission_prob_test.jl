@@ -24,7 +24,7 @@ function adm_prob_test(switches)
         end
 
         xV = 0.01 : 0.1 : 0.99;
-        for ic = 1 : n_colleges(af)
+        for ic = 1 : ce.n_colleges(af)
             f = make_admprob_function(af, ic);
             probV = f.(xV);
             @test size(probV) == size(xV);

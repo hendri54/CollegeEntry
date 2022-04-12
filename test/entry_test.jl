@@ -21,7 +21,7 @@ function access_test(switches)
         # println(e);
 
         J = n_types(e);
-        nc = n_colleges(e);
+        nc = ce.n_colleges(e);
         nl = n_locations(e);
 
         @test 0.0 < min_entry_prob(e) < max_entry_prob(e) < 1.0
@@ -80,7 +80,7 @@ function entry_test(switches, prefShocks :: Bool)
         # println("Preference shocks: $prefShocks");
 
         J = n_types(e);
-        nc = n_colleges(e);
+        nc = ce.n_colleges(e);
         nl = n_locations(e);
         vWork_jV, vCollege_jcM = CollegeEntry.values_for_test(rng, J, nc, nl);
         admitV = [1, 3];
@@ -140,7 +140,7 @@ function small_pref_entry_test(switches)
         # println(e);
 
         J = n_types(e);
-        nc = n_colleges(e);
+        nc = ce.n_colleges(e);
         nl = n_locations(e);
         vWork_jV, vCollege_jcM = CollegeEntry.values_for_test(rng, J, nc, nl);
         admitV = [1, 3];
@@ -172,7 +172,7 @@ function sim_entry_test(switches)
         # println(e);
 
         J = n_types(e);
-        nc = n_colleges(e);
+        nc = ce.n_colleges(e);
         nl = n_locations(e);
         vCollege_clM = test_value_cl(rng, nc, nl);
         vWork = 1.0 .+ sum(vCollege_clM) / length(vCollege_clM);
