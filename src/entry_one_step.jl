@@ -10,7 +10,7 @@ function init_entry_decision(objId :: ObjectId,
 
     pEntryPref = init_entry_prefscale(switches, st);
     pvec = ParamVector(objId, [pEntryPref]);
-    return EntryOneStep(objId, pvec, ModelParams.value(pEntryPref), switches)
+    return EntryOneStep(objId, pvec, ModelParams.pvalue(pEntryPref), switches)
 end
 
 

@@ -16,7 +16,7 @@ function init_entry_decision(objId :: ObjectId,
         switches.calEntryPrefScale);
 
     pvec = ParamVector(objId, [pEntryPref]);
-    return EntryTwoStep(objId,  pvec, ModelParams.value(pEntryPref), 
+    return EntryTwoStep(objId,  pvec, ModelParams.pvalue(pEntryPref), 
         collPrefScale, switches)
 end
 

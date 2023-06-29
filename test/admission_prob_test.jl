@@ -41,7 +41,7 @@ end
 @testset "Admission probs" begin
     nc = 4;
     for switches in (
-        ce.make_test_admprob_fct_step_switches(nc),
+        # ce.make_test_admprob_fct_step_switches(nc),
         ce.make_test_admprob_fct_logistic_switches(nc),
         ce.make_test_admprob_fct_linear_switches(nc),
         AdmProbFctOpenSwitches{Float64}(ObjectId(:test), nc)

@@ -21,20 +21,22 @@ export n_college_sets, college_set, open_admission, admission_probs, prob_coll_s
 export AbstractAdmProbFctSwitches, AbstractAdmProbFct, 
     AdmProbFctLogisticSwitches, AdmProbFctLogistic,
     AdmProbFctOpenSwitches, AdmProbFctOpen,
-    AdmProbFctLinearSwitches, AdmProbFctLinear,
-    AdmProbFctStepSwitches, AdmProbFctStep
-export init_admprob_fct_logistic_switches, init_admprob_fct_step_switches, init_admprob_fct, make_admprob_function,  prob_admit
+    AdmProbFctLinearSwitches, AdmProbFctLinear;
+    # AdmProbFctStepSwitches, AdmProbFctStep, init_admprob_fct_step_switches
+export init_admprob_fct_logistic_switches, init_admprob_fct, make_admprob_function,  prob_admit
 export by_college, by_college!
 
 # Complete entry decisions
 export entry_decisions
 export colleges_full, capacities, capacities_c, limited_capacity, n_locations, n_types, total_mass
 export set_capacities!, increase_capacity!, increase_capacities!, set_local_only_colleges!
+export make_entry_switches_oneloc, validate_es, set_bounds!
 
 # Student rankings
-export AbstractRankingSwitches, AbstractRanking, EndowPctRankingSwitches, EndowPctRanking
-export make_entry_switches_oneloc, validate_es, set_bounds!
-export rank_students, score_students, scale_scores, range_of_scores, make_student_ranking, validate_ranking, validate_ranking_switches, retrieve_draws, n_draws, endow_names
+export AbstractRanking, RankingOneEndow;
+export rank_students, score_students, scale_scores, range_of_scores;
+export make_ranking_one_endow, validate_ranking;
+export endow_names;
 
 # Results
 export AbstractEntryResults, EntryResults, validate_er
@@ -46,7 +48,8 @@ include("test_helpers.jl")
 
 # Student rankings
 include("ranking_types.jl");
-include("ranking_endow_pct.jl");
+include("ranking_one_endow.jl");
+# include("ranking_endow_pct.jl");
 
 # Admission probabilities
 include("admission_prob_functions.jl");
@@ -58,7 +61,7 @@ include("admissions_cutoff_types.jl");
 include("admissions_one_indicator.jl");
 
 # Entry decisions
-include("types.jl")
+include("types.jl");
 include("access_routines.jl")
 include("generic.jl")
 # include("entry_one_step.jl")

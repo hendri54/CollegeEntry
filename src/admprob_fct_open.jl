@@ -32,7 +32,7 @@ n_open_colleges(switches :: AdmProbFctOpenSwitches{F1}) where F1 =
 make_admprob_function(af :: AdmProbFctOpen{F1}, ic) where F1 = 
     x -> one(F1);
 
-prob_admit(af :: AdmProbFctOpen{F1}, iCollege :: Integer, hsGpa) where {I1, F1} = 
+prob_admit(af :: AdmProbFctOpen{F1}, iCollege :: Integer, hsGpa) where F1 = 
     prob_admit_open(hsGpa);
 
 # prob_admit(af :: AdmProbFctOpen{F1}, iCollege :: Integer, 

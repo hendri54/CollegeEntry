@@ -163,7 +163,7 @@ function make_student_ranking(objId :: ObjectId,
     # objId = make_child_id(parentId, :studentRanking);
     pWtV = init_endow_pct_weights(switches, st);
     pvec = ParamVector(objId, [pWtV]);
-    return EndowPctRanking(objId, pvec, ModelParams.value(pWtV), switches)
+    return EndowPctRanking(objId, pvec, pvalue(pWtV), switches)
 end
 
 function init_endow_pct_weights(switches :: EndowPctRankingSwitches{F1},

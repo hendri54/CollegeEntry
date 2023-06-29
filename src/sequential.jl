@@ -23,7 +23,7 @@ function init_entry_decision(objId :: ObjectId,
 
     pEntryPref = init_entry_prefscale(switches, st);
     pvec = ParamVector(objId, [pEntryPref]);
-    return EntrySequential(objId, pvec, ModelParams.value(pEntryPref), switches)
+    return EntrySequential(objId, pvec, ModelParams.pvalue(pEntryPref), switches)
 end
 
 

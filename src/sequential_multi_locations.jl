@@ -60,8 +60,8 @@ function init_entry_decision(objId :: ObjectId,
     pEntryPref = init_entry_prefscale(switches, st);
     pValueLocal = init_value_local(switches, st);
     pvec = ParamVector(objId, [pEntryPref, pValueLocal]);
-    return EntryDecision(objId, pvec, ModelParams.value(pEntryPref), 
-        ModelParams.value(pValueLocal), switches)
+    return EntryDecision(objId, pvec, ModelParams.pvalue(pEntryPref), 
+        ModelParams.pvalue(pValueLocal), switches)
 end
 
 function init_value_local(switches :: EntryDecisionSwitches{F1},
