@@ -69,7 +69,7 @@ end
 """
 	$(SIGNATURES)
 
-Score students. Higher scores are better.
+Score students. Does not consider `highDrawsFirst`. Only ranking considers that.
 Scores are simply weighted sums of endowment draws. 
 Not scaled. Scores can be positive or negative.
 """
@@ -109,13 +109,9 @@ end
 Scale scores to lie in [0, 1].
 """
 function scale_scores(e :: AbstractRanking{F1}, scoreV) where F1
-    error("Must be defined.");
-    # lbV = lower_bounds(e),
-    # ubV = upper_bounds(e)) where F1
-
-    # lb, ub = range_of_scores(e; lbV, ubV);
-    # scoreV = (scoreV .- lb) ./ (ub .- lb);
-    # return scoreV
+    lb, ub = range_of_scores(e);
+    scaledV = (scoreV .- lb) ./ (ub .- lb);
+    return scaledV
 end
 
 # """

@@ -3,17 +3,16 @@ using LatexLH, StructLH, ModelObjectsLH, ModelParams, CollegeEntry
 
 mdl = CollegeEntry;
 
-test_endow_names() = [:hsGpa, :abilPct];
 
 # Scale in [0, 1] consistent with percentiles
 function make_test_endowment_draws(J :: Integer)
-    n = length(test_endow_names());
+    n = length(mdl.test_endow_names());
     drawM = range(0.0, 1.0, length = J) * range(0.05, 0.95, length = n)';
     return drawM
 end
 
 function CollegeEntry.retrieve_draws(draws :: Matrix{Float64}, eName)
-    eIdx = findfirst(eName .== test_endow_names());
+    eIdx = findfirst(eName .== mdl.test_endow_names());
     return draws[:, eIdx]
 end
 
@@ -79,10 +78,15 @@ end
 
 @testset "Student rankings" begin
     objId = ObjectId(:ranking);
-    eName = first(test_endow_names());
+    eName = first(mdl.test_endow_names());
+    # rankFct(draws) = 
     for highDrawsFirst ∈ (true, false)
-        e = make_ranking_one_endow(objId, eName, 0.0, 1.0; highDrawsFirst);
-        student_rankings_test(e);
+        for e in [
+            mdl.make_test_ranking_one_endow(highDrawsFirst),
+            mdl.make_test_ranking_by_fct(highDrawsFirst)
+            ]
+            student_rankings_test(e);
+        end
     end
 end
 

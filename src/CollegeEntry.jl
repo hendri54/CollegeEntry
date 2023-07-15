@@ -33,9 +33,9 @@ export set_capacities!, increase_capacity!, increase_capacities!, set_local_only
 export make_entry_switches_oneloc, validate_es, set_bounds!
 
 # Student rankings
-export AbstractRanking, RankingOneEndow;
+export AbstractRanking, RankingOneEndow, RankingByFunction;
 export rank_students, score_students, scale_scores, range_of_scores;
-export make_ranking_one_endow, validate_ranking;
+export make_ranking_one_endow, make_ranking_by_fct, validate_ranking;
 export endow_names;
 
 # Results
@@ -49,6 +49,7 @@ include("test_helpers.jl")
 # Student rankings
 include("ranking_types.jl");
 include("ranking_one_endow.jl");
+include("ranking_by_function.jl");
 # include("ranking_endow_pct.jl");
 
 # Admission probabilities

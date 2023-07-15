@@ -32,13 +32,14 @@ end
 
 function score_students(e :: RankingOneEndow{F1}, draws) where F1
     scoreV = copy(retrieve_draws(draws, endow_name(e)));
+    @assert check_float_array(scoreV, e.lb, e.ub; msg = "Scores out of bounds.");
     return scoreV
 end
 
-function scale_scores(e :: RankingOneEndow{F1}, scoreV) where F1
-    scoreV = (scoreV .- e.lb) ./ (e.ub .- e.lb);
-    return scoreV
-end
+# function scale_scores(e :: RankingOneEndow{F1}, scoreV) where F1
+#     scaledV = (scoreV .- e.lb) ./ (e.ub .- e.lb);
+#     return scaledV
+# end
 
 
 # ------------  Constructors
@@ -60,7 +61,7 @@ function validate_ranking(e :: RankingOneEndow)
 end
 
 function make_test_ranking_one_endow(highDrawsFirst :: Bool)
-    e = make_ranking_one_endow(ObjectId(:rankOneEndow), :hsGpaPct, 0.0, 1.0; 
+    e = make_ranking_one_endow(ObjectId(:rankOneEndow), first(test_endow_names()), 0.0, 1.0; 
         highDrawsFirst)
     @assert validate_ranking(e);
     return e
