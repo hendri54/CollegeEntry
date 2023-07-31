@@ -1,7 +1,8 @@
 """
 	$(SIGNATURES)
 
-Rank by a single, bounded endowment that lies in (lb, ub) (so that it can be scaled into [0,1]).
+The ranking function of multiple endowments. The resulting score lies in (lb, ub). The score is simply `rankFct(draws)`.
+The `rankFct` may be a `ModelObject` with calibrated parameters.
 """
 mutable struct RankingByFunction{F1, F2} <: AbstractRanking{F1}
     objId :: ObjectId

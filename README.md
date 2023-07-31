@@ -6,6 +6,8 @@ Models of college entry and admissions.
 
 # Change Log 2023
 
+July-31 (v2.2): ModelParams 4
+
 July-18 (v2.1 registered) 
 
 Jun-29 (v2.0)

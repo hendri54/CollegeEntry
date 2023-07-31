@@ -1,12 +1,5 @@
 ## -------------  Ranking students for sequential college admissions
 
-# """
-# 	$(SIGNATURES)
-
-# Abstract type for switches governing student ranking.
-# """
-# abstract type AbstractRankingSwitches{F1 <: Real} end
-
 """
 	$(SIGNATURES)
 
@@ -19,18 +12,6 @@ ModelParams.param_loc(::AbstractRanking) = ParamsInObject();
 
 StructLH.describe(switches :: AbstractRanking) = 
     ["Generic student ranking"];
-
-# Lazy.@forward AbstractRanking.switches (
-#     StructLH.describe, high_draws_first, calibrate_weights
-# )
-
-
-# """
-# 	$(SIGNATURES)
-
-# Initialize an `AbstractRanking` object from its switches.
-# """
-# function make_student_ranking end
 
 
 """
@@ -106,7 +87,7 @@ end
 """
 	$(SIGNATURES)
 
-Scale scores to lie in [0, 1].
+Scale scores to lie in [0, 1]. Based on range of scores encoded in the ranking. So the actual range of scores does not cover the entire interval.
 """
 function scale_scores(e :: AbstractRanking{F1}, scoreV) where F1
     lb, ub = range_of_scores(e);
@@ -143,13 +124,6 @@ endow_names(e :: AbstractRanking{F1}) where F1 = e.eNameV;
 Validate an `AbstractRanking`.
 """
 function validate_ranking end
-
-# """
-# 	$(SIGNATURES)
-
-# Validate switches for an `AbstractRanking`.
-# """
-# function validate_ranking_switches end
 
 
 # -----------------
