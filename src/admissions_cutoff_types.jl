@@ -1,5 +1,3 @@
-## ----------  HS GPA or other endowment percentile cutoff
-
 """
 	$(SIGNATURES)
 
@@ -7,9 +5,7 @@ Switches governing admissions by cutoff rule.
 """
 mutable struct AdmissionsCutoffSwitches{I1, F1 <: Real} <: AbstractAdmissionsSwitches{I1, F1}
     nColleges :: I1
-    # Name of the variable that holds the individual percentiles
-    # pctVar :: Symbol
-    # Minimum HS GPA percentile required for each college; should be increasing
+    # Minimum HS GPA percentile required for each college; should be increasing. Need not be in [0, 1].
     minPctV :: Vector{F1}
     # Minimum probability of all college sets
     minCollSetProb :: F1
@@ -29,13 +25,13 @@ struct AdmissionsCutoff{I1, F1 <: Real} <: AbstractAdmissionsRule{I1, F1}
 end
 
 function Base.show(io :: IO, a :: AdmissionsCutoff)
-    nc = n_colleges(a);
+    # nc = n_colleges(a);
     print(io, typeof(a), " with cutoff percentiles",
         round.(min_percentiles(a), digits = 2));
 end
 
 StructLH.describe(a :: AdmissionsCutoffSwitches) = [
-    "Admission rule"  " ";
+    "Admission rule"  "Cutoff rule";
     # "Cutoff rule based on"  "$(a.pctVar)";
     "Min percentile by college"  "fixed at $(a.minPctV)"
 ];
@@ -44,10 +40,10 @@ StructLH.describe(a :: AdmissionsCutoffSwitches) = [
 function validate_admissions(a :: AdmissionsCutoff{I1, F1}) where {I1, F1}
     isValid = true;
     if any(diff(min_percentiles(a)) .<= 0.0)
-        @warn "Min percentiles should be increasing"
+        @warn "Min percentiles should be increasing";
         isValid = false;
     end
-    isValid  =  isValid  &&  validate_percentiles(min_percentiles(a));
+    # isValid  =  isValid  &&  validate_percentiles(min_percentiles(a));
     isValid  ||  println(a);
     return isValid
 end
@@ -71,7 +67,7 @@ min_percentiles(a :: AdmissionsCutoff{I1, F1}) where {I1, F1} = a.switches.minPc
 function highest_college(a :: AdmissionsCutoff{I1, F1}, endowPct :: F2) where 
     {I1, F1, F2 <: Real}
 
-    @assert (zero(F2) <= endowPct <= one(F2))  "Expecting percentiles between 0 and 1";
+    # @assert (zero(F2) <= endowPct <= one(F2))  "Expecting percentiles between 0 and 1";
     qIdx = findlast(x -> x <= endowPct, min_percentiles(a));
     @check qIdx >= 1
     return qIdx
@@ -79,6 +75,7 @@ end
 
 function highest_college(a :: AdmissionsCutoff{I1, F1}, endowPctV :: AbstractVector{F2}) where {I1, F1, F2 <: Real}
 
+    # use map +++++
     highV = Vector{Int}(undef, length(endowPctV));
     for (j, endowPct) in enumerate(endowPctV)
         highV[j] = highest_college(a, endowPct);
@@ -93,7 +90,7 @@ function prob_coll_set(a :: AdmissionsCutoff{I1, F1},
     iSet :: Integer, endowPct :: F2) where 
     {AF1 <: AbstractAdmProbFct{<: Real}, I1, F1, F2 <: Real}
 
-    @assert (zero(F2) <= endowPct <= one(F2))  "Expecting percentiles between 0 and 1";
+    # @assert (zero(F2) <= endowPct <= one(F2))  "Expecting percentiles between 0 and 1";
     qIdx = highest_college(a, endowPct);
     if qIdx == iSet
         # Best college the student qualifies for
@@ -117,7 +114,7 @@ function prob_coll_sets(a :: AdmissionsCutoff{I1, F1},
     admProbFct :: AF1,
     endowPct :: F2) where {AF1 <: AbstractAdmProbFct{<: Real}, I1, F1, F2 <: Real}
     
-    @assert (zero(F2) <= endowPct <= one(F2))  "Expecting percentiles between 0 and 1";
+    # @assert (zero(F2) <= endowPct <= one(F2))  "Expecting percentiles between 0 and 1";
     nSets = n_college_sets(a);
     probV = [prob_coll_set(a, admProbFct, iSet, endowPct)  for iSet = 1 : nSets];
     @check sum(probV) ≈ 1

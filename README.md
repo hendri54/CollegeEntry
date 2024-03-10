@@ -4,6 +4,10 @@ Models of college entry and admissions.
 
 [Documentation](lhendricks.org/julia/CollegeEntry/index.html)
 
+# Change Log 2024
+
+Mar-9 (v2.3): Admissions cutoff rules allow endowments outside of [0, 1]
+
 # Change Log 2023
 
 July-31 (v2.2): ModelParams 4
