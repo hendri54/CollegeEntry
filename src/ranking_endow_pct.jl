@@ -50,7 +50,7 @@ Base.show(io :: IO,  e :: EndowPctRanking{F1}) where F1 =
     print(io, typeof(e), " with endowments ", endow_names(e),
         " and weights ",  round.(weights(e), digits = 2));
 
-function StructLH.describe(e :: EndowPctRankingSwitches{F1}) where F1
+function CommonLH.describe(e :: EndowPctRankingSwitches{F1}) where F1
     endowNameV = CollegeEntry.endow_names(e);
     calStr = calibrate_weights(e)  ?  "calibrated"  :  "fixed";
     return [
@@ -60,7 +60,7 @@ function StructLH.describe(e :: EndowPctRankingSwitches{F1}) where F1
     ]
 end
 
-# StructLH.describe(e :: EndowPctRanking) = StructLH.describe(e.switches);
+# CommonLH.describe(e :: EndowPctRanking) = CommonLH.describe(e.switches);
 
 # high_draws_first(e :: EndowPctRanking{F1}) where F1 = 
 #     high_draws_first(e.switches);
@@ -171,7 +171,7 @@ function init_endow_pct_weights(switches :: EndowPctRankingSwitches{F1},
     wtV = switches.wtV;
     n = length(wtV);
     p = Param(:wtV, 
-        LatexLH.description(st, :rankWt), latex(st, :rankWt), 
+        FilesLH.description(st, :rankWt), latex(st, :rankWt), 
         wtV, wtV, switches.lbV, switches.ubV, switches.doCal);
     return p
 end

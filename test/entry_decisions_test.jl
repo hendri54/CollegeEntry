@@ -1,5 +1,5 @@
 using Random, Test, TestSetExtensions
-using LatexLH, StructLH, ModelObjectsLH, ModelParams, CollegeEntry
+using FilesLH, CommonLH, ModelParams, CollegeEntry
 
 ce = CollegeEntry;
 
@@ -37,7 +37,7 @@ function entry_decisions_test(switches :: AbstractEntrySwitches{F1},
     @testset ExtendedTestSet "Entry Decisions $(typeof(switches)), $(typeof(admissionS))" begin
         rng = MersenneTwister(12);
         # println(switches);
-        @test StructLH.describe(switches) isa Array{String};
+        @test CommonLH.describe(switches) isa Array{String};
         objId = ObjectId(:entryOneStep);
         st = ce.make_test_symbol_table();
         entryS = init_entry_decision(objId, switches, st);

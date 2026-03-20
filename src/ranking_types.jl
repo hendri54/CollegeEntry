@@ -10,7 +10,7 @@ abstract type AbstractRanking{F1 <: Real} <: ModelObject end
 ModelParams.has_pvector(::AbstractRanking) = true;
 ModelParams.param_loc(::AbstractRanking) = ParamsInObject();
 
-StructLH.describe(switches :: AbstractRanking) = 
+CommonLH.describe(switches :: AbstractRanking) = 
     ["Generic student ranking"];
 
 

@@ -23,7 +23,7 @@ range_of_scores(e :: RankingByFunction) = (e.lb, e.ub);
 Base.show(io :: IO,  e :: RankingByFunction) =
     print(io, "Ranking by function of endowments ", endow_names(e));
 
-function StructLH.describe(e :: RankingByFunction)
+function CommonLH.describe(e :: RankingByFunction)
     return [
         "Ranking for sequential entry"  "by function";
         "Ranking based on"  "$(endow_names(e))"

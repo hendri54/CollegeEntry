@@ -30,7 +30,7 @@ function Base.show(io :: IO, a :: AdmissionsCutoff)
         round.(min_percentiles(a), digits = 2));
 end
 
-StructLH.describe(a :: AdmissionsCutoffSwitches) = [
+CommonLH.describe(a :: AdmissionsCutoffSwitches) = [
     "Admission rule"  "Cutoff rule";
     # "Cutoff rule based on"  "$(a.pctVar)";
     "Min percentile by college"  "fixed at $(a.minPctV)"

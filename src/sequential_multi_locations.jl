@@ -2,7 +2,7 @@
 
 ## ------------- Switches
 
-function StructLH.describe(switches :: EntryDecisionSwitches{F1}) where F1
+function CommonLH.describe(switches :: EntryDecisionSwitches{F1}) where F1
     nLoc = n_locations(switches);
     capStr = limited_capacity(switches)  ?  "limited"  :  "unlimited";
     return [
@@ -76,7 +76,7 @@ function init_value_local(switches :: EntryDecisionSwitches{F1},
     end
 
     ub = max(F1(5.0), valueLocal + 2.0);
-    pEntryPref = Param(:valueLocal, LatexLH.description(st, :uLocal), latex(st, :uLocal), valueLocal, valueLocal, F1(0.0), ub, 
+    pEntryPref = Param(:valueLocal, FilesLH.description(st, :uLocal), latex(st, :uLocal), valueLocal, valueLocal, F1(0.0), ub, 
         calValueLocal);
     return pEntryPref
 end

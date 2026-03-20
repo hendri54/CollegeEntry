@@ -1,5 +1,5 @@
 using Test
-using ModelObjectsLH
+using CommonLH
 using CollegeEntry
 
 ce = CollegeEntry;

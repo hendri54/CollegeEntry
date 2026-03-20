@@ -1,5 +1,5 @@
 using Test
-using LatexLH, StructLH, ModelObjectsLH, ModelParams, CollegeEntry
+using FilesLH, CommonLH, ModelParams, CollegeEntry
 
 mdl = CollegeEntry;
 
@@ -22,7 +22,7 @@ CollegeEntry.n_draws(draws :: Matrix{Float64}) = size(draws, 1);
 # Input: No of endowments to rank on.
 function student_rankings_test(e)
     @testset "$e" begin
-        @test StructLH.describe(e) isa Matrix{String};
+        @test CommonLH.describe(e) isa Matrix{String};
         @test validate_ranking(e);
 
         # if n > 1

@@ -45,7 +45,7 @@ er = entry_decisions(entryS, admissionS,
 
 Notational note: Several functions have suffixes that indicate the dimensions of the objects to be returned. For example, `type_mass_jl` returns the mass of types by (type, location), whereas `type_mass_j` returns the total mass of each type across locations.
 
-Notation (Latex symbols) are provided into object constructors as `LatexLH.SymbolTable` objects. `make_test_symbol_table()` contains all the objects that need to be defined for all variations of entry scenarios.
+Notation (Latex symbols) are provided into object constructors as `FilesLH.SymbolTable` objects. `make_test_symbol_table()` contains all the objects that need to be defined for all variations of entry scenarios.
 
 ## Admission rules
 

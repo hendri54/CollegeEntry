@@ -15,7 +15,7 @@ abstract type AbstractAdmissionsSwitches{I1, F1 <: Real} end
 
 
 Lazy.@forward AbstractAdmissionsRule.switches (
-    StructLH.describe, open_admission, min_coll_set_prob, n_colleges
+    CommonLH.describe, open_admission, min_coll_set_prob, n_colleges
     );
 
 

@@ -1,5 +1,5 @@
 using Test
-using CollegeEntry, StructLH
+using CollegeEntry, CommonLH
 
 ce = CollegeEntry;
 
@@ -16,7 +16,7 @@ function common_test(a :: T1) where T1 <: AbstractAdmissionsRule
 
         @test validate_admissions(a)
         # println(a);
-        @test StructLH.describe(a) isa Matrix{String};
+        @test CommonLH.describe(a) isa Matrix{String};
         nSets = n_college_sets(a);
         @test nSets >= 1
         @test ce.n_colleges(a) > 1

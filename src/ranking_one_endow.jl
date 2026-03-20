@@ -22,7 +22,7 @@ range_of_scores(e :: RankingOneEndow) = (e.lb, e.ub);
 Base.show(io :: IO,  e :: RankingOneEndow{F1}) where F1 =
     print(io, "Ranking by endowment ", endow_name(e));
 
-function StructLH.describe(e :: RankingOneEndow{F1}) where F1
+function CommonLH.describe(e :: RankingOneEndow{F1}) where F1
     eNameStr = string(endow_name(e));
     return [
         "Ranking for sequential entry"  " ";

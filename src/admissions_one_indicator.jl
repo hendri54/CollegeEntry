@@ -36,7 +36,7 @@ function Base.show(io :: IO, a :: AdmissionsOneVar)
     print(io, typeof(a));  # , " with ranking variable $rankVar");
 end
 
-function StructLH.describe(a :: AdmissionsOneVarSwitches)
+function CommonLH.describe(a :: AdmissionsOneVarSwitches)
     # rankVar = percentile_var(a);
     return [
         "Admission rule"  "based on one indicator";

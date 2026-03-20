@@ -3,7 +3,7 @@ module CollegeEntry
 # Distributions only needed for simulations.
 using ModelParams: get_object_id
 using ArgCheck, Distributions, DocStringExtensions, Lazy, Random
-using CommonLH, EconLH, LatexLH, StructLH, ModelObjectsLH, ModelParams
+using CommonLH, EconLH, FilesLH, ModelParams
 
 # Entry decisions
 export AbstractEntryDecision, AbstractEntrySwitches, 

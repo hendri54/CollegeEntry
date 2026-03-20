@@ -24,7 +24,7 @@ end
 
 Base.show(io :: IO, a :: AdmissionsOpen) = print(io, typeof(a));
 
-StructLH.describe(a :: AdmissionsOpenSwitches) = ["College admissions"  "open"];
+CommonLH.describe(a :: AdmissionsOpenSwitches) = ["College admissions"  "open"];
 
 n_college_sets(a :: AdmissionsOpen) = 1;
 college_set(a :: AdmissionsOpen, j :: Integer) = 1 : n_colleges(a);
